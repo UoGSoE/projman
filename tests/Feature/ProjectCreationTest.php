@@ -11,8 +11,8 @@ uses(RefreshDatabase::class);
 
 describe('Project Creation', function () {
     beforeEach(function () {
-        // Create a test user
-        $this->user = User::factory()->create(['username' => 'admin']);
+        // Create a test admin user
+        $this->user = User::factory()->create(['is_admin' => true]);
     });
 
     describe('Ideation Form', function () {
@@ -133,6 +133,7 @@ describe('Project Creation', function () {
                 ->set('schedulingForm.changeBoardDate', $tomorrow)
                 ->set('schedulingForm.assignedTo', '1')
                 ->set('schedulingForm.priority', 'high')
+                ->set('schedulingForm.teamAssignment', '1')
                 ->call('save', 'scheduling')
                 ->assertHasNoErrors();
         });
@@ -145,10 +146,11 @@ describe('Project Creation', function () {
                     'schedulingForm.keySkills' => 'required',
                     'schedulingForm.estimatedStartDate' => 'required',
                     'schedulingForm.estimatedCompletionDate' => 'required',
-                    'schedulingForm.changeBoardDate' => 'required',
-                    'schedulingForm.assignedTo' => 'required',
-                    'schedulingForm.priority' => 'required',
-                ]);
+                                    'schedulingForm.changeBoardDate' => 'required',
+                'schedulingForm.assignedTo' => 'required',
+                'schedulingForm.priority' => 'required',
+                'schedulingForm.teamAssignment' => 'required',
+            ]);
         });
 
         it('validates completion date must be after start date', function () {
@@ -210,42 +212,42 @@ describe('Project Creation', function () {
             $tomorrow = now()->addDay()->format('Y-m-d');
             $dayAfterTomorrow = now()->addDays(2)->format('Y-m-d');
 
-            livewire(ProjectCreator::class)
-                ->set('developmentForm.deliverableTitle', 'Test Deliverable')
-                ->set('developmentForm.leadDeveloper', 'Test Lead')
-                ->set('developmentForm.developmentTeam', 'Test Team')
-                ->set('developmentForm.technicalApproach', 'Test Technical Approach')
-                ->set('developmentForm.developmentNotes', 'Test Development Notes')
-                ->set('developmentForm.repositoryUrl', 'https://github.com/test/repo')
-                ->set('developmentForm.status', 'in_progress')
-                ->set('developmentForm.estimatedStartDate', $tomorrow)
-                ->set('developmentForm.estimatedCompletionDate', $dayAfterTomorrow)
-                ->set('developmentForm.codeReviewNotes', 'Test Code Review Notes')
-                ->call('save', 'development')
-                ->assertHasNoErrors();
+                    livewire(ProjectCreator::class)
+            ->set('developmentForm.deliverableTitle', 'Test Deliverable')
+            ->set('developmentForm.leadDeveloper', 'Test Lead')
+            ->set('developmentForm.developmentTeam', 'Test Team')
+            ->set('developmentForm.technicalApproach', 'Test Technical Approach')
+            ->set('developmentForm.developmentNotes', 'Test Development Notes')
+            ->set('developmentForm.repositoryLink', 'https://github.com/test/repo')
+            ->set('developmentForm.status', 'in_progress')
+            ->set('developmentForm.startDate', $tomorrow)
+            ->set('developmentForm.completionDate', $dayAfterTomorrow)
+            ->set('developmentForm.codeReviewNotes', 'Test Code Review Notes')
+            ->call('save', 'development')
+            ->assertHasNoErrors();
         });
 
         it('validates required fields for development form', function () {
             livewire(ProjectCreator::class)
                 ->call('save', 'development')
-                ->assertHasErrors([
-                    'developmentForm.deliverableTitle' => 'required',
-                    'developmentForm.leadDeveloper' => 'required',
-                    'developmentForm.developmentTeam' => 'required',
-                    'developmentForm.technicalApproach' => 'required',
-                    'developmentForm.developmentNotes' => 'required',
-                    'developmentForm.repositoryUrl' => 'required',
-                    'developmentForm.status' => 'required',
-                    'developmentForm.estimatedStartDate' => 'required',
-                    'developmentForm.estimatedCompletionDate' => 'required',
-                ]);
+                            ->assertHasErrors([
+                'developmentForm.deliverableTitle' => 'required',
+                'developmentForm.leadDeveloper' => 'required',
+                'developmentForm.developmentTeam' => 'required',
+                'developmentForm.technicalApproach' => 'required',
+                'developmentForm.developmentNotes' => 'required',
+                'developmentForm.repositoryLink' => 'required',
+                'developmentForm.status' => 'required',
+                'developmentForm.startDate' => 'required',
+                'developmentForm.completionDate' => 'required',
+            ]);
         });
 
         it('validates URL format for repository URL', function () {
             livewire(ProjectCreator::class)
-                ->set('developmentForm.repositoryUrl', 'not-a-url')
+                ->set('developmentForm.repositoryLink', 'not-a-url')
                 ->call('save', 'development')
-                ->assertHasErrors(['developmentForm.repositoryUrl' => 'url']);
+                ->assertHasErrors(['developmentForm.repositoryLink' => 'url']);
         });
     });
 
@@ -301,44 +303,48 @@ describe('Project Creation', function () {
         it('can create a deployed form with valid data', function () {
             $today = now()->format('Y-m-d');
 
-            livewire(ProjectCreator::class)
-                ->set('deployedForm.deliverableTitle', 'Test Deliverable')
-                ->set('deployedForm.deployedBy', 'Test Deployer')
-                ->set('deployedForm.environment', 'production')
-                ->set('deployedForm.deploymentStatus', 'deployed')
-                ->set('deployedForm.deploymentDate', $today)
-                ->set('deployedForm.version', '1.0.0')
-                ->set('deployedForm.deploymentUrl', 'https://example.com/app')
-                ->set('deployedForm.deploymentNotes', 'Test deployment notes')
-                ->set('deployedForm.rollbackPlan', 'Test rollback plan')
-                ->set('deployedForm.monitoringNotes', 'Test monitoring notes')
-                ->set('deployedForm.signOffBy', 'Test Sign Off')
-                ->set('deployedForm.signOffDate', $today)
-                ->call('save', 'deployed')
-                ->assertHasNoErrors();
+                    livewire(ProjectCreator::class)
+            ->set('deployedForm.deliverableTitle', 'Test Deliverable')
+            ->set('deployedForm.deployedBy', 'Test Deployer')
+            ->set('deployedForm.environment', 'production')
+            ->set('deployedForm.status', 'deployed')
+            ->set('deployedForm.deploymentDate', $today)
+            ->set('deployedForm.version', '1.0.0')
+            ->set('deployedForm.productionUrl', 'https://example.com/app')
+            ->set('deployedForm.deploymentNotes', 'Test deployment notes')
+            ->set('deployedForm.rollbackPlan', 'Test rollback plan')
+            ->set('deployedForm.monitoringNotes', 'Test monitoring notes')
+            ->set('deployedForm.deploymentSignOff', 'Test Deployment Sign Off')
+            ->set('deployedForm.operationsSignOff', 'Test Operations Sign Off')
+            ->set('deployedForm.userAcceptance', 'Test User Acceptance')
+            ->set('deployedForm.serviceDeliverySignOff', 'Test Service Delivery Sign Off')
+            ->call('save', 'deployed')
+            ->assertHasNoErrors();
         });
 
         it('validates required fields for deployed form', function () {
             livewire(ProjectCreator::class)
                 ->call('save', 'deployed')
-                ->assertHasErrors([
-                    'deployedForm.deliverableTitle' => 'required',
-                    'deployedForm.deployedBy' => 'required',
-                    'deployedForm.environment' => 'required',
-                    'deployedForm.deploymentStatus' => 'required',
-                    'deployedForm.deploymentDate' => 'required',
-                    'deployedForm.version' => 'required',
-                    'deployedForm.deploymentUrl' => 'required',
-                    'deployedForm.signOffBy' => 'required',
-                    'deployedForm.signOffDate' => 'required',
-                ]);
+                            ->assertHasErrors([
+                'deployedForm.deliverableTitle' => 'required',
+                'deployedForm.deployedBy' => 'required',
+                'deployedForm.environment' => 'required',
+                'deployedForm.status' => 'required',
+                'deployedForm.deploymentDate' => 'required',
+                'deployedForm.version' => 'required',
+                'deployedForm.productionUrl' => 'required',
+                'deployedForm.deploymentSignOff' => 'required',
+                'deployedForm.operationsSignOff' => 'required',
+                'deployedForm.userAcceptance' => 'required',
+                'deployedForm.serviceDeliverySignOff' => 'required',
+            ]);
         });
 
         it('validates URL format for deployment URL', function () {
             livewire(ProjectCreator::class)
-                ->set('deployedForm.deploymentUrl', 'not-a-url')
+                ->set('deployedForm.productionUrl', 'not-a-url')
                 ->call('save', 'deployed')
-                ->assertHasErrors(['deployedForm.deploymentUrl' => 'url']);
+                ->assertHasErrors(['deployedForm.productionUrl' => 'url']);
         });
     });
 

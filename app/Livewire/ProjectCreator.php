@@ -55,7 +55,7 @@ class ProjectCreator extends Component
 
     public function render()
     {
-        Auth::loginUsingId(User::where('name', 'admin')->first()->id);
+        Auth::loginUsingId(User::admin()->first()->id);
         return view('livewire.project-creator', [
             'project' => new Project(['user_id' => Auth::id()]),
         ]);

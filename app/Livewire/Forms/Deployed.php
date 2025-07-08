@@ -14,7 +14,7 @@ class Deployed extends Form
         'production' => 'Production',
     ];
 
-    public array $availableDeploymentStatuses = [
+    public array $availableStatuses = [
         'pending' => 'Pending',
         'deployed' => 'Deployed',
         'failed' => 'Failed',
@@ -31,7 +31,7 @@ class Deployed extends Form
     public string $environment = '';
 
     #[Validate('required|string')]
-    public string $deploymentStatus = 'pending';
+    public string $status = 'pending';
 
     #[Validate('required|date')]
     public string $deploymentDate = '';
@@ -40,7 +40,7 @@ class Deployed extends Form
     public string $version = '';
 
     #[Validate('required|url|max:255')]
-    public string $deploymentUrl = '';
+    public string $productionUrl = '';
 
     #[Validate('string|max:2048')]
     public string $deploymentNotes = '';
@@ -52,10 +52,16 @@ class Deployed extends Form
     public string $monitoringNotes = '';
 
     #[Validate('required|string|max:255')]
-    public string $signOffBy = '';
+    public string $deploymentSignOff = '';
 
-    #[Validate('required|date')]
-    public string $signOffDate = '';
+    #[Validate('required|string|max:255')]
+    public string $operationsSignOff = '';
+
+    #[Validate('required|string|max:255')]
+    public string $userAcceptance = '';
+
+    #[Validate('required|string|max:255')]
+    public string $serviceDeliverySignOff = '';
 
     public function save()
     {

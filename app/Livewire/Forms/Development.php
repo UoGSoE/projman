@@ -38,16 +38,16 @@ class Development extends Form
     public string $developmentNotes = '';
 
     #[Validate('required|url|max:255')]
-    public string $repositoryUrl = '';
+    public string $repositoryLink = '';
 
     #[Validate('required|string')]
     public string $status = 'not_started';
 
     #[Validate('required|date|after:today')]
-    public string $estimatedStartDate = '';
+    public string $startDate = '';
 
-    #[Validate('required|date|after:estimatedStartDate')]
-    public string $estimatedCompletionDate = '';
+    #[Validate('required|date|after:startDate')]
+    public string $completionDate = '';
 
     #[Validate('string|max:1024')]
     public string $codeReviewNotes = '';

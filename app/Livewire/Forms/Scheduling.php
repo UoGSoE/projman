@@ -20,6 +20,12 @@ class Scheduling extends Form
         'high' => 'High',
     ];
 
+    public array $availableTeams = [
+        '1' => 'Development Team',
+        '2' => 'Infrastructure Team',
+        '3' => 'Support Team',
+    ];
+
     #[Validate('required|string|max:255')]
     public string $deliverableTitle = '';
 
@@ -43,6 +49,9 @@ class Scheduling extends Form
 
     #[Validate('required|string')]
     public string $priority = '';
+
+    #[Validate('required|string')]
+    public string $teamAssignment = '';
 
     public function save()
     {
