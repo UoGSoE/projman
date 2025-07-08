@@ -13,6 +13,35 @@ describe('Project Creation', function () {
     beforeEach(function () {
         // Create a test admin user
         $this->user = User::factory()->create(['is_admin' => true]);
+
+        // Create test users with names that match what the tests expect
+        $this->testAssessor = User::factory()->create([
+            'forenames' => 'Test',
+            'surname' => 'Assessor',
+            'username' => 'test.assessor',
+            'email' => 'test.assessor@example.ac.uk',
+        ]);
+
+        $this->testDesigner = User::factory()->create([
+            'forenames' => 'Test',
+            'surname' => 'Designer',
+            'username' => 'test.designer',
+            'email' => 'test.designer@example.ac.uk',
+        ]);
+
+        $this->testLead = User::factory()->create([
+            'forenames' => 'Test',
+            'surname' => 'Lead',
+            'username' => 'test.lead',
+            'email' => 'test.lead@example.ac.uk',
+        ]);
+
+        $this->testDeployer = User::factory()->create([
+            'forenames' => 'Test',
+            'surname' => 'Deployer',
+            'username' => 'test.deployer',
+            'email' => 'test.deployer@example.ac.uk',
+        ]);
     });
 
     describe('Ideation Form', function () {
@@ -68,7 +97,7 @@ describe('Project Creation', function () {
                 ->set('feasibilityForm.dependenciesPrerequisites', 'Test Dependencies')
                 ->set('feasibilityForm.deadlinesAchievable', 'yes')
                 ->set('feasibilityForm.alternativeProposal', 'Test Alternative')
-                ->set('feasibilityForm.assessedBy', 'Test Assessor')
+                ->set('feasibilityForm.assessedBy', $this->testAssessor->id)
                 ->set('feasibilityForm.dateAssessed', $tomorrow)
                 ->call('save', 'feasibility')
                 ->assertHasNoErrors();
@@ -94,7 +123,7 @@ describe('Project Creation', function () {
         it('can create a scoping form with valid data', function () {
             livewire(ProjectCreator::class)
                 ->set('scopingForm.deliverableTitle', 'Test Deliverable')
-                ->set('scopingForm.assessedBy', 'Test Assessor')
+                ->set('scopingForm.assessedBy', $this->testAssessor->id)
                 ->set('scopingForm.estimatedEffort', 'Test Effort')
                 ->set('scopingForm.inScope', 'Test In Scope')
                 ->set('scopingForm.outOfScope', 'Test Out of Scope')
@@ -131,7 +160,7 @@ describe('Project Creation', function () {
                 ->set('schedulingForm.estimatedStartDate', $tomorrow)
                 ->set('schedulingForm.estimatedCompletionDate', $dayAfterTomorrow)
                 ->set('schedulingForm.changeBoardDate', $tomorrow)
-                ->set('schedulingForm.assignedTo', '1')
+                ->set('schedulingForm.assignedTo', $this->testLead->id)
                 ->set('schedulingForm.priority', 'high')
                 ->set('schedulingForm.teamAssignment', '1')
                 ->call('save', 'scheduling')
@@ -169,7 +198,7 @@ describe('Project Creation', function () {
         it('can create a detailed design form with valid data', function () {
             livewire(ProjectCreator::class)
                 ->set('detailedDesignForm.deliverableTitle', 'Test Deliverable')
-                ->set('detailedDesignForm.designedBy', 'Test Designer')
+                ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
                 ->set('detailedDesignForm.serviceFunction', 'Test Service')
                 ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
                 ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
@@ -214,7 +243,7 @@ describe('Project Creation', function () {
 
                     livewire(ProjectCreator::class)
             ->set('developmentForm.deliverableTitle', 'Test Deliverable')
-            ->set('developmentForm.leadDeveloper', 'Test Lead')
+            ->set('developmentForm.leadDeveloper', $this->testLead->id)
             ->set('developmentForm.developmentTeam', 'Test Team')
             ->set('developmentForm.technicalApproach', 'Test Technical Approach')
             ->set('developmentForm.developmentNotes', 'Test Development Notes')
@@ -255,7 +284,7 @@ describe('Project Creation', function () {
         it('can create a testing form with valid data', function () {
             livewire(ProjectCreator::class)
                 ->set('testingForm.deliverableTitle', 'Test Deliverable')
-                ->set('testingForm.testLead', 'Test Lead')
+                ->set('testingForm.testLead', $this->testLead->id)
                 ->set('testingForm.serviceFunction', 'Test Service')
                 ->set('testingForm.functionalTestingTitle', 'Functional Testing')
                 ->set('testingForm.functionalTests', 'Test functional tests')
@@ -266,7 +295,7 @@ describe('Project Creation', function () {
                 ->set('testingForm.userAcceptance', 'Test User Acceptance')
                 ->set('testingForm.testingLeadSignOff', 'Test Lead Sign Off')
                 ->set('testingForm.serviceDeliverySignOff', 'Test Service Delivery')
-                ->set('testingForm.serviceResilienceSignOff', 'Test Service Resilience')
+                ->set('testingForm.serviceResilienceSignOff', 'Test Service Resilience Sign Off')
                 ->call('save', 'testing')
                 ->assertHasNoErrors();
         });
@@ -305,7 +334,7 @@ describe('Project Creation', function () {
 
                     livewire(ProjectCreator::class)
             ->set('deployedForm.deliverableTitle', 'Test Deliverable')
-            ->set('deployedForm.deployedBy', 'Test Deployer')
+            ->set('deployedForm.deployedBy', $this->testDeployer->id)
             ->set('deployedForm.environment', 'production')
             ->set('deployedForm.status', 'deployed')
             ->set('deployedForm.deploymentDate', $today)
@@ -316,8 +345,9 @@ describe('Project Creation', function () {
             ->set('deployedForm.monitoringNotes', 'Test monitoring notes')
             ->set('deployedForm.deploymentSignOff', 'Test Deployment Sign Off')
             ->set('deployedForm.operationsSignOff', 'Test Operations Sign Off')
-            ->set('deployedForm.userAcceptance', 'Test User Acceptance')
+            ->set('deployedForm.userAcceptanceSignOff', 'Test User Acceptance Sign Off')
             ->set('deployedForm.serviceDeliverySignOff', 'Test Service Delivery Sign Off')
+            ->set('deployedForm.changeAdvisorySignOff', 'Test Change Advisory Sign Off')
             ->call('save', 'deployed')
             ->assertHasNoErrors();
         });
@@ -335,8 +365,9 @@ describe('Project Creation', function () {
                 'deployedForm.productionUrl' => 'required',
                 'deployedForm.deploymentSignOff' => 'required',
                 'deployedForm.operationsSignOff' => 'required',
-                'deployedForm.userAcceptance' => 'required',
+                'deployedForm.userAcceptanceSignOff' => 'required',
                 'deployedForm.serviceDeliverySignOff' => 'required',
+                'deployedForm.changeAdvisorySignOff' => 'required',
             ]);
         });
 

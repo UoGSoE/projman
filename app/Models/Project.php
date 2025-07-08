@@ -4,6 +4,12 @@ namespace App\Models;
 
 use App\Enums\ProjectStatus;
 use App\Models\ProjectHistory;
+use App\Models\Scoping;
+use App\Models\Scheduling;
+use App\Models\DetailedDesign;
+use App\Models\Development;
+use App\Models\Testing;
+use App\Models\Deployed;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,6 +51,36 @@ class Project extends Model
     public function feasibility(): HasOne
     {
         return $this->hasOne(Feasibility::class);
+    }
+
+    public function scoping(): HasOne
+    {
+        return $this->hasOne(Scoping::class);
+    }
+
+    public function scheduling(): HasOne
+    {
+        return $this->hasOne(Scheduling::class);
+    }
+
+    public function detailedDesign(): HasOne
+    {
+        return $this->hasOne(DetailedDesign::class);
+    }
+
+    public function development(): HasOne
+    {
+        return $this->hasOne(Development::class);
+    }
+
+    public function testing(): HasOne
+    {
+        return $this->hasOne(Testing::class);
+    }
+
+    public function deployed(): HasOne
+    {
+        return $this->hasOne(Deployed::class);
     }
 
     public function scopeIncomplete($query)

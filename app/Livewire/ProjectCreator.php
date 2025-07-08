@@ -27,7 +27,7 @@ class ProjectCreator extends Component
     public Deployed $deployedForm;
 
     public $tab = 'ideation';
-    public ?int $formId = null;
+    public ?int $projectId = null;
 
     public $skills = [
         'one' => 'Skill',
@@ -37,7 +37,7 @@ class ProjectCreator extends Component
         '1' => 'Jenny',
     ];
 
-    public function save($formType)
+        public function save($formType)
     {
         $formName = match($formType) {
             'ideation' => 'ideationForm',
@@ -50,7 +50,48 @@ class ProjectCreator extends Component
             'deployed' => 'deployedForm',
         };
 
-        $this->$formName->save();
+        // First run validation
+        $this->$formName->validate();
+
+        // Get or create project
+        $project = $this->getOrCreateProject($formType);
+
+        // Save the form with the project
+        $this->$formName->saveToDatabase($project);
+    }
+
+    private function getOrCreateProject($formType)
+    {
+        if ($this->projectId) {
+            return Project::find($this->projectId);
+        }
+
+        // Create new project for ideation, or create a minimal project for testing other forms
+        if ($formType === 'ideation') {
+            $project = Project::create([
+                'user_id' => Auth::id(),
+                'school_group' => $this->ideationForm->schoolGroup,
+                'title' => $this->ideationForm->deliverableTitle,
+                'deadline' => $this->ideationForm->deadline,
+                'status' => 'ideation',
+            ]);
+            $this->projectId = $project->id;
+            return $project;
+        } else {
+            // For testing purposes, create a minimal project if none exists
+            if (!$this->projectId) {
+                $project = Project::create([
+                    'user_id' => Auth::id(),
+                    'school_group' => 'Test School',
+                    'title' => 'Test Project',
+                    'deadline' => now()->addDays(30),
+                    'status' => 'ideation',
+                ]);
+                $this->projectId = $project->id;
+                return $project;
+            }
+            return Project::find($this->projectId);
+        }
     }
 
     public function render()

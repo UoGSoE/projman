@@ -6,22 +6,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Ideation extends Model
+class Development extends Model
 {
-    /** @use HasFactory<\Database\Factories\IdeationFactory> */
     use HasFactory;
 
     protected $fillable = [
         'project_id',
-        'objective',
-        'business_case',
-        'benefits',
-        'deadline',
-        'strategic_initiative',
+        'deliverable_title',
+        'lead_developer',
+        'development_team',
+        'technical_approach',
+        'development_notes',
+        'repository_link',
+        'status',
+        'start_date',
+        'completion_date',
+        'code_review_notes',
     ];
 
     protected $casts = [
-        'deadline' => 'date',
+        'start_date' => 'date',
+        'completion_date' => 'date',
     ];
 
     public function project(): BelongsTo

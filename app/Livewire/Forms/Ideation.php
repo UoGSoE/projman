@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use Flux\Flux;
 use Livewire\Form;
 use Livewire\Attributes\Validate;
+use App\Models\Project;
 
 class Ideation extends Form
 {
@@ -41,6 +42,22 @@ class Ideation extends Form
     public function save()
     {
         $this->validate();
+        Flux::toast('Ideation saved', variant: 'success');
+    }
+
+    public function saveToDatabase($project)
+    {
+        // Create or update ideation record
+        $project->ideation()->updateOrCreate(
+            ['project_id' => $project->id],
+            [
+                'objective' => $this->objective,
+                'business_case' => $this->businessCase,
+                'benefits' => $this->benefits,
+                'deadline' => $this->deadline,
+                'strategic_initiative' => $this->initiative,
+            ]
+        );
 
         Flux::toast('Ideation saved', variant: 'success');
     }

@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use Flux\Flux;
 use Livewire\Form;
 use Livewire\Attributes\Validate;
+use App\Models\Project;
 
 class Scheduling extends Form
 {
@@ -44,18 +45,38 @@ class Scheduling extends Form
     #[Validate('required|date|after:today')]
     public string $changeBoardDate = '';
 
-    #[Validate('required|string')]
-    public string $assignedTo = '';
-
-    #[Validate('required|string')]
+    #[Validate('required|string|max:255')]
     public string $priority = '';
 
-    #[Validate('required|string')]
+    #[Validate('required|integer|exists:users,id')]
+    public ?int $assignedTo = null;
+
+    #[Validate('required|string|max:255')]
     public string $teamAssignment = '';
 
     public function save()
     {
         $this->validate();
+        Flux::toast('Scheduling saved', variant: 'success');
+    }
+
+    public function saveToDatabase($project)
+    {
+        // Create or update scheduling record
+        $project->scheduling()->updateOrCreate(
+            ['project_id' => $project->id],
+            [
+                'deliverable_title' => $this->deliverableTitle,
+                'key_skills' => $this->keySkills,
+                'cose_it_staff' => $this->coseItStaff,
+                'estimated_start_date' => $this->estimatedStartDate,
+                'estimated_completion_date' => $this->estimatedCompletionDate,
+                'change_board_date' => $this->changeBoardDate,
+                'assigned_to' => $this->assignedTo,
+                'priority' => $this->priority,
+                'team_assignment' => $this->teamAssignment,
+            ]
+        );
 
         Flux::toast('Scheduling saved', variant: 'success');
     }

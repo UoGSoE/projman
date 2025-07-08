@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use Flux\Flux;
 use Livewire\Form;
 use Livewire\Attributes\Validate;
+use App\Models\Project;
 
 class Scoping extends Form
 {
@@ -17,8 +18,8 @@ class Scoping extends Form
     #[Validate('required|string|max:255')]
     public string $deliverableTitle = '';
 
-    #[Validate('required|string|max:255')]
-    public string $assessedBy = '';
+    #[Validate('required|integer|exists:users,id')]
+    public ?int $assessedBy = null;
 
     #[Validate('required|string|max:2048')]
     public string $estimatedEffort = '';
@@ -32,12 +33,30 @@ class Scoping extends Form
     #[Validate('required|string|max:2048')]
     public string $assumptions = '';
 
-    #[Validate('required|string')]
+    #[Validate('required|string|max:255')]
     public string $skillsRequired = '';
 
     public function save()
     {
         $this->validate();
+        Flux::toast('Scoping saved', variant: 'success');
+    }
+
+    public function saveToDatabase($project)
+    {
+        // Create or update scoping record
+        $project->scoping()->updateOrCreate(
+            ['project_id' => $project->id],
+            [
+                'deliverable_title' => $this->deliverableTitle,
+                'assessed_by' => $this->assessedBy,
+                'estimated_effort' => $this->estimatedEffort,
+                'in_scope' => $this->inScope,
+                'out_of_scope' => $this->outOfScope,
+                'assumptions' => $this->assumptions,
+                'skills_required' => $this->skillsRequired,
+            ]
+        );
 
         Flux::toast('Scoping saved', variant: 'success');
     }
