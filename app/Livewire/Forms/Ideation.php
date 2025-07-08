@@ -36,7 +36,7 @@ class Ideation extends Form
     public string $deadline = '';
 
     #[Validate('required|string')]
-    public string $initiative = 'thing';
+    public string $initiative = '';
 
     public function save()
     {

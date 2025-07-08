@@ -31,7 +31,7 @@ class Deployed extends Form
     public string $environment = '';
 
     #[Validate('required|string')]
-    public string $status = 'pending';
+    public string $status = '';
 
     #[Validate('required|date')]
     public string $deploymentDate = '';

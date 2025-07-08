@@ -41,7 +41,7 @@ class Development extends Form
     public string $repositoryLink = '';
 
     #[Validate('required|string')]
-    public string $status = 'not_started';
+    public string $status = '';
 
     #[Validate('required|date|after:today')]
     public string $startDate = '';
