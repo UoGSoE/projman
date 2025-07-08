@@ -2,12 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
+use App\Models\Project;
 use Livewire\Component;
 use App\Livewire\Forms\Ideation;
 use App\Livewire\Forms\Feasibility;
-use App\Models\User;
 
-class HomePage extends Component
+class ProjectCreator extends Component
 {
     public Ideation $ideationForm;
     public Feasibility $feasibilityForm;
@@ -26,23 +27,8 @@ class HomePage extends Component
     public function render()
     {
         auth()->loginUsingId(User::admin()->first()->id);
-        return view('livewire.home-page', [
-            'partOfDay' => $this->partOfDay(),
+        return view('livewire.project-creator', [
+            'project' => new Project(['user_id' => auth()->user()->id]),
         ]);
-    }
-
-    public function save(string $tabName)
-    {
-        $this->{$tabName . 'Form'}->save();
-    }
-
-    public function partOfDay()
-    {
-        $hour = now()->hour;
-        return match(true) {
-            $hour < 12 => 'morning',
-            $hour < 18 => 'afternoon',
-            default => 'evening',
-        };
     }
 }

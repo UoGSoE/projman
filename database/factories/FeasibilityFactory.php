@@ -1,0 +1,31 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\User;
+use App\Models\Project;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Feasibility>
+ */
+class FeasibilityFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'project_id' => Project::factory(),
+            'technical_credence' => fake()->sentence(),
+            'cost_benefit_case' => fake()->paragraph(),
+            'dependencies_prerequisites' => fake()->paragraph(),
+            'deadlines_achievable' => fake()->boolean(),
+            'alternative_proposal' => fake()->paragraph(),
+            'assessed_by' => User::factory(),
+        ];
+    }
+}

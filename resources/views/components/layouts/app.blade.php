@@ -12,27 +12,26 @@
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky stashable class="bg-white dark:bg-zinc-800">
+        <flux:sidebar sticky stashable class="bg-white dark:bg-zinc-800 print:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <flux:brand href="/" logo="https://fluxui.dev/img/demo/logo.png" name="{{ config('app.name') }}" class="px-2 dark:hidden" />
-            <flux:brand href="#" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="{{ config('app.name') }}" class="px-2 hidden dark:flex" />
+            <flux:brand href="/" logo="https://fluxui.dev/img/demo/logo.png" name="{{ config('app.name') }}" class="px-2 dark:hidden print:hidden" />
+            <flux:brand href="#" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="{{ config('app.name') }}" class="px-2 hidden dark:flex print:hidden" />
 
             <flux:navlist variant="outline">
-                <flux:navlist.item icon="home" href="/" :current="request()->routeIs('home')">Home</flux:navlist.item>
+                <flux:navlist.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home</flux:navlist.item>
+                <flux:navlist.item icon="plus-circle" href="{{ route('project.create')}}" :current="request()->routeIs('project.create')" wire:navigate>New project</flux:navlist.item>
             </flux:navlist>
 
-                <flux:separator />
+            <flux:separator />
 
                 <flux:navlist variant="outline">
-                    <flux:navlist.item icon="inbox" href="{{ route('home') }}" :current="request()->routeIs('importexport')">Import/Export</flux:navlist.item>
-                    <flux:navlist.item icon="document-text" href="/users" :current="request()->routeIs('users')">Manage Users</flux:navlist.item>
-                    <flux:navlist.item icon="trash" href="/deleted-software" :current="request()->routeIs('deleted-software')"><span class="flex items-center justify-between"><span>Pending Deletion</span><flux:badge color="amber">3</flux:badge></span></flux:navlist.item>
-                    <flux:navlist.item icon="cog-6-tooth" href="/settings" :current="request()->routeIs('settings')">Settings</flux:navlist.item>
+                    <flux:navlist.item icon="list-bullet" href="/projects" :current="request()->routeIs('projects')" wire:navigate><span class="flex items-center justify-between"><span>All projects</span><flux:badge color="green">3</flux:badge></span></flux:navlist.item>
+                    <flux:navlist.item icon="cog-6-tooth" href="/settings" :current="request()->routeIs('settings')" wire:navigate>Settings</flux:navlist.item>
                 </flux:navlist>
             <flux:spacer />
             <flux:navlist variant="outline">
-                    <flux:navlist.item icon="information-circle" href="/help" :current="request()->routeIs('help')">Help</flux:navlist.item>
+                    <flux:navlist.item icon="information-circle" href="/help" :current="request()->routeIs('help')" wire:navigate>Help</flux:navlist.item>
             </flux:navlist>
             <div class="flex flex-row gap-2 items-center justify-between">
                 <form method="post" action="" class="w-full">
@@ -42,7 +41,7 @@
             </div>
         </flux:sidebar>
 
-        <flux:header class="lg:hidden">
+        <flux:header class="lg:hidden print:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
