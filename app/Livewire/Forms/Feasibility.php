@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use Flux\Flux;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -31,4 +32,10 @@ class Feasibility extends Form
     #[Validate('required|date|after:today')]
     public string $dateAssessed = '';
 
+    public function save()
+    {
+        $this->validate();
+
+        Flux::toast('Feasibility saved', variant: 'success');
+    }
 }
