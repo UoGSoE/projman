@@ -14,15 +14,14 @@ return new class extends Migration
         Schema::create('schedulings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->string('deliverable_title');
-            $table->text('key_skills');
+            $table->text('key_skills')->nullable();
             $table->text('cose_it_staff')->nullable();
-            $table->date('estimated_start_date');
-            $table->date('estimated_completion_date');
-            $table->date('change_board_date');
-            $table->foreignId('assigned_to')->constrained('users');
-            $table->string('priority');
-            $table->string('team_assignment');
+            $table->date('estimated_start_date')->nullable();
+            $table->date('estimated_completion_date')->nullable();
+            $table->date('change_board_date')->nullable();
+            $table->foreignId('assigned_to')->constrained('users')->nullable();
+            $table->string('priority')->nullable();
+            $table->string('team_assignment')->nullable();
             $table->timestamps();
         });
     }

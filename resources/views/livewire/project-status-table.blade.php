@@ -60,11 +60,11 @@
                         <flux:table.cell variant="strong">{{ $project->updated_at->diffForHumans() }}</flux:table.cell>
 
                         <flux:table.cell>
-                            <flux:badge :color="$project->ideation ? 'green' : 'zinc'" icon="check-circle" title="Ideation"></flux:badge>
-                            <flux:badge :color="$project->feasibility ? 'green' : 'zinc'" icon="check-circle" title="Feasibility"></flux:badge>
-                            <flux:badge color="zinc" icon="pause-circle" title="Development"></flux:badge>
-                            <flux:badge color="zinc" icon="pause-circle" title="Testing"></flux:badge>
-                            <flux:badge color="zinc" icon="pause-circle" title="Deployed"></flux:badge>
+                            <flux:badge :color="$project->ideation->hasBeenEdited() ? 'green' : 'zinc'" icon="check-circle" title="Ideation"></flux:badge>
+                            <flux:badge :color="$project->feasibility->hasBeenEdited() ? 'green' : 'zinc'" icon="check-circle" title="Feasibility"></flux:badge>
+                            <flux:badge :color="$project->development->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Development"></flux:badge>
+                            <flux:badge :color="$project->testing->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Testing"></flux:badge>
+                            <flux:badge :color="$project->deployed->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Deployed"></flux:badge>
                         </flux:table.cell>
 
                         <flux:table.cell>

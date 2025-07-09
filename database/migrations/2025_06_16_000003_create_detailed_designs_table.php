@@ -14,16 +14,15 @@ return new class extends Migration
         Schema::create('detailed_designs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->string('deliverable_title');
             $table->foreignId('designed_by')->constrained('users')->nullable();
-            $table->string('service_function');
-            $table->text('functional_requirements');
-            $table->text('non_functional_requirements');
-            $table->string('hld_design_link');
-            $table->string('approval_delivery');
-            $table->string('approval_operations');
-            $table->string('approval_resilience');
-            $table->string('approval_change_board');
+            $table->string('service_function')->nullable();
+            $table->text('functional_requirements')->nullable();
+            $table->text('non_functional_requirements')->nullable();
+            $table->string('hld_design_link')->nullable();
+            $table->string('approval_delivery')->nullable();
+            $table->string('approval_operations')->nullable();
+            $table->string('approval_resilience')->nullable();
+            $table->string('approval_change_board')->nullable();
             $table->timestamps();
         });
     }

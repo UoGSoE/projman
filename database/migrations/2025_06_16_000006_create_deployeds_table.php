@@ -14,21 +14,20 @@ return new class extends Migration
         Schema::create('deployeds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->string('deliverable_title');
             $table->foreignId('deployed_by')->constrained('users')->nullable();
-            $table->string('environment');
-            $table->string('status');
-            $table->date('deployment_date');
-            $table->string('version');
-            $table->string('production_url');
+            $table->string('environment')->nullable();
+            $table->string('status')->nullable();
+            $table->date('deployment_date')->nullable();
+            $table->string('version')->nullable();
+            $table->string('production_url')->nullable();
             $table->text('deployment_notes')->nullable();
             $table->text('rollback_plan')->nullable();
             $table->text('monitoring_notes')->nullable();
-            $table->string('deployment_sign_off');
-            $table->string('operations_sign_off');
-            $table->string('user_acceptance');
-            $table->string('service_delivery_sign_off');
-            $table->string('change_advisory_sign_off');
+            $table->string('deployment_sign_off')->nullable();
+            $table->string('operations_sign_off')->nullable();
+            $table->string('user_acceptance')->nullable();
+            $table->string('service_delivery_sign_off')->nullable();
+            $table->string('change_advisory_sign_off')->nullable();
             $table->timestamps();
         });
     }

@@ -14,19 +14,18 @@ return new class extends Migration
         Schema::create('testings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->string('deliverable_title');
             $table->foreignId('test_lead')->constrained('users')->nullable();
-            $table->string('service_function');
-            $table->string('functional_testing_title');
-            $table->text('functional_tests');
-            $table->string('non_functional_testing_title');
-            $table->text('non_functional_tests');
-            $table->string('test_repository');
-            $table->string('testing_sign_off');
-            $table->string('user_acceptance');
-            $table->string('testing_lead_sign_off');
-            $table->string('service_delivery_sign_off');
-            $table->string('service_resilience_sign_off');
+            $table->string('service_function')->nullable();
+            $table->string('functional_testing_title')->nullable();
+            $table->text('functional_tests')->nullable();
+            $table->string('non_functional_testing_title')->nullable();
+            $table->text('non_functional_tests')->nullable();
+            $table->string('test_repository')->nullable();
+            $table->string('testing_sign_off')->nullable();
+            $table->string('user_acceptance')->nullable();
+            $table->string('testing_lead_sign_off')->nullable();
+            $table->string('service_delivery_sign_off')->nullable();
+            $table->string('service_resilience_sign_off')->nullable();
             $table->timestamps();
         });
     }

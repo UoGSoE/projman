@@ -14,13 +14,12 @@ return new class extends Migration
         Schema::create('scopings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->string('deliverable_title');
             $table->foreignId('assessed_by')->constrained('users')->nullable();
-            $table->text('estimated_effort');
-            $table->text('in_scope');
-            $table->text('out_of_scope');
-            $table->text('assumptions');
-            $table->string('skills_required');
+            $table->text('estimated_effort')->nullable();
+            $table->text('in_scope')->nullable();
+            $table->text('out_of_scope')->nullable();
+            $table->text('assumptions')->nullable();
+            $table->string('skills_required')->nullable();
             $table->timestamps();
         });
     }

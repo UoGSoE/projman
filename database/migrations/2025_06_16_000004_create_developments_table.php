@@ -14,15 +14,14 @@ return new class extends Migration
         Schema::create('developments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->string('deliverable_title');
             $table->foreignId('lead_developer')->constrained('users')->nullable();
-            $table->string('development_team');
-            $table->text('technical_approach');
-            $table->text('development_notes');
-            $table->string('repository_link');
-            $table->string('status');
-            $table->date('start_date');
-            $table->date('completion_date');
+            $table->string('development_team')->nullable();
+            $table->text('technical_approach')->nullable();
+            $table->text('development_notes')->nullable();
+            $table->string('repository_link')->nullable();
+            $table->string('status')->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('completion_date')->nullable();
             $table->text('code_review_notes')->nullable();
             $table->timestamps();
         });

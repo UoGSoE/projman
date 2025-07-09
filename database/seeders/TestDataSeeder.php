@@ -25,18 +25,25 @@ class TestDataSeeder extends Seeder
 
         $users = User::factory()->count(10)->create();
 
+        $formNames = [
+            \App\Models\Ideation::class,
+            \App\Models\Feasibility::class,
+            \App\Models\Development::class,
+            \App\Models\Testing::class,
+            \App\Models\Deployed::class,
+            \App\Models\Scoping::class,
+            \App\Models\Scheduling::class,
+            \App\Models\DetailedDesign::class,
+        ];
+
         foreach (User::all() as $user) {
             foreach (range(1, 10) as $i) {
                 $project = Project::factory()->create([
                     'user_id' => $user->id,
                     'updated_at' => now()->subDays(rand(1, 100)),
                 ]);
-                Ideation::factory()->create([
-                    'project_id' => $project->id,
-                ]);
-
-                if (rand(0, 1)) {
-                    Feasibility::factory()->create([
+                foreach ($formNames as $formName) {
+                    $form = $formName::factory()->create([
                         'project_id' => $project->id,
                     ]);
                 }
