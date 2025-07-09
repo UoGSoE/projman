@@ -7,7 +7,7 @@ use Livewire\Form;
 use Livewire\Attributes\Validate;
 use App\Models\Project;
 
-class Scoping extends Form
+class ScopingForm extends Form
 {
     public array $availableSkills = [
         'one' => 'Skill',

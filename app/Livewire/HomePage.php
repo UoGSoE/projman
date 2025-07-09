@@ -3,14 +3,14 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Livewire\Forms\Ideation;
-use App\Livewire\Forms\Feasibility;
+use App\Livewire\Forms\IdeationForm;
+use App\Livewire\Forms\FeasibilityForm;
 use App\Models\User;
 
 class HomePage extends Component
 {
-    public Ideation $ideationForm;
-    public Feasibility $feasibilityForm;
+    public IdeationForm $ideationForm;
+    public FeasibilityForm $feasibilityForm;
 
     public $tab = 'ideation';
     public ?int $formId = null;

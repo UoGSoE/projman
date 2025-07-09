@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->string('school_group')->nullable();
-            $table->string('title');
+            $table->string('title')->nullable();
             $table->date('deadline')->nullable();
             $table->string('status')->default('draft');
             $table->timestamps();

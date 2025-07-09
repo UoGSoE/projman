@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Traits\CanCheckIfEdited;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Deployed extends Model
 {
     use HasFactory;
+    use CanCheckIfEdited;
 
     protected $fillable = [
         'project_id',
@@ -32,6 +34,8 @@ class Deployed extends Model
     protected $casts = [
         'deployment_date' => 'date',
     ];
+
+    protected $touches = ['project'];
 
     public function project(): BelongsTo
     {

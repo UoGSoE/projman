@@ -15,11 +15,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Traits\CanCheckIfEdited;
 
 class Project extends Model
 {
     /** @use HasFactory<\Database\Factories\ProjectFactory> */
     use HasFactory;
+    use CanCheckIfEdited;
 
     protected $fillable = [
         'user_id',
@@ -85,6 +87,19 @@ class Project extends Model
 
     public function scopeIncomplete($query)
     {
-        return $query->where('status', '!=', ProjectStatus::COMPLETED);
+        return $query->whereNotIn('status', [
+            ProjectStatus::COMPLETED->value,
+            ProjectStatus::CANCELLED->value,
+        ]);
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', ProjectStatus::COMPLETED->value);
+    }
+
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', ProjectStatus::CANCELLED->value);
     }
 }

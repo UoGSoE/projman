@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Traits\CanCheckIfEdited;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Feasibility extends Model
 {
     /** @use HasFactory<\Database\Factories\FeasibilityFactory> */
     use HasFactory;
+    use CanCheckIfEdited;
+
+    protected $touches = ['project'];
 
     protected $fillable = [
         'project_id',

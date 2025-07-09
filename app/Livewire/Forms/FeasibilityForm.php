@@ -7,7 +7,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Form;
 use App\Models\Project;
 
-class Feasibility extends Form
+class FeasibilityForm extends Form
 {
     #[Validate('required|string|max:255')]
     public string $deliverableTitle = '';

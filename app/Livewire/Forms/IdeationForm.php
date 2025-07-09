@@ -7,8 +7,10 @@ use Livewire\Form;
 use Livewire\Attributes\Validate;
 use App\Models\Project;
 
-class Ideation extends Form
+class IdeationForm extends Form
 {
+    public Project $project;
+
     public array $availableStrategicInitiatives = [
         'thing' => 'description',
         'other' => 'Other',
@@ -45,11 +47,12 @@ class Ideation extends Form
         Flux::toast('Ideation saved', variant: 'success');
     }
 
-    public function saveToDatabase($project)
+    public function saveToDatabase(int $projectId)
     {
         // Create or update ideation record
+        $project = Project::find($projectId);
         $project->ideation()->updateOrCreate(
-            ['project_id' => $project->id],
+            ['project_id' => $projectId],
             [
                 'objective' => $this->objective,
                 'business_case' => $this->businessCase,
@@ -60,5 +63,10 @@ class Ideation extends Form
         );
 
         Flux::toast('Ideation saved', variant: 'success');
+    }
+
+    public function setProject(Project $project)
+    {
+        $this->project = $project;
     }
 }

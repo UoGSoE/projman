@@ -7,7 +7,7 @@ use Livewire\Form;
 use Livewire\Attributes\Validate;
 use App\Models\Project;
 
-class Testing extends Form
+class TestingForm extends Form
 {
     #[Validate('required|string|max:255')]
     public string $deliverableTitle = '';

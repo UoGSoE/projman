@@ -7,7 +7,7 @@ use Livewire\Form;
 use Livewire\Attributes\Validate;
 use App\Models\Project;
 
-class Deployed extends Form
+class DeployedForm extends Form
 {
     public array $availableEnvironments = [
         'development' => 'Development',

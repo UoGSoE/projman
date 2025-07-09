@@ -7,7 +7,7 @@ use Livewire\Form;
 use Livewire\Attributes\Validate;
 use App\Models\Project;
 
-class Scheduling extends Form
+class SchedulingForm extends Form
 {
     public array $availableUsers = [
         '1' => 'Jenny',

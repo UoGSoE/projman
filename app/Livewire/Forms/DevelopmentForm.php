@@ -7,7 +7,7 @@ use Livewire\Form;
 use Livewire\Attributes\Validate;
 use App\Models\Project;
 
-class Development extends Form
+class DevelopmentForm extends Form
 {
     public array $availableDevelopers = [
         '1' => 'Alice',
