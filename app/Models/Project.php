@@ -102,4 +102,14 @@ class Project extends Model
     {
         return $query->where('status', ProjectStatus::CANCELLED->value);
     }
+
+    public function cancel()
+    {
+        $this->update(['status' => ProjectStatus::CANCELLED]);
+    }
+
+    public function isCancelled()
+    {
+        return $this->status === ProjectStatus::CANCELLED;
+    }
 }

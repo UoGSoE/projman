@@ -67,17 +67,21 @@
                             <flux:badge :color="$project->deployed->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Deployed"></flux:badge>
                         </flux:table.cell>
 
-                        <flux:table.cell>
-                            <flux:dropdown>
-                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
-                                <flux:menu>
-                                    <flux:menu.item icon="magnifying-glass" href="{{ route('project.show', $project) }}" wire:navigate>View</flux:menu.item>
-                                    <flux:menu.item icon="pencil">Edit</flux:menu.item>
-                                    <flux:menu.item icon="at-symbol">Request Progress Update</flux:menu.item>
-                                    <flux:menu.separator />
-                                    <flux:menu.item icon="trash" variant="danger">Remove</flux:menu.item>
-                                </flux:menu>
-                            </flux:dropdown>
+                        <flux:table.cell class="text-center">
+                            @if (! $project->isCancelled())
+                                <flux:dropdown>
+                                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
+                                    <flux:menu>
+                                        <flux:menu.item icon="magnifying-glass" href="{{ route('project.show', $project) }}" wire:navigate>View</flux:menu.item>
+                                        <flux:menu.item icon="pencil" href="{{ route('project.edit', $project) }}" wire:navigate>Edit</flux:menu.item>
+                                        <flux:menu.item icon="at-symbol">Request Progress Update</flux:menu.item>
+                                        <flux:menu.separator />
+                                        <flux:menu.item wire:click="cancelProject({{ $project->id }})" wire:confirm="Are you sure you want to cancel this project?" icon="trash" variant="danger">Cancel</flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            @else
+                                <flux:button size="xs" icon="no-symbol" title="Cancelled" inset variant="subtle" color="red" />
+                            @endif
                         </flux:table.cell>
                     </flux:table.row>
                 @endforeach

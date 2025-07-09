@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Flux\Flux;
 use App\Models\Project;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -43,6 +44,13 @@ class ProjectStatusTable extends Component
             $this->sortBy = $column;
             $this->sortDirection = 'asc';
         }
+    }
+
+    public function cancelProject(int $projectId)
+    {
+        $project = Project::findOrFail($projectId);
+        $project->cancel();
+        Flux::toast('Project cancelled', variant: 'success');
     }
 
 }
