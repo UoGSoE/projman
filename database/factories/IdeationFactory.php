@@ -22,6 +22,7 @@ class IdeationFactory extends Factory
             'objective' => fake()->sentence(),
             'business_case' => fake()->sentence(),
             'benefits' => fake()->paragraph(),
+            'deadline' => fake()->dateTimeBetween('now', '+1 year'),
             'strategic_initiative' => fake()->sentence(),
         ];
     }

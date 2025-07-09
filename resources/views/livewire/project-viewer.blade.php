@@ -1,7 +1,10 @@
 <div>
-    <flux:heading size="xl" level="1">Project Details</flux:heading>
+    <div class="flex flex-col md:flex-row gap-4 justify-between">
+        <flux:heading size="xl" level="1">Project Details</flux:heading>
+        <flux:button icon="pencil" variant="primary" href="{{ route('project.edit', $project) }}">Edit</flux:button>
+    </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="flex flex-col md:grid grid-cols-2 gap-4">
         <flux:callout icon="user" class="mt-6">
             <flux:callout.heading>{{ $project->user->full_name }} ({{ $project->user->email }})</flux:callout.heading>
         </flux:callout>

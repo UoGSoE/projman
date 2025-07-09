@@ -20,12 +20,13 @@ class FeasibilityFactory extends Factory
     {
         return [
             'project_id' => Project::factory(),
+            'assessed_by' => User::factory(),
+            'date_assessed' => fake()->dateTimeBetween('-1 year', 'now'),
             'technical_credence' => fake()->sentence(),
             'cost_benefit_case' => fake()->paragraph(),
             'dependencies_prerequisites' => fake()->paragraph(),
             'deadlines_achievable' => fake()->boolean(),
             'alternative_proposal' => fake()->paragraph(),
-            'assessed_by' => User::factory(),
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,15 @@ class SchedulingFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'project_id' => Project::factory(),
+            'key_skills' => fake()->paragraph(),
+            'cose_it_staff' => fake()->paragraph(),
+            'estimated_start_date' => fake()->dateTimeBetween('now', '+3 months'),
+            'estimated_completion_date' => fake()->dateTimeBetween('+3 months', '+1 year'),
+            'change_board_date' => fake()->dateTimeBetween('now', '+1 month'),
+            'assigned_to' => User::factory(),
+            'priority' => fake()->randomElement(['low', 'medium', 'high', 'critical']),
+            'team_assignment' => fake()->words(3, true),
         ];
     }
 }

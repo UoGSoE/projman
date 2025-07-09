@@ -12,6 +12,6 @@ trait CanCheckIfEdited
      */
     public function hasBeenEdited(): bool
     {
-        return $this->updated_at->diffInSeconds($this->created_at) > 10;
+        return $this->created_at->diffInSeconds($this->updated_at) > 10;
     }
 }

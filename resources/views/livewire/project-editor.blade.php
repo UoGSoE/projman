@@ -1,18 +1,9 @@
 <div>
-    <flux:heading size="xl" level="1">Create a new project</flux:heading>
+    <flux:heading size="xl" level="1">Edit Project</flux:heading>
+    <flux:subheading>{{ $project->title }}</flux:subheading>
 
     <flux:separator variant="subtle" class="mt-6"/>
 
-    <form wire:submit="saveProjectName">
-        <flux:input.group>
-            <flux:input placeholder="Project Name" wire:model="projectName" />
-            <flux:button icon="plus" variant="primary" type="submit">Save</flux:button>
-        </flux:input.group>
-    </form>
-
-    <flux:separator variant="subtle" class="mt-6"/>
-
-    <div x-data="{show: $wire.projectId ? true : false}" x-show="show" x-cloak>
         <flux:tab.group class="mt-6">
             <flux:tabs variant="segmented" wire:model="tab">
                 <flux:tab name="ideation">Ideation</flux:tab>
@@ -573,5 +564,4 @@
             </flux:tab.panel>
 
         </flux:tab.group>
-    </div>
 </div>

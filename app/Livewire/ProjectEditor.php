@@ -2,18 +2,27 @@
 
 namespace App\Livewire;
 
+use App\Models\Project;
 use Livewire\Component;
+use App\Livewire\Forms\IdeationForm;
+use App\Livewire\Forms\FeasibilityForm;
+use App\Livewire\Forms\ScopingForm;
+use App\Livewire\Forms\SchedulingForm;
+use App\Livewire\Forms\DetailedDesignForm;
+use App\Livewire\Forms\DevelopmentForm;
+use App\Livewire\Forms\TestingForm;
+use App\Livewire\Forms\DeployedForm;
 
 class ProjectEditor extends Component
 {
-    public Ideation $ideationForm;
-    public Feasibility $feasibilityForm;
-    public Scoping $scopingForm;
-    public Scheduling $schedulingForm;
-    public DetailedDesign $detailedDesignForm;
-    public Development $developmentForm;
-    public Testing $testingForm;
-    public Deployed $deployedForm;
+    public IdeationForm $ideationForm;
+    public FeasibilityForm $feasibilityForm;
+    public ScopingForm $scopingForm;
+    public SchedulingForm $schedulingForm;
+    public DetailedDesignForm $detailedDesignForm;
+    public DevelopmentForm $developmentForm;
+    public TestingForm $testingForm;
+    public DeployedForm $deployedForm;
 
     public $tab = 'ideation';
     public ?int $projectId = null;
@@ -48,58 +57,15 @@ class ProjectEditor extends Component
         $this->$formName->saveToDatabase($this->project);
     }
 
-    private function getOrCreateProject($formType)
+    public function mount(Project $project)
     {
-        if ($this->projectId) {
-            return Project::find($this->projectId);
-        }
-
-        // Create new project for ideation, or create a minimal project for testing other forms
-        if ($formType === 'ideation') {
-            $project = Project::create([
-                'user_id' => Auth::id(),
-                'school_group' => $this->ideationForm->schoolGroup,
-                'title' => $this->ideationForm->deliverableTitle,
-                'deadline' => $this->ideationForm->deadline,
-                'status' => 'ideation',
-            ]);
-            $this->projectId = $project->id;
-            return $project;
-        } else {
-            // For testing purposes, create a minimal project if none exists
-            if (!$this->projectId) {
-                $project = Project::create([
-                    'user_id' => Auth::id(),
-                    'school_group' => 'Test School',
-                    'title' => 'Test Project',
-                    'deadline' => now()->addDays(30),
-                    'status' => 'ideation',
-                ]);
-                $this->projectId = $project->id;
-                return $project;
-            }
-            return Project::find($this->projectId);
-        }
-    }
-
-    /**
-     * @param int|Project|null $project
-     */
-    public function mount($project = null)
-    {
-        if (! $project) {
-            $project = Project::make([
-                'user_id' => Auth::id(),
-            ]);
-        }
-
+        $project->load(['ideation', 'feasibility', 'scoping', 'scheduling', 'detailedDesign', 'development', 'testing', 'deployed']);
         $this->projectId = $project->id;
         $this->project = $project;
     }
 
     public function render()
     {
-        Auth::loginUsingId(User::admin()->first()->id);
         return view('livewire.project-editor');
     }
 }

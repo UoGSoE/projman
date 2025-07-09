@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,16 @@ class DetailedDesignFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'project_id' => Project::factory(),
+            'designed_by' => User::factory(),
+            'service_function' => fake()->sentence(),
+            'functional_requirements' => fake()->paragraph(),
+            'non_functional_requirements' => fake()->paragraph(),
+            'hld_design_link' => fake()->url(),
+            'approval_delivery' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'approval_operations' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'approval_resilience' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'approval_change_board' => fake()->randomElement(['pending', 'approved', 'rejected']),
         ];
     }
 }

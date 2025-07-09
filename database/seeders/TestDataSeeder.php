@@ -42,9 +42,11 @@ class TestDataSeeder extends Seeder
                     'user_id' => $user->id,
                     'updated_at' => now()->subDays(rand(1, 100)),
                 ]);
-                foreach ($formNames as $formName) {
+                $stage = rand(0, count($formNames) - 1);
+                foreach ($formNames as $index => $formName) {
                     $form = $formName::factory()->create([
                         'project_id' => $project->id,
+                        'created_at' => $index <= $stage ? now()->subDays(rand(1, 100)) : now(),
                     ]);
                 }
 

@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,16 @@ class DevelopmentFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'project_id' => Project::factory(),
+            'lead_developer' => User::factory(),
+            'development_team' => fake()->words(3, true),
+            'technical_approach' => fake()->paragraph(),
+            'development_notes' => fake()->paragraph(),
+            'repository_link' => fake()->url(),
+            'status' => fake()->randomElement(['planning', 'in_progress', 'review', 'completed']),
+            'start_date' => fake()->dateTimeBetween('-6 months', 'now'),
+            'completion_date' => fake()->dateTimeBetween('now', '+6 months'),
+            'code_review_notes' => fake()->paragraph(),
         ];
     }
 }
