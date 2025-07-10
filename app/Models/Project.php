@@ -112,4 +112,12 @@ class Project extends Model
     {
         return $this->status === ProjectStatus::CANCELLED;
     }
+
+    public function addHistory(?User $user, string $description)
+    {
+        $this->history()->create([
+            'user_id' => $user->id,
+            'description' => $description,
+        ]);
+    }
 }

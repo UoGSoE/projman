@@ -5,8 +5,8 @@
 
     <form wire:submit="save">
         <flux:input.group>
-            <flux:input placeholder="Project Name" wire:model="projectName" />
-            <flux:button icon="plus" variant="primary" type="submit">Save</flux:button>
+            <flux:input placeholder="Project Name" wire:model="projectName" autofocus />
+            <flux:button icon="plus" variant="primary" type="submit">Create</flux:button>
         </flux:input.group>
     </form>
 </div>

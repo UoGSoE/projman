@@ -42,6 +42,8 @@ class ProjectCreator extends Component
             $form->save();
         }
 
+        $project->addHistory(Auth::user(), 'Created');
+
         return $this->redirect(route('project.edit', $project->id));
     }
 }

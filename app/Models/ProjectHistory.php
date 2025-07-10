@@ -13,6 +13,12 @@ class ProjectHistory extends Model
     /** @use HasFactory<\Database\Factories\ProjectHistoryFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'project_id',
+        'user_id',
+        'description',
+    ];
+
     protected function casts(): array
     {
         return [

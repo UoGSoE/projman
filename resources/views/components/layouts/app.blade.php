@@ -16,7 +16,7 @@
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
             <flux:brand href="/" logo="https://fluxui.dev/img/demo/logo.png" name="{{ config('app.name') }}" class="px-2 dark:hidden print:hidden" />
-            <flux:brand href="#" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="{{ config('app.name') }}" class="px-2 hidden dark:flex print:hidden" />
+            <flux:brand href="/" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="{{ config('app.name') }}" class="px-2 hidden dark:flex print:hidden" />
 
             <flux:navlist variant="outline">
                 <flux:navlist.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home</flux:navlist.item>
