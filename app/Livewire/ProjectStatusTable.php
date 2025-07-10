@@ -21,6 +21,7 @@ class ProjectStatusTable extends Component
     public $projectStatus = null;
     public $schoolGroup = null;
     public $search = '';
+    public $status = null;
 
 
     public function mount(?int $userId = null)
