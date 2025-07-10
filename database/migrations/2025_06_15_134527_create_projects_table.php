@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Enums\ProjectStatus;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -17,7 +18,7 @@ return new class extends Migration
             $table->string('school_group')->nullable();
             $table->string('title')->nullable();
             $table->date('deadline')->nullable();
-            $table->string('status')->default('draft');
+            $table->string('status')->default(ProjectStatus::IDEATION->value);
             $table->timestamps();
         });
     }

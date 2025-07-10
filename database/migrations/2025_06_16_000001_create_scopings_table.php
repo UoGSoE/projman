@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('scopings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('assessed_by')->constrained('users')->nullable();
+            $table->foreignId('assessed_by')->nullable()->constrained('users');
             $table->text('estimated_effort')->nullable();
             $table->text('in_scope')->nullable();
             $table->text('out_of_scope')->nullable();

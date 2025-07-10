@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('developments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('lead_developer')->constrained('users')->nullable();
+            $table->foreignId('lead_developer')->nullable()->constrained('users');
             $table->string('development_team')->nullable();
             $table->text('technical_approach')->nullable();
             $table->text('development_notes')->nullable();

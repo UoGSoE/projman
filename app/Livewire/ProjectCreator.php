@@ -42,6 +42,6 @@ class ProjectCreator extends Component
             $form->save();
         }
 
-        return $this->redirect()->route('project.edit', $project->id);
+        return $this->redirect(route('project.edit', $project->id));
     }
 }

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('estimated_start_date')->nullable();
             $table->date('estimated_completion_date')->nullable();
             $table->date('change_board_date')->nullable();
-            $table->foreignId('assigned_to')->constrained('users')->nullable();
+            $table->foreignId('assigned_to')->nullable()->constrained('users');
             $table->string('priority')->nullable();
             $table->string('team_assignment')->nullable();
             $table->timestamps();

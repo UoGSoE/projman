@@ -3,35 +3,36 @@
 namespace App\Livewire\Forms;
 
 use Flux\Flux;
-use Livewire\Attributes\Validate;
 use Livewire\Form;
+use App\Models\User;
 use App\Models\Project;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Validate;
 
 class FeasibilityForm extends Form
 {
-    #[Validate('required|string|max:255')]
-    public string $deliverableTitle = '';
+    public ?Project $project = null;
 
     #[Validate('required|string|max:2048')]
-    public string $technicalCredence = '';
+    public ?string $technicalCredence = '';
 
     #[Validate('required|string|max:2048')]
-    public string $costBenefitCase = '';
+    public ?string $costBenefitCase = '';
 
     #[Validate('required|string|max:2048')]
-    public string $dependenciesPrerequisites = '';
+    public ?string $dependenciesPrerequisites = '';
 
     #[Validate('required|string')]
-    public string $deadlinesAchievable = '';
+    public ?string $deadlinesAchievable = 'no';
 
     #[Validate('required|string|max:2048')]
-    public string $alternativeProposal = '';
+    public ?string $alternativeProposal = '';
 
     #[Validate('required|integer|exists:users,id')]
     public ?int $assessedBy = null;
 
     #[Validate('required|date|after:today')]
-    public string $dateAssessed = '';
+    public ?string $dateAssessed = '';
 
     public function save()
     {
@@ -39,21 +40,28 @@ class FeasibilityForm extends Form
         Flux::toast('Feasibility saved', variant: 'success');
     }
 
+    public function setProject(Project $project)
+    {
+        $this->project = $project;
+        $this->assessedBy = $project->feasibility->assessed_by;
+        $this->dateAssessed = (string)$project->feasibility->date_assessed?->format('Y-m-d');
+        $this->technicalCredence = $project->feasibility->technical_credence;
+        $this->costBenefitCase = $project->feasibility->cost_benefit_case;
+        $this->dependenciesPrerequisites = $project->feasibility->dependencies_prerequisites;
+        $this->deadlinesAchievable = $project->feasibility->deadlines_achievable ? 'yes' : 'no';
+        $this->alternativeProposal = $project->feasibility->alternative_proposal;
+    }
     public function saveToDatabase($project)
     {
-        // Create or update feasibility record
-        $project->feasibility()->updateOrCreate(
-            ['project_id' => $project->id],
-            [
-                'assessed_by' => $this->assessedBy,
-                'date_assessed' => $this->dateAssessed,
-                'technical_credence' => $this->technicalCredence,
-                'cost_benefit_case' => $this->costBenefitCase,
-                'dependencies_prerequisites' => $this->dependenciesPrerequisites,
-                'deadlines_achievable' => $this->deadlinesAchievable === 'yes',
-                'alternative_proposal' => $this->alternativeProposal,
-            ]
-        );
+        $project->feasibility->update([
+            'assessed_by' => $this->assessedBy,
+            'date_assessed' => $this->dateAssessed,
+            'technical_credence' => $this->technicalCredence,
+            'cost_benefit_case' => $this->costBenefitCase,
+            'dependencies_prerequisites' => $this->dependenciesPrerequisites,
+            'deadlines_achievable' => $this->deadlinesAchievable === 'yes',
+            'alternative_proposal' => $this->alternativeProposal,
+        ]);
 
         Flux::toast('Feasibility saved', variant: 'success');
     }

@@ -33,7 +33,7 @@
             <flux:table.column>Description</flux:table.column>
         </flux:table.columns>
         <flux:table.rows>
-            @foreach ($project->history()->orderBy('created_at', 'desc')->get() as $history)
+            @foreach ($project->history as $history)
                 <flux:table.row>
                     <flux:table.cell>{{ $history->created_at->format('d/m/Y H:i') }}</flux:table.cell>
                     <flux:table.cell>{{ $history->user->full_name }}</flux:table.cell>

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('detailed_designs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('designed_by')->constrained('users')->nullable();
+            $table->foreignId('designed_by')->nullable()->constrained('users');
             $table->string('service_function')->nullable();
             $table->text('functional_requirements')->nullable();
             $table->text('non_functional_requirements')->nullable();

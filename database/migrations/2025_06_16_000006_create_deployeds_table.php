@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('deployeds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('deployed_by')->constrained('users')->nullable();
+            $table->foreignId('deployed_by')->nullable()->constrained('users');
             $table->string('environment')->nullable();
             $table->string('status')->nullable();
             $table->date('deployment_date')->nullable();

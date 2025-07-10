@@ -42,7 +42,7 @@ class Project extends Model
 
     public function history(): HasMany
     {
-        return $this->hasMany(ProjectHistory::class);
+        return $this->hasMany(ProjectHistory::class)->orderBy('created_at', 'desc');
     }
 
     public function ideation(): HasOne

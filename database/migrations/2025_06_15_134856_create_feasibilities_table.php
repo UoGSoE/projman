@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('feasibilities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('assessed_by')->constrained('users')->nullable();
+            $table->foreignId('assessed_by')->nullable()->constrained('users');
             $table->date('date_assessed')->nullable();
             $table->text('technical_credence')->nullable();
             $table->text('cost_benefit_case')->nullable();

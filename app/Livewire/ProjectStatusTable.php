@@ -31,7 +31,7 @@ class ProjectStatusTable extends Component
     public function getProjects()
     {
         return Project::query()
-            ->with(['ideation', 'feasibility'])
+            ->with(['user', 'ideation', 'feasibility', 'scoping', 'scheduling', 'detailedDesign', 'development', 'testing', 'deployed'])
             ->when($this->userId, fn ($query) => $query->where('user_id', $this->userId))
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(20);

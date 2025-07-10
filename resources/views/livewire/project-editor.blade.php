@@ -1,7 +1,7 @@
 <div>
     <flux:heading size="xl" level="1">Edit Project</flux:heading>
-    <flux:subheading>{{ $project->title }}</flux:subheading>
-
+    <flux:subheading class="flex items-center gap-2"><b>Title:</b> {{ $project->title }}</flux:subheading>
+    <flux:subheading class="flex items-center gap-2"><b>Requested By:</b> {{ $project->user->full_name }}</flux:subheading>
     <flux:separator variant="subtle" class="mt-6"/>
 
         <flux:tab.group class="mt-6">
@@ -21,15 +21,9 @@
                 <form wire:submit="save('ideation')" class="space-y-6">
                     {{-- Top row: Name & Schools/Group --}}
                     <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
-                        <flux:input label="Name" wire:model="ideationForm.name" />
+                        <flux:input label="Name" value="{{  $project->user->full_name }}" disabled />
                         <flux:input label="Schools / Group" wire:model="ideationForm.schoolGroup" />
                     </div>
-
-                    {{-- Deliverable Title --}}
-                    <flux:input
-                        label="Deliverable Title"
-                        wire:model="ideationForm.deliverableTitle"
-                    />
 
                     {{-- Objective & Business Case --}}
                     <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
@@ -84,16 +78,16 @@
             {{-- Feasibility panel --}}
             <flux:tab.panel name="feasibility" class="mt-6 space-y-6">
                 <form wire:submit="save('feasibility')" class="space-y-6">
-                    {{-- Deliverable Title (readonly/auto‐populated) --}}
-                    <flux:input
-                        label="Deliverable Title"
-                        wire:model="feasibilityForm.deliverableTitle"
-                        disabled
-                    />
 
                     {{-- Assessed By / Date Assessed --}}
                     <div class="grid grid-cols-2 gap-4">
-                        <flux:input label="Assessed By" wire:model="feasibilityForm.assessedBy" />
+                        <flux:select label="Assessed By" wire:model="feasibilityForm.assessedBy">
+                            @foreach($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                         <flux:input
                             label="Date Assessed"
                             type="date"
@@ -124,13 +118,10 @@
                         />
 
                         <div class="space-y-4">
-                            <flux:select
-                                label="Deadlines Achievable?"
-                                wire:model="feasibilityForm.deadlinesAchievable"
-                            >
-                                <flux:select.option value="yes">Yes</flux:select.option>
-                                <flux:select.option value="no">No</flux:select.option>
-                            </flux:select>
+                            <flux:radio.group wire:model="feasibilityForm.deadlinesAchievable" label="Deadlines Achievable?">
+                                <flux:radio value="yes" label="Yes" />
+                                <flux:radio value="no" label="No" />
+                            </flux:radio.group>
 
                             <flux:textarea
                                 label="Alternative Proposal"
@@ -153,13 +144,6 @@
 
             <flux:tab.panel name="testing" class="mt-6 space-y-6">
                 <form wire:submit="save('testing')" class="space-y-6">
-                    {{-- Deliverable (readonly) --}}
-                    <flux:input
-                        label="Deliverable"
-                        wire:model="testingForm.deliverableTitle"
-                        disabled
-                    />
-
                     {{-- Test Lead / Service Function --}}
                     <div class="grid grid-cols-2 gap-4">
                         <flux:input label="Test Lead" wire:model="testingForm.testLead" />
@@ -227,13 +211,6 @@
 
             <flux:tab.panel name="detailed-design" class="mt-6 space-y-6">
                 <form wire:submit="save('detailed-design')" class="space-y-6">
-                    {{-- Deliverable (readonly) --}}
-                    <flux:input
-                        label="Deliverable"
-                        wire:model="detailedDesignForm.deliverableTitle"
-                        disabled
-                    />
-
                     {{-- Designed by / Service Function --}}
                     <div class="grid grid-cols-2 gap-4">
                         <flux:input label="Designed by" wire:model="detailedDesignForm.designedBy" />
@@ -286,13 +263,6 @@
 
             <flux:tab.panel name="scheduling" class="mt-6 space-y-6">
                 <form wire:submit="save('scheduling')" class="space-y-6">
-                    {{-- Deliverable (readonly) --}}
-                    <flux:input
-                        label="Deliverable"
-                        wire:model="schedulingForm.deliverableTitle"
-                        disabled
-                    />
-
                     {{-- Key Skills / CoSE IT staff --}}
                     <div class="grid grid-cols-2 gap-4">
                         <flux:textarea
@@ -371,13 +341,6 @@
 
             <flux:tab.panel name="scoping" class="mt-6 space-y-6">
                 <form wire:submit="save('scoping')" class="space-y-6">
-                    {{-- Deliverable (readonly) --}}
-                    <flux:input
-                        label="Deliverable"
-                        wire:model="scopingForm.deliverableTitle"
-                        disabled
-                    />
-
                     {{-- Assessed By --}}
                     <flux:input label="Assessed By" wire:model="scopingForm.assessedBy" />
 
@@ -432,13 +395,6 @@
 
             <flux:tab.panel name="development" class="mt-6 space-y-6">
                 <form wire:submit="save('development')" class="space-y-6">
-                    {{-- Deliverable (readonly) --}}
-                    <flux:input
-                        label="Deliverable"
-                        wire:model="developmentForm.deliverableTitle"
-                        disabled
-                    />
-
                     {{-- Lead Developer / Development Team --}}
                     <div class="grid grid-cols-2 gap-4">
                         <flux:input label="Lead Developer" wire:model="developmentForm.leadDeveloper" />
@@ -496,13 +452,6 @@
 
             <flux:tab.panel name="deployed" class="mt-6 space-y-6">
                 <form wire:submit="save('deployed')" class="space-y-6">
-                    {{-- Deliverable (readonly) --}}
-                    <flux:input
-                        label="Deliverable"
-                        wire:model="deployedForm.deliverableTitle"
-                        disabled
-                    />
-
                     {{-- Deployment Details --}}
                     <div class="grid grid-cols-2 gap-4">
                         <flux:input label="Deployed By" wire:model="deployedForm.deployedBy" />
