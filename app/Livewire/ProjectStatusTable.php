@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Flux\Flux;
 use App\Models\Project;
 use Livewire\Component;
+use App\Enums\ProjectStatus;
 use Livewire\WithPagination;
 
 class ProjectStatusTable extends Component
@@ -16,9 +17,17 @@ class ProjectStatusTable extends Component
 
     public ?int $userId = null;
 
+    public $projectStatuses = [];
+    public $projectStatus = null;
+    public $schoolGroup = null;
+    public $search = '';
+
+
     public function mount(?int $userId = null)
     {
         $this->userId = $userId;
+        $this->projectStatuses = ProjectStatus::cases();
+        $this->projectStatus = ProjectStatus::IDEATION;
     }
 
     public function render()

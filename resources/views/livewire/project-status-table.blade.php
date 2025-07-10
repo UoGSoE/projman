@@ -15,12 +15,9 @@
                     <flux:select.option>Something</flux:select.option>
                 </flux:select>
                 <flux:select variant="combobox" wire:model="status" placeholder="Status...">
-                    <flux:select.option>All</flux:select.option>
-                    <flux:select.option>Ideation</flux:select.option>
-                    <flux:select.option>Feasibility</flux:select.option>
-                    <flux:select.option>Development</flux:select.option>
-                    <flux:select.option>Testing</flux:select.option>
-                    <flux:select.option>Deployed</flux:select.option>
+                    @foreach ($projectStatuses as $status)
+                        <flux:select.option>{{ $status }}</flux:select.option>
+                    @endforeach
                 </flux:select>
             </div>
 
