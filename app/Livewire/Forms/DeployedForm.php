@@ -22,9 +22,6 @@ class DeployedForm extends Form
         'rolled_back' => 'Rolled Back',
     ];
 
-    #[Validate('required|string|max:255')]
-    public string $deliverableTitle = '';
-
     #[Validate('required|integer|exists:users,id')]
     public ?int $deployedBy = null;
 
@@ -79,7 +76,6 @@ class DeployedForm extends Form
         $project->deployed()->updateOrCreate(
             ['project_id' => $project->id],
             [
-                'deliverable_title' => $this->deliverableTitle,
                 'deployed_by' => $this->deployedBy,
                 'environment' => $this->environment,
                 'status' => $this->status,

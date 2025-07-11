@@ -23,9 +23,6 @@ class DevelopmentForm extends Form
         'completed' => 'Completed',
     ];
 
-    #[Validate('required|string|max:255')]
-    public string $deliverableTitle = '';
-
     #[Validate('required|integer|exists:users,id')]
     public ?int $leadDeveloper = null;
 
@@ -65,7 +62,6 @@ class DevelopmentForm extends Form
         $project->development()->updateOrCreate(
             ['project_id' => $project->id],
             [
-                'deliverable_title' => $this->deliverableTitle,
                 'lead_developer' => $this->leadDeveloper,
                 'development_team' => $this->developmentTeam,
                 'technical_approach' => $this->technicalApproach,

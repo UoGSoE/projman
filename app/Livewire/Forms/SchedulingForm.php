@@ -27,9 +27,6 @@ class SchedulingForm extends Form
         '3' => 'Support Team',
     ];
 
-    #[Validate('required|string|max:255')]
-    public string $deliverableTitle = '';
-
     #[Validate('required|string|max:1024')]
     public string $keySkills = '';
 
@@ -66,7 +63,6 @@ class SchedulingForm extends Form
         $project->scheduling()->updateOrCreate(
             ['project_id' => $project->id],
             [
-                'deliverable_title' => $this->deliverableTitle,
                 'key_skills' => $this->keySkills,
                 'cose_it_staff' => $this->coseItStaff,
                 'estimated_start_date' => $this->estimatedStartDate,

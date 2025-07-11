@@ -14,25 +14,25 @@ class FeasibilityForm extends Form
     public ?Project $project = null;
 
     #[Validate('required|string|max:2048')]
-    public ?string $technicalCredence = '';
+    public ?string $technicalCredence;
 
     #[Validate('required|string|max:2048')]
-    public ?string $costBenefitCase = '';
+    public ?string $costBenefitCase;
 
     #[Validate('required|string|max:2048')]
-    public ?string $dependenciesPrerequisites = '';
+    public ?string $dependenciesPrerequisites;
 
     #[Validate('required|string')]
     public ?string $deadlinesAchievable = 'no';
 
     #[Validate('required|string|max:2048')]
-    public ?string $alternativeProposal = '';
+    public ?string $alternativeProposal;
 
     #[Validate('required|integer|exists:users,id')]
     public ?int $assessedBy = null;
 
     #[Validate('required|date|after:today')]
-    public ?string $dateAssessed = '';
+    public ?string $dateAssessed;
 
     public function save()
     {

@@ -18,22 +18,22 @@ class IdeationForm extends Form
     ];
 
     #[Validate('required|string|max:255')]
-    public ?string $schoolGroup = '';
+    public ?string $schoolGroup;
 
     #[Validate('required|string|max:255')]
-    public ?string $objective = '';
+    public ?string $objective;
 
     #[Validate('required|string|max:2048')]
-    public ?string $businessCase = '';
+    public ?string $businessCase;
 
     #[Validate('required|string|max:2048')]
-    public ?string $benefits = '';
+    public ?string $benefits;
 
     #[Validate('required|date|after:today')]
-    public ?string $deadline = '';
+    public ?string $deadline;
 
     #[Validate('required|string')]
-    public ?string $initiative = '';
+    public ?string $initiative;
 
     public function setProject(Project $project)
     {

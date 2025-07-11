@@ -9,9 +9,6 @@ use App\Models\Project;
 
 class TestingForm extends Form
 {
-    #[Validate('required|string|max:255')]
-    public string $deliverableTitle = '';
-
     #[Validate('required|integer|exists:users,id')]
     public ?int $testLead = null;
 
@@ -60,7 +57,6 @@ class TestingForm extends Form
         $project->testing()->updateOrCreate(
             ['project_id' => $project->id],
             [
-                'deliverable_title' => $this->deliverableTitle,
                 'test_lead' => $this->testLead,
                 'service_function' => $this->serviceFunction,
                 'functional_testing_title' => $this->functionalTestingTitle,

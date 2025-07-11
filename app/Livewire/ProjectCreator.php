@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class ProjectCreator extends Component
 {
     #[Validate('required|string|max:255')]
-    public string $projectName = '';
+    public ?string $projectName;
 
     protected array $formTypes = [
         \App\Models\Ideation::class,
@@ -31,6 +31,8 @@ class ProjectCreator extends Component
 
     public function save()
     {
+        $this->validate();
+
         $project = Project::create([
             'user_id' => Auth::id(),
             'title' => $this->projectName,

@@ -9,9 +9,6 @@ use App\Models\Project;
 
 class DetailedDesignForm extends Form
 {
-    #[Validate('required|string|max:255')]
-    public string $deliverableTitle = '';
-
     #[Validate('required|integer|exists:users,id')]
     public ?int $designedBy = null;
 
@@ -51,7 +48,6 @@ class DetailedDesignForm extends Form
         $project->detailedDesign()->updateOrCreate(
             ['project_id' => $project->id],
             [
-                'deliverable_title' => $this->deliverableTitle,
                 'designed_by' => $this->designedBy,
                 'service_function' => $this->serviceFunction,
                 'functional_requirements' => $this->functionalRequirements,

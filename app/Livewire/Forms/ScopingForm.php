@@ -15,9 +15,6 @@ class ScopingForm extends Form
         'three' => 'Third Skill',
     ];
 
-    #[Validate('required|string|max:255')]
-    public string $deliverableTitle = '';
-
     #[Validate('required|integer|exists:users,id')]
     public ?int $assessedBy = null;
 
@@ -48,7 +45,6 @@ class ScopingForm extends Form
         $project->scoping()->updateOrCreate(
             ['project_id' => $project->id],
             [
-                'deliverable_title' => $this->deliverableTitle,
                 'assessed_by' => $this->assessedBy,
                 'estimated_effort' => $this->estimatedEffort,
                 'in_scope' => $this->inScope,
