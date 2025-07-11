@@ -63,6 +63,11 @@ class User extends Authenticatable
         return $query->where('is_admin', true);
     }
 
+    public function isAdmin(): bool
+    {
+        return (bool)$this->is_admin;
+    }
+
     public function getFirstNameAttribute()
     {
         return explode(' ', $this->forenames)[0];

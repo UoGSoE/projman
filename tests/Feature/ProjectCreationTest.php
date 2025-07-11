@@ -1,7 +1,8 @@
 <?php
 
-use App\Livewire\ProjectCreator;
 use App\Models\User;
+use App\Models\Project;
+use App\Livewire\ProjectEditor;
 use function Pest\Livewire\livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -13,6 +14,24 @@ describe('Project Creation', function () {
     beforeEach(function () {
         // Create a test admin user
         $this->user = User::factory()->create(['is_admin' => true]);
+        $this->project = Project::factory()->create([
+            'user_id' => $this->user->id,
+        ]);
+        $formTypes = [
+            \App\Models\Ideation::class,
+            \App\Models\Feasibility::class,
+            \App\Models\Testing::class,
+            \App\Models\Deployed::class,
+            \App\Models\Scoping::class,
+            \App\Models\Scheduling::class,
+            \App\Models\Development::class,
+            \App\Models\DetailedDesign::class,
+        ];
+        foreach ($formTypes as $formType) {
+            $form = $formType::factory()->create([
+                'project_id' => $this->project->id,
+            ]);
+        }
 
         // Create test users with names that match what the tests expect
         $this->testAssessor = User::factory()->create([
@@ -48,7 +67,7 @@ describe('Project Creation', function () {
         it('can create an ideation form with valid data', function () {
             $tomorrow = now()->addDay()->format('Y-m-d');
 
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('ideationForm.name', 'Test Project')
                 ->set('ideationForm.schoolGroup', 'Test School')
                 ->set('ideationForm.deliverableTitle', 'Test Deliverable')
@@ -62,7 +81,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for ideation form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'ideation')
                 ->assertHasErrors([
                     'ideationForm.name' => 'required',
@@ -79,7 +98,7 @@ describe('Project Creation', function () {
         it('validates deadline must be after today', function () {
             $yesterday = now()->subDay()->format('Y-m-d');
 
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('ideationForm.deadline', $yesterday)
                 ->call('save', 'ideation')
                 ->assertHasErrors(['ideationForm.deadline' => 'after']);
@@ -90,7 +109,7 @@ describe('Project Creation', function () {
         it('can create a feasibility form with valid data', function () {
             $tomorrow = now()->addDay()->format('Y-m-d');
 
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('feasibilityForm.deliverableTitle', 'Test Deliverable')
                 ->set('feasibilityForm.technicalCredence', 'Test Technical Credence')
                 ->set('feasibilityForm.costBenefitCase', 'Test Cost Benefit Case')
@@ -104,7 +123,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for feasibility form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'feasibility')
                 ->assertHasErrors([
                     'feasibilityForm.deliverableTitle' => 'required',
@@ -121,7 +140,7 @@ describe('Project Creation', function () {
 
     describe('Scoping Form', function () {
         it('can create a scoping form with valid data', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('scopingForm.deliverableTitle', 'Test Deliverable')
                 ->set('scopingForm.assessedBy', $this->testAssessor->id)
                 ->set('scopingForm.estimatedEffort', 'Test Effort')
@@ -134,7 +153,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for scoping form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'scoping')
                 ->assertHasErrors([
                     'scopingForm.deliverableTitle' => 'required',
@@ -153,7 +172,7 @@ describe('Project Creation', function () {
             $tomorrow = now()->addDay()->format('Y-m-d');
             $dayAfterTomorrow = now()->addDays(2)->format('Y-m-d');
 
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('schedulingForm.deliverableTitle', 'Test Deliverable')
                 ->set('schedulingForm.keySkills', 'Test Key Skills')
                 ->set('schedulingForm.coseItStaff', 'Test Staff')
@@ -168,7 +187,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for scheduling form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'scheduling')
                 ->assertHasErrors([
                     'schedulingForm.deliverableTitle' => 'required',
@@ -186,7 +205,7 @@ describe('Project Creation', function () {
             $tomorrow = now()->addDay()->format('Y-m-d');
             $today = now()->format('Y-m-d');
 
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('schedulingForm.estimatedStartDate', $tomorrow)
                 ->set('schedulingForm.estimatedCompletionDate', $today)
                 ->call('save', 'scheduling')
@@ -196,7 +215,7 @@ describe('Project Creation', function () {
 
     describe('Detailed Design Form', function () {
         it('can create a detailed design form with valid data', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('detailedDesignForm.deliverableTitle', 'Test Deliverable')
                 ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
                 ->set('detailedDesignForm.serviceFunction', 'Test Service')
@@ -212,7 +231,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for detailed design form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'detailed-design')
                 ->assertHasErrors([
                     'detailedDesignForm.deliverableTitle' => 'required',
@@ -229,7 +248,7 @@ describe('Project Creation', function () {
         });
 
         it('validates URL format for design link', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('detailedDesignForm.hldDesignLink', 'not-a-url')
                 ->call('save', 'detailed-design')
                 ->assertHasErrors(['detailedDesignForm.hldDesignLink' => 'url']);
@@ -241,7 +260,7 @@ describe('Project Creation', function () {
             $tomorrow = now()->addDay()->format('Y-m-d');
             $dayAfterTomorrow = now()->addDays(2)->format('Y-m-d');
 
-                    livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
             ->set('developmentForm.deliverableTitle', 'Test Deliverable')
             ->set('developmentForm.leadDeveloper', $this->testLead->id)
             ->set('developmentForm.developmentTeam', 'Test Team')
@@ -257,7 +276,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for development form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'development')
                             ->assertHasErrors([
                 'developmentForm.deliverableTitle' => 'required',
@@ -273,7 +292,7 @@ describe('Project Creation', function () {
         });
 
         it('validates URL format for repository URL', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('developmentForm.repositoryLink', 'not-a-url')
                 ->call('save', 'development')
                 ->assertHasErrors(['developmentForm.repositoryLink' => 'url']);
@@ -282,7 +301,7 @@ describe('Project Creation', function () {
 
     describe('Testing Form', function () {
         it('can create a testing form with valid data', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('testingForm.deliverableTitle', 'Test Deliverable')
                 ->set('testingForm.testLead', $this->testLead->id)
                 ->set('testingForm.serviceFunction', 'Test Service')
@@ -301,7 +320,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for testing form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'testing')
                 ->assertHasErrors([
                     'testingForm.deliverableTitle' => 'required',
@@ -321,7 +340,7 @@ describe('Project Creation', function () {
         });
 
         it('validates URL format for test repository', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('testingForm.testRepository', 'not-a-url')
                 ->call('save', 'testing')
                 ->assertHasErrors(['testingForm.testRepository' => 'url']);
@@ -332,7 +351,7 @@ describe('Project Creation', function () {
         it('can create a deployed form with valid data', function () {
             $today = now()->format('Y-m-d');
 
-                    livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
             ->set('deployedForm.deliverableTitle', 'Test Deliverable')
             ->set('deployedForm.deployedBy', $this->testDeployer->id)
             ->set('deployedForm.environment', 'production')
@@ -353,7 +372,7 @@ describe('Project Creation', function () {
         });
 
         it('validates required fields for deployed form', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'deployed')
                             ->assertHasErrors([
                 'deployedForm.deliverableTitle' => 'required',
@@ -372,7 +391,7 @@ describe('Project Creation', function () {
         });
 
         it('validates URL format for deployment URL', function () {
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('deployedForm.productionUrl', 'not-a-url')
                 ->call('save', 'deployed')
                 ->assertHasErrors(['deployedForm.productionUrl' => 'url']);
@@ -383,7 +402,7 @@ describe('Project Creation', function () {
         it('validates maximum length for string fields', function () {
             $longString = str_repeat('a', 256); // 256 characters
 
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('ideationForm.name', $longString)
                 ->call('save', 'ideation')
                 ->assertHasErrors(['ideationForm.name' => 'max']);
@@ -392,7 +411,7 @@ describe('Project Creation', function () {
         it('validates maximum length for textarea fields', function () {
             $longString = str_repeat('a', 2049); // 2049 characters
 
-            livewire(ProjectCreator::class)
+            livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('ideationForm.businessCase', $longString)
                 ->call('save', 'ideation')
                 ->assertHasErrors(['ideationForm.businessCase' => 'max']);

@@ -28,6 +28,7 @@
                 <flux:navlist variant="outline">
                     <flux:navlist.item icon="list-bullet" href="/projects" :current="request()->routeIs('projects')" wire:navigate><span class="flex items-center justify-between"><span>All projects</span><flux:badge color="green">3</flux:badge></span></flux:navlist.item>
                     <flux:navlist.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')" wire:navigate>Staff heatmap</flux:navlist.item>
+                    <flux:navlist.item icon="users" href="/staff" :current="request()->routeIs('staff')" wire:navigate>Staff</flux:navlist.item>
                     <flux:navlist.item icon="cog-6-tooth" href="/settings" :current="request()->routeIs('settings')" wire:navigate>Settings</flux:navlist.item>
                 </flux:navlist>
             <flux:spacer />

@@ -8,3 +8,4 @@ Route::get('/project/create', \App\Livewire\ProjectCreator::class)->name('projec
 Route::get('/project/{project}', \App\Livewire\ProjectViewer::class)->name('project.show');
 Route::get('/project/{project}/edit', \App\Livewire\ProjectEditor::class)->name('project.edit');
 Route::get('/staff/heatmap', \App\Livewire\HeatMapViewer::class)->name('project.heatmap');
+Route::get('/staff', \App\Livewire\UserList::class)->name('staff');
