@@ -44,7 +44,7 @@
                 @foreach ($projects as $project)
                     <flux:table.row key="project-row-{{ $project->id }}" class="hover:bg-zinc-200 dark:hover:bg-zinc-700">
                         <flux:table.cell class="flex items-center gap-3">
-                            <flux:badge size="sm" :color="$project->status->colour()" inset="top bottom">
+                            <flux:badge size="sm" class="transition-all duration-300" :color="$project->status->colour()" inset="top bottom">
                                 {{ $project->status }}
                             </flux:badge>
                             <a href="{{ route('project.show', $project) }}" class="hover:underline cursor-pointer">{{ $project->title }}</a>

@@ -28,7 +28,7 @@
                     <flux:table.cell class="whitespace-nowrap"><a href="mailto:{{ $user->email }}">{{ $user->email }}</a></flux:table.cell>
 
                     <flux:table.cell>
-                        <flux:badge size="sm" :color="$user->isAdmin() ? 'green' : 'gray'" inset="top bottom">{{ $user->isAdmin() ? 'Admin' : 'User' }}</flux:badge>
+                        <flux:badge size="sm" class="transition-all duration-300" :color="$user->isAdmin() ? 'green' : 'gray'" inset="top bottom">{{ $user->isAdmin() ? 'Admin' : 'User' }}</flux:badge>
                     </flux:table.cell>
 
                     <flux:table.cell>
