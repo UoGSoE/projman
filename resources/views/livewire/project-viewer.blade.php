@@ -36,7 +36,7 @@
             @foreach ($project->history as $history)
                 <flux:table.row>
                     <flux:table.cell>{{ $history->created_at->format('d/m/Y H:i') }}</flux:table.cell>
-                    <flux:table.cell>{{ $history->user->full_name }}</flux:table.cell>
+                    <flux:table.cell>{{ $history->user_name }}</flux:table.cell>
                     <flux:table.cell>{{ $history->description }}</flux:table.cell>
                 </flux:table.row>
             @endforeach

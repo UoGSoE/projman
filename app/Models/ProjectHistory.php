@@ -35,4 +35,9 @@ class ProjectHistory extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function getUserNameAttribute(): string
+    {
+        return $this->user?->full_name ?? 'System';
+    }
 }
