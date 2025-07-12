@@ -2,26 +2,31 @@
 
 namespace App\Models;
 
-use App\Enums\ProjectStatus;
-use App\Models\ProjectHistory;
 use App\Models\Scoping;
-use App\Models\Scheduling;
-use App\Models\DetailedDesign;
-use App\Models\Development;
 use App\Models\Testing;
 use App\Models\Deployed;
+use App\Models\Scheduling;
+use App\Models\Development;
+use App\Enums\ProjectStatus;
+use App\Events\ProjectCreated;
+use App\Models\DetailedDesign;
+use App\Models\ProjectHistory;
+use App\Models\Traits\CanCheckIfEdited;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Traits\CanCheckIfEdited;
 
 class Project extends Model
 {
     /** @use HasFactory<\Database\Factories\ProjectFactory> */
     use HasFactory;
     use CanCheckIfEdited;
+
+    protected $dispatchesEvents = [
+        'created' => ProjectCreated::class,
+    ];
 
     protected $fillable = [
         'user_id',
@@ -116,7 +121,7 @@ class Project extends Model
     public function addHistory(?User $user, string $description)
     {
         $this->history()->create([
-            'user_id' => $user->id,
+            'user_id' => $user?->id,
             'description' => $description,
         ]);
     }
