@@ -9,6 +9,8 @@ use App\Models\Project;
 
 class DevelopmentForm extends Form
 {
+    public ?Project $project = null;
+
     public array $availableDevelopers = [
         '1' => 'Alice',
         '2' => 'Bob',
@@ -27,53 +29,55 @@ class DevelopmentForm extends Form
     public ?int $leadDeveloper = null;
 
     #[Validate('required|string|max:255')]
-    public string $developmentTeam = '';
+    public ?string $developmentTeam;
 
     #[Validate('required|string|max:2048')]
-    public string $technicalApproach = '';
+    public ?string $technicalApproach;
 
     #[Validate('required|string|max:2048')]
-    public string $developmentNotes = '';
+    public ?string $developmentNotes;
 
     #[Validate('required|url|max:255')]
-    public string $repositoryLink = '';
+    public ?string $repositoryLink;
 
     #[Validate('required|string|max:255')]
-    public string $status = '';
+    public ?string $status;
 
     #[Validate('required|date')]
-    public string $startDate = '';
+    public ?string $startDate;
 
     #[Validate('required|date|after:startDate')]
-    public string $completionDate = '';
+    public ?string $completionDate;
 
     #[Validate('nullable|string|max:2048')]
-    public string $codeReviewNotes = '';
+    public ?string $codeReviewNotes;
+
+    public function setProject(Project $project)
+    {
+        $this->project = $project;
+        $this->leadDeveloper = $project->development->lead_developer;
+        $this->developmentTeam = $project->development->development_team;
+        $this->technicalApproach = $project->development->technical_approach;
+        $this->developmentNotes = $project->development->development_notes;
+        $this->repositoryLink = $project->development->repository_link;
+        $this->status = $project->development->status;
+        $this->startDate = $project->development->start_date;
+        $this->completionDate = $project->development->completion_date;
+        $this->codeReviewNotes = $project->development->code_review_notes;
+    }
 
     public function save()
     {
-        $this->validate();
-        Flux::toast('Development saved', variant: 'success');
-    }
-
-    public function saveToDatabase($project)
-    {
-        // Create or update development record
-        $project->development()->updateOrCreate(
-            ['project_id' => $project->id],
-            [
-                'lead_developer' => $this->leadDeveloper,
-                'development_team' => $this->developmentTeam,
-                'technical_approach' => $this->technicalApproach,
-                'development_notes' => $this->developmentNotes,
-                'repository_link' => $this->repositoryLink,
-                'status' => $this->status,
-                'start_date' => $this->startDate,
-                'completion_date' => $this->completionDate,
-                'code_review_notes' => $this->codeReviewNotes,
-            ]
-        );
-
-        Flux::toast('Development saved', variant: 'success');
+        $this->project->development->update([
+            'lead_developer' => $this->leadDeveloper,
+            'development_team' => $this->developmentTeam,
+            'technical_approach' => $this->technicalApproach,
+            'development_notes' => $this->developmentNotes,
+            'repository_link' => $this->repositoryLink,
+            'status' => $this->status,
+            'start_date' => $this->startDate,
+            'completion_date' => $this->completionDate,
+            'code_review_notes' => $this->codeReviewNotes,
+        ]);
     }
 }

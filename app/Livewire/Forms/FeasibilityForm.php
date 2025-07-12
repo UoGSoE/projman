@@ -34,12 +34,6 @@ class FeasibilityForm extends Form
     #[Validate('required|date|after:today')]
     public ?string $dateAssessed;
 
-    public function save()
-    {
-        $this->validate();
-        Flux::toast('Feasibility saved', variant: 'success');
-    }
-
     public function setProject(Project $project)
     {
         $this->project = $project;
@@ -51,9 +45,9 @@ class FeasibilityForm extends Form
         $this->deadlinesAchievable = $project->feasibility->deadlines_achievable ? 'yes' : 'no';
         $this->alternativeProposal = $project->feasibility->alternative_proposal;
     }
-    public function saveToDatabase($project)
+    public function save()
     {
-        $project->feasibility->update([
+        $this->project->feasibility->update([
             'assessed_by' => $this->assessedBy,
             'date_assessed' => $this->dateAssessed,
             'technical_credence' => $this->technicalCredence,
@@ -62,7 +56,5 @@ class FeasibilityForm extends Form
             'deadlines_achievable' => $this->deadlinesAchievable === 'yes',
             'alternative_proposal' => $this->alternativeProposal,
         ]);
-
-        Flux::toast('Feasibility saved', variant: 'success');
     }
 }

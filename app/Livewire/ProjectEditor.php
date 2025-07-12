@@ -12,6 +12,7 @@ use App\Livewire\Forms\ScopingForm;
 use App\Livewire\Forms\TestingForm;
 use App\Livewire\Forms\DeployedForm;
 use App\Livewire\Forms\IdeationForm;
+use Illuminate\Support\Facades\Auth;
 use App\Livewire\Forms\SchedulingForm;
 use App\Livewire\Forms\DevelopmentForm;
 use App\Livewire\Forms\FeasibilityForm;
@@ -43,6 +44,42 @@ class ProjectEditor extends Component
         '1' => 'Jenny',
     ];
 
+    public function mount(Project $project)
+    {
+        $project->load([
+            'user',
+            'ideation',
+            'feasibility',
+            'scoping',
+            'scheduling',
+            'detailedDesign',
+            'development',
+            'testing',
+            'deployed',
+            'history'
+        ]);
+        $this->projectId = $project->id;
+        $this->project = $project;
+        $formNames = [
+            'ideationForm',
+            'feasibilityForm',
+            'scopingForm',
+            'schedulingForm',
+            'detailedDesignForm',
+            'developmentForm',
+            'testingForm',
+            'deployedForm',
+        ];
+        foreach ($formNames as $formName) {
+            $this->$formName->setProject($project);
+        }
+    }
+
+    public function render()
+    {
+        return view('livewire.project-editor');
+    }
+
     public function save($formType)
     {
         $formName = match($formType) {
@@ -56,46 +93,18 @@ class ProjectEditor extends Component
             'deployed' => 'deployedForm',
         };
 
-
-        // First run validation
         $this->$formName->validate();
 
-        // Save the form with the project
-        $this->$formName->saveToDatabase($this->project);
+        $this->$formName->save();
+
+        $this->project->addHistory(Auth::user(), 'Saved ' . $formType);
 
         Flux::toast('Project saved', variant: 'success');
     }
-
-    public function mount(Project $project)
-    {
-        $project->load(['user','ideation', 'feasibility', 'scoping', 'scheduling', 'detailedDesign', 'development', 'testing', 'deployed']);
-        $this->projectId = $project->id;
-        $this->project = $project;
-        $formNames = [
-            'ideationForm',
-            'feasibilityForm',
-            'scopingForm',
-            'schedulingForm',
-            'detailedDesignForm',
-            'developmentForm',
-            'testingForm',
-            'deployedForm',
-        ];
-        foreach (['ideationForm', 'feasibilityForm'] as $formName) {
-            $this->$formName->setProject($project);
-        }
-    }
-
-    public function render()
-    {
-        return view('livewire.project-editor');
-    }
-
 
     #[Computed]
     public function availableUsers()
     {
         return User::orderBy('surname')->get();
     }
-
 }

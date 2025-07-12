@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('project_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('user_id')->constrained('users')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users');
             $table->text('description')->nullable();
             $table->timestamps();
         });

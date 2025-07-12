@@ -48,13 +48,7 @@ class IdeationForm extends Form
 
     public function save()
     {
-        $this->validate();
-        Flux::toast('Ideation saved', variant: 'success');
-    }
-
-    public function saveToDatabase(Project $project)
-    {
-        $project->ideation->update([
+        $this->project->ideation->update([
             'objective' => $this->objective,
             'business_case' => $this->businessCase,
             'benefits' => $this->benefits,
