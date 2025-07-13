@@ -19,6 +19,7 @@ class IdeationFactory extends Factory
     {
         return [
             'project_id' => Project::factory(),
+            'school_group' => fake()->company(),
             'objective' => fake()->sentence(),
             'business_case' => fake()->sentence(),
             'benefits' => fake()->paragraph(),
