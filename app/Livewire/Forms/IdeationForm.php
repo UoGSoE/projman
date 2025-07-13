@@ -38,7 +38,7 @@ class IdeationForm extends Form
     public function setProject(Project $project)
     {
         $this->project = $project;
-        $this->schoolGroup = $project->user->school_group;
+        $this->schoolGroup = $project->ideation->school_group;
         $this->objective = $project->ideation->objective;
         $this->businessCase = $project->ideation->business_case;
         $this->benefits = $project->ideation->benefits;
@@ -49,6 +49,7 @@ class IdeationForm extends Form
     public function save()
     {
         $this->project->ideation->update([
+            'school_group' => $this->schoolGroup,
             'objective' => $this->objective,
             'business_case' => $this->businessCase,
             'benefits' => $this->benefits,

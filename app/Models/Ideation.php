@@ -15,6 +15,7 @@ class Ideation extends Model
 
     protected $fillable = [
         'project_id',
+        'school_group',
         'objective',
         'business_case',
         'benefits',

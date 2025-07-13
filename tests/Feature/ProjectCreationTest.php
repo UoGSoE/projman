@@ -37,6 +37,7 @@ describe('Project Creation', function () {
             ->set('projectName', '')
             ->call('save')
             ->assertHasErrors(['projectName' => 'required']);
+        $this->assertDatabaseCount('projects', 0);
     });
 });
 
@@ -48,21 +49,6 @@ describe('Project Editing', function () {
             'user_id' => $this->user->id,
             'title' => 'Test Project', // Set the project title directly
         ]);
-        $formTypes = [
-            \App\Models\Ideation::class,
-            \App\Models\Feasibility::class,
-            \App\Models\Testing::class,
-            \App\Models\Deployed::class,
-            \App\Models\Scoping::class,
-            \App\Models\Scheduling::class,
-            \App\Models\Development::class,
-            \App\Models\DetailedDesign::class,
-        ];
-        foreach ($formTypes as $formType) {
-            $form = $formType::factory()->create([
-                'project_id' => $this->project->id,
-            ]);
-        }
 
         // Create test users with names that match what the tests expect
         $this->testAssessor = User::factory()->create([
@@ -107,6 +93,13 @@ describe('Project Editing', function () {
                 ->set('ideationForm.initiative', 'thing')
                 ->call('save', 'ideation')
                 ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->ideation->school_group)->toBe('Test School');
+            expect($this->project->ideation->objective)->toBe('Test Objective');
+            expect($this->project->ideation->business_case)->toBe('Test Business Case');
+            expect($this->project->ideation->benefits)->toBe('Test Benefits');
+            expect($this->project->ideation->deadline->format('Y-m-d'))->toBe($tomorrow);
+            expect($this->project->ideation->strategic_initiative)->toBe('thing');
         });
 
         it('validates required fields for ideation form', function () {
@@ -152,6 +145,13 @@ describe('Project Editing', function () {
                 ->set('feasibilityForm.dateAssessed', $tomorrow)
                 ->call('save', 'feasibility')
                 ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->feasibility->technical_credence)->toBe('Test Technical Credence');
+            expect($this->project->feasibility->cost_benefit_case)->toBe('Test Cost Benefit Case');
+            expect($this->project->feasibility->dependencies_prerequisites)->toBe('Test Dependencies');
+            expect($this->project->feasibility->deadlines_achievable)->toBe(true);
+            expect($this->project->feasibility->alternative_proposal)->toBe('Test Alternative');
+            expect($this->project->feasibility->assessed_by)->toBe($this->testAssessor->id);
         });
 
         it('validates required fields for feasibility form', function () {
@@ -187,6 +187,13 @@ describe('Project Editing', function () {
                 ->set('scopingForm.skillsRequired', 'one')
                 ->call('save', 'scoping')
                 ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->scoping->assessed_by)->toBe($this->testAssessor->id);
+            expect($this->project->scoping->estimated_effort)->toBe('Test Effort');
+            expect($this->project->scoping->in_scope)->toBe('Test In Scope');
+            expect($this->project->scoping->out_of_scope)->toBe('Test Out of Scope');
+            expect($this->project->scoping->assumptions)->toBe('Test Assumptions');
+            expect($this->project->scoping->skills_required)->toBe('one');
         });
 
         it('validates required fields for scoping form', function () {
@@ -219,6 +226,15 @@ describe('Project Editing', function () {
                 ->set('schedulingForm.teamAssignment', '1')
                 ->call('save', 'scheduling')
                 ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->scheduling->key_skills)->toBe('Test Key Skills');
+            expect($this->project->scheduling->cose_it_staff)->toBe('Test Staff');
+            expect($this->project->scheduling->estimated_start_date->format('Y-m-d'))->toBe($tomorrow);
+            expect($this->project->scheduling->estimated_completion_date->format('Y-m-d'))->toBe($dayAfterTomorrow);
+            expect($this->project->scheduling->change_board_date->format('Y-m-d'))->toBe($tomorrow);
+            expect($this->project->scheduling->assigned_to)->toBe($this->testLead->id);
+            expect($this->project->scheduling->priority)->toBe('high');
+            expect($this->project->scheduling->team_assignment)->toBe('1');
         });
 
         it('validates required fields for scheduling form', function () {
@@ -261,6 +277,16 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.approvalChangeBoard', 'Test Change Board')
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->detailedDesign->designed_by)->toBe($this->testDesigner->id);
+            expect($this->project->detailedDesign->service_function)->toBe('Test Service');
+            expect($this->project->detailedDesign->functional_requirements)->toBe('Test Functional Requirements');
+            expect($this->project->detailedDesign->non_functional_requirements)->toBe('Test Non-Functional Requirements');
+            expect($this->project->detailedDesign->hld_design_link)->toBe('https://example.com/design');
+            expect($this->project->detailedDesign->approval_delivery)->toBe('Test Approval');
+            expect($this->project->detailedDesign->approval_operations)->toBe('Test Operations');
+            expect($this->project->detailedDesign->approval_resilience)->toBe('Test Resilience');
+            expect($this->project->detailedDesign->approval_change_board)->toBe('Test Change Board');
         });
 
         it('validates required fields for detailed design form', function () {
@@ -304,6 +330,16 @@ describe('Project Editing', function () {
             ->set('developmentForm.codeReviewNotes', 'Test Code Review Notes')
             ->call('save', 'development')
             ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->development->lead_developer)->toBe($this->testLead->id);
+            expect($this->project->development->development_team)->toBe('Test Team');
+            expect($this->project->development->technical_approach)->toBe('Test Technical Approach');
+            expect($this->project->development->development_notes)->toBe('Test Development Notes');
+            expect($this->project->development->repository_link)->toBe('https://github.com/test/repo');
+            expect($this->project->development->status)->toBe('in_progress');
+            expect($this->project->development->start_date->format('Y-m-d'))->toBe($tomorrow);
+            expect($this->project->development->completion_date->format('Y-m-d'))->toBe($dayAfterTomorrow);
+            expect($this->project->development->code_review_notes)->toBe('Test Code Review Notes');
         });
 
         it('validates required fields for development form', function () {
@@ -346,6 +382,18 @@ describe('Project Editing', function () {
                 ->set('testingForm.serviceResilienceSignOff', 'Test Service Resilience Sign Off')
                 ->call('save', 'testing')
                 ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->testing->test_lead)->toBe($this->testLead->id);
+            expect($this->project->testing->service_function)->toBe('Test Service');
+            expect($this->project->testing->functional_testing_title)->toBe('Functional Testing');
+            expect($this->project->testing->functional_tests)->toBe('Test functional tests');
+            expect($this->project->testing->non_functional_testing_title)->toBe('Non-Functional Testing');
+            expect($this->project->testing->non_functional_tests)->toBe('Test non-functional tests');
+            expect($this->project->testing->test_repository)->toBe('https://github.com/test/tests');
+            expect($this->project->testing->testing_sign_off)->toBe('Test Sign Off');
+            expect($this->project->testing->user_acceptance)->toBe('Test User Acceptance');
+            expect($this->project->testing->testing_lead_sign_off)->toBe('Test Lead Sign Off');
+            expect($this->project->testing->service_delivery_sign_off)->toBe('Test Service Delivery');
         });
 
         it('validates required fields for testing form', function () {
@@ -396,6 +444,19 @@ describe('Project Editing', function () {
             ->set('deployedForm.changeAdvisorySignOff', 'Test Change Advisory Sign Off')
             ->call('save', 'deployed')
             ->assertHasNoErrors();
+            $this->project->refresh();
+            expect($this->project->deployed->deployed_by)->toBe($this->testDeployer->id);
+            expect($this->project->deployed->environment)->toBe('production');
+            expect($this->project->deployed->status)->toBe('deployed');
+            expect($this->project->deployed->deployment_date->format('Y-m-d'))->toBe($today);
+            expect($this->project->deployed->version)->toBe('1.0.0');
+            expect($this->project->deployed->production_url)->toBe('https://example.com/app');
+            expect($this->project->deployed->deployment_notes)->toBe('Test deployment notes');
+            expect($this->project->deployed->rollback_plan)->toBe('Test rollback plan');
+            expect($this->project->deployed->monitoring_notes)->toBe('Test monitoring notes');
+            expect($this->project->deployed->deployment_sign_off)->toBe('Test Deployment Sign Off');
+            expect($this->project->deployed->operations_sign_off)->toBe('Test Operations Sign Off');
+            expect($this->project->deployed->user_acceptance)->toBe('Test User Acceptance Sign Off');
         });
 
         it('validates required fields for deployed form', function () {

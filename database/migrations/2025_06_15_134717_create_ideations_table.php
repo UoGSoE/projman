@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('ideations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
+            $table->string('school_group')->nullable();
             $table->text('objective')->nullable();
             $table->text('business_case')->nullable();
             $table->text('benefits')->nullable();
