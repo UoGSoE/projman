@@ -332,7 +332,7 @@ describe('Project Editing', function () {
             ->assertHasNoErrors();
             $this->project->refresh();
             expect($this->project->development->lead_developer)->toBe($this->testLead->id);
-            expect(json_decode($this->project->development->development_team))->toBe([$this->testLead->id, $this->testDesigner->id]);
+            expect($this->project->development->development_team)->toBe([$this->testLead->id, $this->testDesigner->id]);
             expect($this->project->development->technical_approach)->toBe('Test Technical Approach');
             expect($this->project->development->development_notes)->toBe('Test Development Notes');
             expect($this->project->development->repository_link)->toBe('https://github.com/test/repo');

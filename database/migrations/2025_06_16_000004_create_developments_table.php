@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
             $table->foreignId('lead_developer')->nullable()->constrained('users');
-            $table->string('development_team')->nullable();
+            $table->json('development_team')->nullable();
             $table->text('technical_approach')->nullable();
             $table->text('development_notes')->nullable();
             $table->string('repository_link')->nullable();

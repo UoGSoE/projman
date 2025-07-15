@@ -105,6 +105,6 @@ class ProjectEditor extends Component
     #[Computed]
     public function availableUsers()
     {
-        return User::orderBy('surname')->get();
+        return User::orderBy('surname')->take(10)->get();
     }
 }

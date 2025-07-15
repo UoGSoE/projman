@@ -481,6 +481,9 @@
                                 </flux:select.option>
                             @endforeach
                         </flux:select>
+                        @error('developmentForm.leadDeveloper')
+                            <flux:error>{{ $message }}</flux:error>
+                        @enderror
                     </div>
 
                     {{-- Technical Approach --}}
@@ -488,6 +491,20 @@
                         label="Technical Approach"
                         rows="4"
                         wire:model="developmentForm.technicalApproach"
+                    />
+
+                    {{-- Development Notes --}}
+                    <flux:textarea
+                        label="Development Notes"
+                        rows="4"
+                        wire:model="developmentForm.developmentNotes"
+                    />
+
+                    {{--  Code Review Notes --}}
+                    <flux:textarea
+                        label="Code Review Notes"
+                        rows="4"
+                        wire:model="developmentForm.codeReviewNotes"
                     />
 
                     {{-- Repository Link --}}

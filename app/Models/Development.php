@@ -31,6 +31,7 @@ class Development extends Model
     protected $casts = [
         'start_date' => 'date',
         'completion_date' => 'date',
+        'development_team' => 'array',
     ];
 
     public function project(): BelongsTo
