@@ -21,7 +21,7 @@ class DevelopmentFactory extends Factory
         return [
             'project_id' => Project::factory(),
             'lead_developer' => User::factory(),
-            'development_team' => fake()->words(3, true),
+            'development_team' => [],
             'technical_approach' => fake()->paragraph(),
             'development_notes' => fake()->paragraph(),
             'repository_link' => fake()->url(),
