@@ -28,8 +28,8 @@ class DevelopmentForm extends Form
     #[Validate('required|integer|exists:users,id')]
     public ?int $leadDeveloper = null;
 
-    #[Validate('required|string|max:255')]
-    public ?string $developmentTeam;
+    #[Validate('required|array|min:1')]
+    public array $developmentTeam = [];
 
     #[Validate('required|string|max:2048')]
     public ?string $technicalApproach;
@@ -56,7 +56,20 @@ class DevelopmentForm extends Form
     {
         $this->project = $project;
         $this->leadDeveloper = $project->development->lead_developer;
-        $this->developmentTeam = $project->development->development_team;
+        // Convert stored JSON back to array, or use the string as single value for backward compatibility
+        $storedTeam = $project->development->development_team;
+        if (is_string($storedTeam)) {
+            // Check if it's JSON
+            $decoded = json_decode($storedTeam, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $this->developmentTeam = $decoded;
+            } else {
+                // Treat as single value for backward compatibility
+                $this->developmentTeam = [$storedTeam];
+            }
+        } else {
+            $this->developmentTeam = is_array($storedTeam) ? $storedTeam : [];
+        }
         $this->technicalApproach = $project->development->technical_approach;
         $this->developmentNotes = $project->development->development_notes;
         $this->repositoryLink = $project->development->repository_link;
@@ -70,7 +83,7 @@ class DevelopmentForm extends Form
     {
         $this->project->development->update([
             'lead_developer' => $this->leadDeveloper,
-            'development_team' => $this->developmentTeam,
+            'development_team' => json_encode($this->developmentTeam),
             'technical_approach' => $this->technicalApproach,
             'development_notes' => $this->developmentNotes,
             'repository_link' => $this->repositoryLink,

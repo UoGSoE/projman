@@ -32,8 +32,8 @@ class ScopingForm extends Form
     #[Validate('required|string|max:2048')]
     public ?string $assumptions;
 
-    #[Validate('required|string|max:255')]
-    public ?string $skillsRequired;
+    #[Validate('required|array|min:1')]
+    public array $skillsRequired = [];
 
     public function setProject(Project $project)
     {
@@ -43,7 +43,20 @@ class ScopingForm extends Form
         $this->inScope = $project->scoping->in_scope;
         $this->outOfScope = $project->scoping->out_of_scope;
         $this->assumptions = $project->scoping->assumptions;
-        $this->skillsRequired = $project->scoping->skills_required;
+        // Convert stored JSON back to array, or use the string as single value for backward compatibility
+        $storedSkills = $project->scoping->skills_required;
+        if (is_string($storedSkills)) {
+            // Check if it's JSON
+            $decoded = json_decode($storedSkills, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $this->skillsRequired = $decoded;
+            } else {
+                // Treat as single value for backward compatibility
+                $this->skillsRequired = [$storedSkills];
+            }
+        } else {
+            $this->skillsRequired = is_array($storedSkills) ? $storedSkills : [];
+        }
     }
 
     public function save()
@@ -54,7 +67,7 @@ class ScopingForm extends Form
             'in_scope' => $this->inScope,
             'out_of_scope' => $this->outOfScope,
             'assumptions' => $this->assumptions,
-            'skills_required' => $this->skillsRequired,
+            'skills_required' => json_encode($this->skillsRequired),
         ]);
     }
 }

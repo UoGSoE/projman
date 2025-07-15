@@ -33,19 +33,25 @@ class TestingForm extends Form
     public ?string $testRepository;
 
     #[Validate('required|string|max:255')]
-    public ?string $testingSignOff;
+    public ?string $testingSignOff = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $userAcceptance;
+    public ?string $userAcceptance = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $testingLeadSignOff;
+    public ?string $testingLeadSignOff = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $serviceDeliverySignOff;
+    public ?string $serviceDeliverySignOff = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $serviceResilienceSignOff;
+    public ?string $serviceResilienceSignOff = '';
+
+    public $availableApprovalStates = [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+    ];
 
     public function setProject(Project $project)
     {

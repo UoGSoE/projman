@@ -52,19 +52,25 @@ class DeployedForm extends Form
     public ?string $monitoringNotes;
 
     #[Validate('required|string|max:255')]
-    public ?string $deploymentSignOff;
+    public ?string $deploymentSignOff = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $operationsSignOff;
+    public ?string $operationsSignOff = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $userAcceptanceSignOff;
+    public ?string $userAcceptanceSignOff = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $serviceDeliverySignOff;
+    public ?string $serviceDeliverySignOff = '';
 
     #[Validate('required|string|max:255')]
-    public ?string $changeAdvisorySignOff;
+    public ?string $changeAdvisorySignOff = '';
+
+    public $availableApprovalStates = [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+    ];
 
     public function setProject(Project $project)
     {

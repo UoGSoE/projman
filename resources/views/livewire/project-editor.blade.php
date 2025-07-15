@@ -146,7 +146,13 @@
                 <form wire:submit="save('testing')" class="space-y-6">
                     {{-- Test Lead / Service Function --}}
                     <div class="grid grid-cols-2 gap-4">
-                        <flux:input label="Test Lead" wire:model="testingForm.testLead" />
+                        <flux:select label="Test Lead" wire:model="testingForm.testLead">
+                            @foreach($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                         <flux:input
                             label="Service / Function"
                             wire:model="testingForm.serviceFunction"
@@ -191,11 +197,41 @@
 
                     {{-- Sign-off matrix --}}
                     <div class="grid grid-cols-5 gap-4">
-                        <flux:input label="Testing Sign Off" wire:model="testingForm.testingSignOff" />
-                        <flux:input label="User Acceptance" wire:model="testingForm.userAcceptance" />
-                        <flux:input label="Test Lead" wire:model="testingForm.testingLeadSignOff" />
-                        <flux:input label="Service Delivery" wire:model="testingForm.serviceDeliverySignOff" />
-                        <flux:input label="Service Resilience" wire:model="testingForm.serviceResilienceSignOff" />
+                        <flux:select label="Testing Sign Off" wire:model="testingForm.testingSignOff">
+                            @foreach($testingForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="User Acceptance" wire:model="testingForm.userAcceptance">
+                            @foreach($testingForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Test Lead" wire:model="testingForm.testingLeadSignOff">
+                            @foreach($testingForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Service Delivery" wire:model="testingForm.serviceDeliverySignOff">
+                            @foreach($testingForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Service Resilience" wire:model="testingForm.serviceResilienceSignOff">
+                            @foreach($testingForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
                     <flux:separator />
@@ -250,10 +286,34 @@
                     {{-- Approvals --}}
                     <div class="grid grid-cols-5 gap-4">
                         <flux:input label="Approvals" value="Approvals" disabled />
-                        <flux:input label="Delivery" wire:model="detailedDesignForm.approvalDelivery" />
-                        <flux:input label="Operations" wire:model="detailedDesignForm.approvalOperations" />
-                        <flux:input label="Resilience" wire:model="detailedDesignForm.approvalResilience" />
-                        <flux:input label="Change Board" wire:model="detailedDesignForm.approvalChangeBoard" />
+                        <flux:select label="Delivery" wire:model="detailedDesignForm.approvalDelivery">
+                            @foreach($detailedDesignForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Operations" wire:model="detailedDesignForm.approvalOperations">
+                            @foreach($detailedDesignForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Resilience" wire:model="detailedDesignForm.approvalResilience">
+                            @foreach($detailedDesignForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Change Board" wire:model="detailedDesignForm.approvalChangeBoard">
+                            @foreach($detailedDesignForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
                     <flux:separator />
@@ -522,11 +582,42 @@
                     </div>
 
                     {{-- Sign-off matrix --}}
-                    <div class="grid grid-cols-4 gap-4">
-                        <flux:input label="Deployment Sign Off" wire:model="deployedForm.deploymentSignOff" />
-                        <flux:input label="Operations Sign Off" wire:model="deployedForm.operationsSignOff" />
-                        <flux:input label="User Acceptance" wire:model="deployedForm.userAcceptance" />
-                        <flux:input label="Service Delivery" wire:model="deployedForm.serviceDeliverySignOff" />
+                    <div class="grid grid-cols-5 gap-4">
+                        <flux:select label="Deployment Sign Off" wire:model="deployedForm.deploymentSignOff">
+                            @foreach($deployedForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Operations Sign Off" wire:model="deployedForm.operationsSignOff">
+                            @foreach($deployedForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="User Acceptance" wire:model="deployedForm.userAcceptanceSignOff">
+                            @foreach($deployedForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Service Delivery" wire:model="deployedForm.serviceDeliverySignOff">
+                            @foreach($deployedForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select label="Change Advisory" wire:model="deployedForm.changeAdvisorySignOff">
+                            @foreach($deployedForm->availableApprovalStates as $id => $label)
+                                <flux:select.option value="{{ $id }}">
+                                    {{ $label }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
                     <flux:separator />

@@ -11,6 +11,12 @@ class DetailedDesignForm extends Form
 {
     public ?Project $project = null;
 
+    public $availableApprovalStates = [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+    ];
+
     #[Validate('required|integer|exists:users,id')]
     public ?int $designedBy = null;
 
@@ -26,17 +32,17 @@ class DetailedDesignForm extends Form
     #[Validate('required|url|max:255')]
     public ?string $hldDesignLink;
 
-    #[Validate('required|string|max:255')]
-    public ?string $approvalDelivery;
+    #[Validate('required|integer|exists:users,id')]
+    public ?string $approvalDelivery = '';
 
-    #[Validate('required|string|max:255')]
-    public ?string $approvalOperations;
+    #[Validate('required|integer|exists:users,id')]
+    public ?string $approvalOperations = '';
 
-    #[Validate('required|string|max:255')]
-    public ?string $approvalResilience;
+    #[Validate('required|integer|exists:users,id')]
+    public ?string $approvalResilience = '';
 
-    #[Validate('required|string|max:255')]
-    public ?string $approvalChangeBoard;
+    #[Validate('required|integer|exists:users,id')]
+    public ?string $approvalChangeBoard = '';
 
     public function setProject(Project $project)
     {

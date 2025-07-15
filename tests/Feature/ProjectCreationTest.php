@@ -184,7 +184,7 @@ describe('Project Editing', function () {
                 ->set('scopingForm.inScope', 'Test In Scope')
                 ->set('scopingForm.outOfScope', 'Test Out of Scope')
                 ->set('scopingForm.assumptions', 'Test Assumptions')
-                ->set('scopingForm.skillsRequired', 'one')
+                ->set('scopingForm.skillsRequired', ['one'])
                 ->call('save', 'scoping')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -193,7 +193,7 @@ describe('Project Editing', function () {
             expect($this->project->scoping->in_scope)->toBe('Test In Scope');
             expect($this->project->scoping->out_of_scope)->toBe('Test Out of Scope');
             expect($this->project->scoping->assumptions)->toBe('Test Assumptions');
-            expect($this->project->scoping->skills_required)->toBe('one');
+            expect(json_decode($this->project->scoping->skills_required))->toBe(['one']);
         });
 
         it('validates required fields for scoping form', function () {
@@ -271,10 +271,10 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
                 ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
                 ->set('detailedDesignForm.hldDesignLink', 'https://example.com/design')
-                ->set('detailedDesignForm.approvalDelivery', 'Test Approval')
-                ->set('detailedDesignForm.approvalOperations', 'Test Operations')
-                ->set('detailedDesignForm.approvalResilience', 'Test Resilience')
-                ->set('detailedDesignForm.approvalChangeBoard', 'Test Change Board')
+                ->set('detailedDesignForm.approvalDelivery', $this->testAssessor->id)
+                ->set('detailedDesignForm.approvalOperations', $this->testLead->id)
+                ->set('detailedDesignForm.approvalResilience', $this->testDesigner->id)
+                ->set('detailedDesignForm.approvalChangeBoard', $this->testDeployer->id)
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -283,10 +283,10 @@ describe('Project Editing', function () {
             expect($this->project->detailedDesign->functional_requirements)->toBe('Test Functional Requirements');
             expect($this->project->detailedDesign->non_functional_requirements)->toBe('Test Non-Functional Requirements');
             expect($this->project->detailedDesign->hld_design_link)->toBe('https://example.com/design');
-            expect($this->project->detailedDesign->approval_delivery)->toBe('Test Approval');
-            expect($this->project->detailedDesign->approval_operations)->toBe('Test Operations');
-            expect($this->project->detailedDesign->approval_resilience)->toBe('Test Resilience');
-            expect($this->project->detailedDesign->approval_change_board)->toBe('Test Change Board');
+            expect($this->project->detailedDesign->approval_delivery)->toEqual($this->testAssessor->id);
+            expect($this->project->detailedDesign->approval_operations)->toEqual($this->testLead->id);
+            expect($this->project->detailedDesign->approval_resilience)->toEqual($this->testDesigner->id);
+            expect($this->project->detailedDesign->approval_change_board)->toEqual($this->testDeployer->id);
         });
 
         it('validates required fields for detailed design form', function () {
@@ -320,7 +320,7 @@ describe('Project Editing', function () {
 
             livewire(ProjectEditor::class, ['project' => $this->project])
             ->set('developmentForm.leadDeveloper', $this->testLead->id)
-            ->set('developmentForm.developmentTeam', 'Test Team')
+            ->set('developmentForm.developmentTeam', [$this->testLead->id, $this->testDesigner->id])
             ->set('developmentForm.technicalApproach', 'Test Technical Approach')
             ->set('developmentForm.developmentNotes', 'Test Development Notes')
             ->set('developmentForm.repositoryLink', 'https://github.com/test/repo')
@@ -332,7 +332,7 @@ describe('Project Editing', function () {
             ->assertHasNoErrors();
             $this->project->refresh();
             expect($this->project->development->lead_developer)->toBe($this->testLead->id);
-            expect($this->project->development->development_team)->toBe('Test Team');
+            expect(json_decode($this->project->development->development_team))->toBe([$this->testLead->id, $this->testDesigner->id]);
             expect($this->project->development->technical_approach)->toBe('Test Technical Approach');
             expect($this->project->development->development_notes)->toBe('Test Development Notes');
             expect($this->project->development->repository_link)->toBe('https://github.com/test/repo');
@@ -375,11 +375,11 @@ describe('Project Editing', function () {
                 ->set('testingForm.nonFunctionalTestingTitle', 'Non-Functional Testing')
                 ->set('testingForm.nonFunctionalTests', 'Test non-functional tests')
                 ->set('testingForm.testRepository', 'https://github.com/test/tests')
-                ->set('testingForm.testingSignOff', 'Test Sign Off')
-                ->set('testingForm.userAcceptance', 'Test User Acceptance')
-                ->set('testingForm.testingLeadSignOff', 'Test Lead Sign Off')
-                ->set('testingForm.serviceDeliverySignOff', 'Test Service Delivery')
-                ->set('testingForm.serviceResilienceSignOff', 'Test Service Resilience Sign Off')
+                ->set('testingForm.testingSignOff', $this->testAssessor->id)
+                ->set('testingForm.userAcceptance', $this->testLead->id)
+                ->set('testingForm.testingLeadSignOff', $this->testDesigner->id)
+                ->set('testingForm.serviceDeliverySignOff', $this->testDeployer->id)
+                ->set('testingForm.serviceResilienceSignOff', $this->testAssessor->id)
                 ->call('save', 'testing')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -390,10 +390,10 @@ describe('Project Editing', function () {
             expect($this->project->testing->non_functional_testing_title)->toBe('Non-Functional Testing');
             expect($this->project->testing->non_functional_tests)->toBe('Test non-functional tests');
             expect($this->project->testing->test_repository)->toBe('https://github.com/test/tests');
-            expect($this->project->testing->testing_sign_off)->toBe('Test Sign Off');
-            expect($this->project->testing->user_acceptance)->toBe('Test User Acceptance');
-            expect($this->project->testing->testing_lead_sign_off)->toBe('Test Lead Sign Off');
-            expect($this->project->testing->service_delivery_sign_off)->toBe('Test Service Delivery');
+            expect($this->project->testing->testing_sign_off)->toEqual($this->testAssessor->id);
+            expect($this->project->testing->user_acceptance)->toEqual($this->testLead->id);
+            expect($this->project->testing->testing_lead_sign_off)->toEqual($this->testDesigner->id);
+            expect($this->project->testing->service_delivery_sign_off)->toEqual($this->testDeployer->id);
         });
 
         it('validates required fields for testing form', function () {
@@ -437,11 +437,11 @@ describe('Project Editing', function () {
             ->set('deployedForm.deploymentNotes', 'Test deployment notes')
             ->set('deployedForm.rollbackPlan', 'Test rollback plan')
             ->set('deployedForm.monitoringNotes', 'Test monitoring notes')
-            ->set('deployedForm.deploymentSignOff', 'Test Deployment Sign Off')
-            ->set('deployedForm.operationsSignOff', 'Test Operations Sign Off')
-            ->set('deployedForm.userAcceptanceSignOff', 'Test User Acceptance Sign Off')
-            ->set('deployedForm.serviceDeliverySignOff', 'Test Service Delivery Sign Off')
-            ->set('deployedForm.changeAdvisorySignOff', 'Test Change Advisory Sign Off')
+            ->set('deployedForm.deploymentSignOff', $this->testAssessor->id)
+            ->set('deployedForm.operationsSignOff', $this->testLead->id)
+            ->set('deployedForm.userAcceptanceSignOff', $this->testDesigner->id)
+            ->set('deployedForm.serviceDeliverySignOff', $this->testDeployer->id)
+            ->set('deployedForm.changeAdvisorySignOff', $this->testAssessor->id)
             ->call('save', 'deployed')
             ->assertHasNoErrors();
             $this->project->refresh();
@@ -454,9 +454,9 @@ describe('Project Editing', function () {
             expect($this->project->deployed->deployment_notes)->toBe('Test deployment notes');
             expect($this->project->deployed->rollback_plan)->toBe('Test rollback plan');
             expect($this->project->deployed->monitoring_notes)->toBe('Test monitoring notes');
-            expect($this->project->deployed->deployment_sign_off)->toBe('Test Deployment Sign Off');
-            expect($this->project->deployed->operations_sign_off)->toBe('Test Operations Sign Off');
-            expect($this->project->deployed->user_acceptance)->toBe('Test User Acceptance Sign Off');
+            expect($this->project->deployed->deployment_sign_off)->toEqual($this->testAssessor->id);
+            expect($this->project->deployed->operations_sign_off)->toEqual($this->testLead->id);
+            expect($this->project->deployed->user_acceptance)->toEqual($this->testDesigner->id);
         });
 
         it('validates required fields for deployed form', function () {
