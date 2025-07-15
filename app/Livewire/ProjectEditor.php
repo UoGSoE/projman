@@ -29,6 +29,8 @@ class ProjectEditor extends Component
     public TestingForm $testingForm;
     public DeployedForm $deployedForm;
 
+    public $userSearch = '';
+
     #[Url]
     public $tab = 'ideation';
 
@@ -105,6 +107,13 @@ class ProjectEditor extends Component
     #[Computed]
     public function availableUsers()
     {
-        return User::orderBy('surname')->take(10)->get();
+        $searchTerm = strtolower(trim($this->userSearch));
+        return User::query()
+            ->when(
+                strlen($this->userSearch) > 1,
+                fn($query) => $query->where('surname', 'like', '%' . $searchTerm . '%')
+            )
+            ->limit(20)
+            ->get();
     }
 }

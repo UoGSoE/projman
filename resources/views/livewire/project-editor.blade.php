@@ -481,9 +481,6 @@
                                 </flux:select.option>
                             @endforeach
                         </flux:select>
-                        @error('developmentForm.leadDeveloper')
-                            <flux:error>{{ $message }}</flux:error>
-                        @enderror
                     </div>
 
                     {{-- Technical Approach --}}
