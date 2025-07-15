@@ -213,7 +213,13 @@
                 <form wire:submit="save('detailed-design')" class="space-y-6">
                     {{-- Designed by / Service Function --}}
                     <div class="grid grid-cols-2 gap-4">
-                        <flux:input label="Designed by" wire:model="detailedDesignForm.designedBy" />
+                        <flux:select label="Designed by" wire:model="detailedDesignForm.designedBy">
+                            @foreach($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                         <flux:input
                             label="Service / Function"
                             wire:model="detailedDesignForm.serviceFunction"
@@ -300,10 +306,9 @@
                     {{-- Assigned To / Priority --}}
                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                         <flux:select label="Assigned To" wire:model="schedulingForm.assignedTo">
-                            <flux:select.option value="">– Select –</flux:select.option>
-                            @foreach($schedulingForm->availableUsers as $id => $name)
-                                <flux:select.option value="{{ $id }}">
-                                    {{ $name }}
+                            @foreach($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
                                 </flux:select.option>
                             @endforeach
                         </flux:select>
@@ -342,7 +347,13 @@
             <flux:tab.panel name="scoping" class="mt-6 space-y-6">
                 <form wire:submit="save('scoping')" class="space-y-6">
                     {{-- Assessed By --}}
-                    <flux:input label="Assessed By" wire:model="scopingForm.assessedBy" />
+                    <flux:select label="Assessed By" wire:model="scopingForm.assessedBy">
+                        @foreach($this->availableUsers as $user)
+                            <flux:select.option value="{{ $user->id }}">
+                                {{ $user->full_name }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
 
                     {{-- Effort, In-Scope, Out-of-Scope --}}
                     <div class="grid grid-cols-3 gap-4">
@@ -373,8 +384,7 @@
                     />
 
                     {{-- Skills / Competency --}}
-                    <flux:select label="Skills / Competency required" wire:model="scopingForm.skillsRequired">
-                        <flux:select.option value="">– Select –</flux:select.option>
+                    <flux:select variant="listbox" multiple label="Skills / Competency required" wire:model="scopingForm.skillsRequired">
                         @foreach($scopingForm->availableSkills as $id => $label)
                             <flux:select.option value="{{ $id }}">
                                 {{ $label }}
@@ -397,8 +407,20 @@
                 <form wire:submit="save('development')" class="space-y-6">
                     {{-- Lead Developer / Development Team --}}
                     <div class="grid grid-cols-2 gap-4">
-                        <flux:input label="Lead Developer" wire:model="developmentForm.leadDeveloper" />
-                        <flux:input label="Development Team" wire:model="developmentForm.developmentTeam" />
+                        <flux:select label="Lead Developer" wire:model="developmentForm.leadDeveloper">
+                            @foreach($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:select variant="listbox" multiple label="Development Team" wire:model="developmentForm.developmentTeam">
+                            @foreach($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
                     {{-- Technical Approach --}}
@@ -454,7 +476,13 @@
                 <form wire:submit="save('deployed')" class="space-y-6">
                     {{-- Deployment Details --}}
                     <div class="grid grid-cols-2 gap-4">
-                        <flux:input label="Deployed By" wire:model="deployedForm.deployedBy" />
+                        <flux:select label="Deployed By" wire:model="deployedForm.deployedBy">
+                            @foreach($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
                         <flux:input
                             label="Deployment Date"
                             type="date"
