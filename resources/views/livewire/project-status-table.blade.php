@@ -27,8 +27,9 @@
             <flux:table.columns>
                 <flux:table.column>Project</flux:table.column>
                 @if (! $userId)
-                    <flux:table.column sortable :sorted="$sortBy === 'user'" :direction="$sortDirection"
-                        wire:click="sort('user')">User</flux:table.column>
+                    <flux:table.column sortable :sorted="$sortBy === 'user'" :direction="$sortDirection" wire:click="sort('user')">
+                        User
+                    </flux:table.column>
                 @endif
                 <flux:table.column sortable :sorted="$sortBy === 'updated_at'" :direction="$sortDirection"
                     wire:click="sort('updated_at')">Updated</flux:table.column>
