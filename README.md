@@ -58,20 +58,72 @@ This project uses [Lando](https://lando.dev/) for local development, which provi
    - **Main App**: [http://projman.lndo.site:8000](http://projman.lndo.site:8000) or [https://projman.lndo.site:4433](https://projman.lndo.site:4433)
    - **MailHog**: [http://localhost:56087](http://localhost:56087) (for email testing)
 
-### Detailed Setup Steps
+## Testing
 
-#### 1. Environment Configuration
+This project uses Pest for simple & expressive testing. [Pest](https://pestphp.com/).
 
-The project includes a `.env.example` file with pre-configured settings for Lando. The database credentials are automatically configured:
+### Running Tests
 
-- **Database Host**: `database` (Lando service)
-- **Database Name**: `laravel`
-- **Database User**: `laravel`
-- **Database Password**: `laravel`
-- **Redis Host**: `cache` (Lando service)
-- **Mail Host**: `sendmailhog` (Lando service)
+#### Using Lando
 
-#### 2. Available Lando Commands
+```bash
+# Run all tests using Pest (working command)
+lando composer test
+
+# Run specific test file (use artisan directly)
+lando artisan test tests/Feature/RolesListTest.php
+
+# Run multiple test files (use artisan directly)
+lando artisan test tests/Feature/RolesListTest.php tests/Feature/UserRoleManagementTest.php
+
+# Run tests with specific filter (use artisan directly)
+lando artisan test --filter="Role Display with User Counts"
+
+# Run tests with coverage (if configured)
+lando artisan test --coverage
+```
+
+#### Using PHP Artisan Directly
+
+```bash
+# Run all tests using Laravel's test command
+php artisan test
+
+# Run specific test file
+php artisan test tests/Feature/RolesListTest.php
+
+# Run tests in specific directory
+php artisan test tests/Feature/
+
+# Run tests with specific filter
+php artisan test --filter="Role Display with User Counts"
+
+# Run tests with verbose output
+php artisan test --verbose
+```
+
+#### Using Composer Directly
+
+```bash
+# Run all tests (no arguments supported)
+composer test
+
+# Note: The composer test script only runs all tests.
+# For specific tests, use 'php artisan test' directly.
+```
+
+### Test Best Practices
+
+The test suite follows these best practices:
+
+- **Isolation**: Each test has its own data setup
+- **Cleanup**: Database is refreshed between tests
+- **Realistic Scenarios**: Tests cover actual user workflows
+- **Edge Cases**: Handles unusual but possible scenarios
+- **Integration**: Tests component interactions, not just individual functionality
+- **Performance**: Tests complete in under 7 seconds total
+
+#### Available Lando Commands
 
 Lando provides several custom commands for common development tasks:
 
@@ -79,57 +131,16 @@ Lando provides several custom commands for common development tasks:
 # Database operations
 lando mfs                    # Drop database, run migrations and seed with test data
 
-# Queue management
-lando horizon               # Run Laravel Horizon for queue processing
-
 # Testing
-lando test                  # Run PHPUnit tests
-lando testf                 # Run tests with specific filter
+lando test
+or
+lando composer test         # Run all tests
+lando artisan test          # Run all tests with artisan
+lando artisan test --filter="Role"  # Run tests with specific filter
 
 # Node.js operations
 lando npm                   # Run npm commands
-lando npmd                  # Run npm run dev
-lando npmp                  # Run npm run production
-lando npmw                  # Run npm run watch
-
-# Development tools
-lando ci                    # Run pseudo CI checks (code style, security)
 ```
-
-#### 3. Development Workflow
-
-1. **Start development servers**
-   ```bash
-   lando start
-   ```
-
-2. **Run database migrations and seeders**
-   ```bash
-   lando mfs
-   ```
-
-3. **Start asset compilation in watch mode**
-   ```bash
-   lando npmw
-   ```
-
-4. **Run tests**
-   ```bash
-   lando test
-   ```
-
-#### 4. Services Included
-
-The Lando configuration includes:
-
-- **PHP 8.4** with Laravel framework
-- **MySQL** database
-- **Redis** for caching and sessions
-- **MailHog** for email testing
-- **Node.js** for frontend asset compilation
-- **Optional services** (commented out):
-  - MeiliSearch for search functionality
-  - MinIO for object storage
 
 #### 5. Troubleshooting
 
