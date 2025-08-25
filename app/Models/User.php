@@ -5,8 +5,10 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Validation\Rule;
 
 class User extends Authenticatable
 {
@@ -53,6 +55,40 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Get the validation rules that apply to the model.
+     */
+    public static function rules(): array
+    {
+        return [
+            'username' => 'required|string|max:255|unique:users,username',
+            'surname' => 'required|string|max:255',
+            'forenames' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8',
+            'is_staff' => 'boolean',
+            'is_admin' => 'boolean',
+        ];
+    }
+
+    /**
+     * Get custom validation messages.
+     */
+    public static function messages(): array
+    {
+        return [
+            'username.required' => 'Username is required.',
+            'username.unique' => 'Username is already taken.',
+            'surname.required' => 'Surname is required.',
+            'forenames.required' => 'Forenames are required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Email must be a valid email address.',
+            'email.unique' => 'Email is already registered.',
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 8 characters.',
+        ];
+    }
+
     public function projects(): HasMany
     {
         return $this->hasMany(Project::class);
@@ -65,7 +101,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return (bool)$this->is_admin;
+        return (bool) $this->is_admin;
     }
 
     public function getFirstNameAttribute()
@@ -76,5 +112,10 @@ class User extends Authenticatable
     public function getFullNameAttribute()
     {
         return $this->forenames . ' ' . $this->surname;
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
     }
 }
