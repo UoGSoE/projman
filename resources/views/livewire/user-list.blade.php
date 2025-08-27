@@ -107,63 +107,65 @@
             @endforeach
         </flux:table.rows>
     </flux:table>
-    <flux:modal name="change-user-role" variant="flyout" @close="resetChangeUserRoleModal" wire:submit="saveUserRoles">
+    <flux:modal name="change-user-role" variant="flyout" @close="resetChangeUserRoleModal">
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Change User Role</flux:heading>
                 <flux:text class="mt-2">Click on roles to assign or remove them from this user.
                 </flux:text>
             </div>
-
-            <div class="space-y-4 max-w-sm">
-                <flux:input label="User"
-                    :value="$selectedUser ? $selectedUser->forenames . ' ' . $selectedUser->surname : ''" readonly
-                    disabled />
-
-
-                <flux:label>Current Roles <flux:badge variant="pill" color="green" class="ml-2">
-                        ({{ count($userRoles) }})
-                    </flux:badge>
-                </flux:label>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    @if (count($userRoles) > 0)
-                        @foreach ($userRoles as $role)
-                            <flux:badge size="sm" class="cursor-pointer" as="button" icon:trailing="x-mark"
-                                wire:click="toggleRole('{{ $role }}')">
-                                {{ ucfirst($role) }}
-                            </flux:badge>
-                        @endforeach
-                    @else
-                        <flux:text class="text-gray-500">No roles assigned</flux:text>
-                    @endif
-                </div>
+            <form wire:submit="saveUserRoles" method="post">
+                @csrf
+                <div class="space-y-4 max-w-sm">
+                    <flux:input label="User"
+                        :value="$selectedUser ? $selectedUser->forenames . ' ' . $selectedUser->surname : ''" readonly
+                        disabled />
 
 
-
-                <flux:label>Available Roles </flux:label>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    @foreach ($availableRoles as $role)
-                        @if (!in_array($role, $userRoles))
-                            <flux:badge color="gray" size="sm" class="cursor-pointer" as="button"
-                                icon:trailing="plus" wire:click="toggleRole('{{ $role }}')">
-                                {{ ucfirst($role) }}
-                            </flux:badge>
+                    <flux:label>Current Roles <flux:badge variant="pill" color="green" class="ml-2">
+                            ({{ count($userRoles) }})
+                        </flux:badge>
+                    </flux:label>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @if (count($userRoles) > 0)
+                            @foreach ($userRoles as $role)
+                                <flux:badge size="sm" class="cursor-pointer" as="button" icon:trailing="x-mark"
+                                    wire:click="toggleRole('{{ $role }}')">
+                                    {{ ucfirst($role) }}
+                                </flux:badge>
+                            @endforeach
+                        @else
+                            <flux:text class="text-gray-500">No roles assigned</flux:text>
                         @endif
-                    @endforeach
+                    </div>
+
+
+
+                    <flux:label>Available Roles </flux:label>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($availableRoles as $role)
+                            @if (!in_array($role, $userRoles))
+                                <flux:badge color="gray" size="sm" class="cursor-pointer" as="button"
+                                    icon:trailing="plus" wire:click="toggleRole('{{ $role }}')">
+                                    {{ ucfirst($role) }}
+                                </flux:badge>
+                            @endif
+                        @endforeach
+                    </div>
+
                 </div>
 
-            </div>
-
-            <div class="flex gap-3">
-                <flux:spacer />
-                <flux:modal.close>
-                    <flux:button variant="ghost" wire:click="resetChangeUserRoleModal">Cancel</flux:button>
-                </flux:modal.close>
-                @if ($formModified)
+                <div class="flex gap-3">
+                    <flux:spacer />
+                    <flux:modal.close>
+                        <flux:button variant="ghost" wire:click="resetChangeUserRoleModal">Cancel</flux:button>
+                    </flux:modal.close>
+                    {{-- @if ($formModified) --}}
                     <flux:button variant="primary" type="submit">Save Changes
                     </flux:button>
-                @endif
-            </div>
+                    {{-- @endif --}}
+                </div>
+            </form>
         </div>
     </flux:modal>
 
