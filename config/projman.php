@@ -11,4 +11,11 @@ return [
         \App\Models\Development::class,
         \App\Models\DetailedDesign::class,
     ],
+    'mail' => [
+        'project_created' => [
+            'admin@example.com',
+            'admin2@example.com',
+            'admin3@example.com',
+        ],
+    ],
 ];

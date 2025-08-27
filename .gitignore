@@ -43,3 +43,6 @@ yarn-error.log
 .DS_Store
 storage/debugbar
 
+/.crush/
+CRUSH.md
+.devdbrc
