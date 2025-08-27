@@ -50,6 +50,7 @@ class UserList extends Component
     /**
      * Sanitize search input to prevent potential security issues
      */
+    // TODO: Remove sanitizeSearchInput
     private function sanitizeSearchInput(string $input): string
     {
         // Remove any potentially dangerous characters and limit length

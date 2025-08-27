@@ -17,6 +17,7 @@ use App\Livewire\Forms\SchedulingForm;
 use App\Livewire\Forms\DevelopmentForm;
 use App\Livewire\Forms\FeasibilityForm;
 use App\Livewire\Forms\DetailedDesignForm;
+use Illuminate\Support\Str;
 
 class ProjectEditor extends Component
 {
@@ -84,7 +85,7 @@ class ProjectEditor extends Component
 
     public function save($formType)
     {
-        $formName = match($formType) {
+        $formName = match ($formType) {
             'ideation' => 'ideationForm',
             'feasibility' => 'feasibilityForm',
             'scoping' => 'scopingForm',
@@ -107,10 +108,10 @@ class ProjectEditor extends Component
     #[Computed]
     public function availableUsers()
     {
-        $searchTerm = strtolower(trim($this->userSearch));
+        $searchTerm = $this->userSearch;
         return User::query()
             ->when(
-                strlen($this->userSearch) > 1,
+                strlen($searchTerm) > 1,
                 fn($query) => $query->where('surname', 'like', '%' . $searchTerm . '%')
             )
             ->limit(20)

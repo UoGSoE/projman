@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Validation\Rule;
 
 class Project extends Model
 {
@@ -39,6 +40,34 @@ class Project extends Model
     protected $casts = [
         'status' => ProjectStatus::class,
     ];
+
+    /**
+     * Get the validation rules that apply to the model.
+     */
+    public static function rules(): array
+    {
+        return [
+            'title' => 'required|string|max:255',
+            'user_id' => 'required|exists:users,id',
+            'school_group' => 'nullable|string|max:255',
+            'deadline' => 'nullable|date|after:today',
+            'status' => ['required', Rule::enum(ProjectStatus::class)],
+        ];
+    }
+
+    /**
+     * Get custom validation messages.
+     */
+    public static function messages(): array
+    {
+        return [
+            'title.required' => 'Project title is required.',
+            'title.max' => 'Project title cannot exceed 255 characters.',
+            'user_id.exists' => 'Selected user does not exist.',
+            'deadline.after' => 'Deadline must be a future date.',
+            'status.enum' => 'Invalid project status.',
+        ];
+    }
 
     public function user(): BelongsTo
     {

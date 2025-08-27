@@ -9,6 +9,7 @@ use App\Models\Project;
 
 class ScopingForm extends Form
 {
+
     public ?Project $project = null;
 
     public array $availableSkills = [
@@ -61,7 +62,7 @@ class ScopingForm extends Form
 
     public function save()
     {
-        $this->project->scoping->update( [
+        $this->project->scoping->update([
             'assessed_by' => $this->assessedBy,
             'estimated_effort' => $this->estimatedEffort,
             'in_scope' => $this->inScope,
