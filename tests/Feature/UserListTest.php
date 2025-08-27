@@ -35,6 +35,18 @@ describe('UserList Component', function () {
         ]);
     });
 
+    describe('Permissions', function () {
+        it('can only be accessed by admins', function () {
+            $this->actingAs($this->regularUser);
+            $this->get(route('users.list'))->assertForbidden();
+        });
+
+        it('can be accessed by admins', function () {
+            $this->actingAs($this->adminUser);
+            $this->get(route('users.list'))->assertOk();
+        });
+    });
+
     describe('Basic Rendering', function () {
         it('renders the component successfully', function () {
             livewire(UserList::class)

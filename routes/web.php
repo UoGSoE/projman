@@ -13,7 +13,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/staff/heatmap', \App\Livewire\HeatMapViewer::class)->name('project.heatmap');
 
     Route::middleware(['admin'])->group(function () {
-        Route::get('/staff', \App\Livewire\UserList::class)->name('staff');
-        Route::get('/roles', \App\Livewire\RolesList::class)->name('roles');
+        Route::get('/staff', \App\Livewire\UserList::class)->name('users.list');
+        Route::get('/roles', \App\Livewire\RolesList::class)->name('roles.list');
     });
 });
