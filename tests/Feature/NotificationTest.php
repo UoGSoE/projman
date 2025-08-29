@@ -38,4 +38,30 @@ describe('Form stage notifications', function () {
     });
 
     // TODO: test content of the email
+
+    it('sends a notification when a project advances to the next stage', function () {
+        Mail::fake();
+
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        livewire(ProjectCreator::class)
+            ->set('projectName', 'Test Project')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $project = Project::factory()->create();
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->call('advanceToNextStage')
+
+        Mail::assertQueued(ProjectCreatedMail::class);
+        Mail::assertQueued(ProjectCreatedMail::class, count(config('projman.mail.project_created')));
+
+        foreach (config('projman.mail.project_created') as $email) {
+            Mail::assertQueued(ProjectCreatedMail::class, function ($mail) use ($email) {
+                return $mail->hasTo($email);
+            });
+        }
+
+    });
 });

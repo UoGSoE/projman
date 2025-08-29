@@ -38,12 +38,13 @@ class IdeationForm extends Form
     public function setProject(Project $project)
     {
         $this->project = $project;
-        $this->schoolGroup = $project->ideation->school_group;
-        $this->objective = $project->ideation->objective;
-        $this->businessCase = $project->ideation->business_case;
-        $this->benefits = $project->ideation->benefits;
-        $this->deadline = (string)$project->ideation->deadline?->format('Y-m-d');
-        $this->initiative = (string)$project->ideation->strategic_initiative;
+
+        $this->schoolGroup = $project->ideation?->school_group ?? '';
+        $this->objective = $project->ideation?->objective ?? '';
+        $this->businessCase = $project->ideation?->business_case ?? '';
+        $this->benefits = $project->ideation?->benefits ?? '';
+        $this->deadline = $project->ideation?->deadline ? (string) $project->ideation->deadline->format('Y-m-d') : '';
+        $this->initiative = $project->ideation?->strategic_initiative ?? '';
     }
 
     public function save()

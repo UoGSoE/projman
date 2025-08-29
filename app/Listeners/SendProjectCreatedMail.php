@@ -28,5 +28,4 @@ class SendProjectCreatedMail
         }
     }
 
-    //TODO: dynamically handle email for other stages
 }

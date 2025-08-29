@@ -17,6 +17,8 @@ use App\Livewire\Forms\SchedulingForm;
 use App\Livewire\Forms\DevelopmentForm;
 use App\Livewire\Forms\FeasibilityForm;
 use App\Livewire\Forms\DetailedDesignForm;
+use App\Events\ProjectStageChange;
+use App\Enums\ProjectStatus;
 use Illuminate\Support\Str;
 
 class ProjectEditor extends Component
@@ -63,17 +65,8 @@ class ProjectEditor extends Component
         ]);
         $this->projectId = $project->id;
         $this->project = $project;
-        $formNames = [
-            'ideationForm',
-            'feasibilityForm',
-            'scopingForm',
-            'schedulingForm',
-            'detailedDesignForm',
-            'developmentForm',
-            'testingForm',
-            'deployedForm',
-        ];
-        foreach ($formNames as $formName) {
+
+        foreach (ProjectStatus::getAllFormNames() as $formName) {
             $this->$formName->setProject($project);
         }
     }
@@ -85,16 +78,7 @@ class ProjectEditor extends Component
 
     public function save($formType)
     {
-        $formName = match ($formType) {
-            'ideation' => 'ideationForm',
-            'feasibility' => 'feasibilityForm',
-            'scoping' => 'scopingForm',
-            'scheduling' => 'schedulingForm',
-            'detailed-design' => 'detailedDesignForm',
-            'development' => 'developmentForm',
-            'testing' => 'testingForm',
-            'deployed' => 'deployedForm',
-        };
+        $formName = ProjectStatus::from($formType)->getFormName();
 
         $this->$formName->validate();
 
@@ -103,6 +87,25 @@ class ProjectEditor extends Component
         $this->project->addHistory(Auth::user(), 'Saved ' . $formType);
 
         Flux::toast('Project saved', variant: 'success');
+    }
+
+    public function advanceToNextStage()
+    {
+        $formName = ProjectStatus::from($this->project->status)->getFormName();
+        $nextForm = ProjectStatus::from($this->project->status)->getNextStatus();
+
+        $this->project->status = $nextForm->value;
+        $this->project->save();
+
+        $this->$formName->save();
+
+        if ($nextForm) {
+            $this->tab = $nextForm->value;
+            $this->project->addHistory(Auth::user(), 'Advanced to ' . $this->tab);
+
+
+            Flux::toast('Project saved and advanced to ' . $this->tab, variant: 'success');
+        }
     }
 
     #[Computed]

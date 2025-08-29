@@ -2,21 +2,22 @@
 
 namespace App\Models;
 
-use App\Models\Scoping;
-use App\Models\Testing;
-use App\Models\Deployed;
-use App\Models\Scheduling;
-use App\Models\Development;
 use App\Enums\ProjectStatus;
 use App\Events\ProjectCreated;
+use App\Events\ProjectStageChange;
+use App\Models\Deployed;
 use App\Models\DetailedDesign;
+use App\Models\Development;
 use App\Models\ProjectHistory;
+use App\Models\Scheduling;
+use App\Models\Scoping;
+use App\Models\Testing;
 use App\Models\Traits\CanCheckIfEdited;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Validation\Rule;
 
 class Project extends Model
@@ -153,5 +154,11 @@ class Project extends Model
             'user_id' => $user?->id,
             'description' => $description,
         ]);
+    }
+
+    public function advanceToNextStage()
+    {
+        $this->update(['status' => $this->status->getNextStatus()]);
+        ProjectStageChange::dispatch($this);
     }
 }

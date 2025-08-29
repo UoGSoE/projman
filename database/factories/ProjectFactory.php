@@ -29,7 +29,7 @@ class ProjectFactory extends Factory
 
     public function completed(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => ProjectStatus::COMPLETED,
         ]);
     }

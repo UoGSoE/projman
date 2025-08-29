@@ -26,6 +26,7 @@ class ProjectCreator extends Component
         $project = Project::create([
             'user_id' => Auth::id(),
             'title' => $this->projectName,
+            'status' => \App\Enums\ProjectStatus::IDEATION,
         ]);
 
         $project->addHistory(Auth::user(), 'Created');
