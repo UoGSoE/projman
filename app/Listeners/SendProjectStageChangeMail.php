@@ -24,7 +24,8 @@ class SendProjectStageChangeMail
     public function handle(ProjectStageChange $event): void
     {
         $projectStatus = $event->project->status->value;
-        foreach (config('projman.mail.stages.' . $projectStatus) as $email) {
+        $addresses = config('projman.mail.stages.' . $projectStatus);
+        foreach ($addresses as $email) {
             Mail::to($email)->queue(new ProjectStageChangeMail($event->project));
         }
     }

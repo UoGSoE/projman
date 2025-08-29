@@ -91,21 +91,13 @@ class ProjectEditor extends Component
 
     public function advanceToNextStage()
     {
-        $formName = ProjectStatus::from($this->project->status)->getFormName();
-        $nextForm = ProjectStatus::from($this->project->status)->getNextStatus();
 
-        $this->project->status = $nextForm->value;
-        $this->project->save();
+        $this->project->advanceToNextStage();
 
-        $this->$formName->save();
+        $this->project->addHistory(Auth::user(), 'Advanced to ' . $this->project->status->value);
 
-        if ($nextForm) {
-            $this->tab = $nextForm->value;
-            $this->project->addHistory(Auth::user(), 'Advanced to ' . $this->tab);
+        Flux::toast('Project saved and advanced to ' . ucfirst($this->project->status->value), variant: 'success');
 
-
-            Flux::toast('Project saved and advanced to ' . $this->tab, variant: 'success');
-        }
     }
 
     #[Computed]

@@ -38,4 +38,18 @@ describe('Project Editing', function () {
         expect($project->fresh()->status->value)->toEqual(ProjectStatus::COMPLETED->value);
 
     });
+
+    it("livewire can advance the project to next stage", function () {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $project = Project::factory()->create(['status' => ProjectStatus::IDEATION]);
+
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->call('advanceToNextStage')
+            ->assertHasNoErrors();
+
+        expect($project->fresh()->status->value)->toEqual(ProjectStatus::FEASIBILITY->value);
+
+    });
 });

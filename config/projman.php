@@ -41,7 +41,7 @@ return [
                 'admin3@example.com',
             ],
 
-            'detailed_design' => [
+            'detailed-design' => [
                 'admin@example.com',
                 'admin2@example.com',
                 'admin3@example.com',

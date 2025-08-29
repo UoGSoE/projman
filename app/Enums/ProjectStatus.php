@@ -62,6 +62,6 @@ enum ProjectStatus: string
 
     public static function getAllFormNames(): array
     {
-        return array_map(fn($case) => $case->getFormName(), self::cases());
+        return array_map(fn($case) => $case->getFormName(), [self::IDEATION, self::FEASIBILITY, self::SCOPING, self::SCHEDULING, self::DETAILED_DESIGN, self::DEVELOPMENT, self::TESTING, self::DEPLOYED]);
     }
 }
