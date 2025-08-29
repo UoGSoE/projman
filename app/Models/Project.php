@@ -156,9 +156,11 @@ class Project extends Model
         ]);
     }
 
-    public function advanceToNextStage()
+    public function advanceToNextStage(): ProjectStatus
     {
         $this->update(['status' => $this->status->getNextStatus()]);
         ProjectStageChange::dispatch($this);
+
+        return $this->status;
     }
 }
