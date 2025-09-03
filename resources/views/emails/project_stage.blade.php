@@ -1,10 +1,11 @@
 <x-mail::message>
-# Introduction
+# Project Update
 
-The body of your message.
+Project {{ $project->title }} has been updated to the {{ ucfirst($project->status->value) }} stage and you are listed
+as a contact for evaluating that stage.
 
-<x-mail::button :url="''">
-Button Text
+<x-mail::button :url="route('project.show', $project)">
+View Project
 </x-mail::button>
 
 Thanks,<br>

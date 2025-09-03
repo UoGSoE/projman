@@ -20,8 +20,14 @@ enum ProjectStatus: string
         return match ($this) {
             self::IDEATION => 'lime',
             self::FEASIBILITY => 'green',
+            self::SCOPING => 'amber',
+            self::SCHEDULING => 'amber',
+            self::DETAILED_DESIGN => 'amber',
+            self::DEVELOPMENT => 'amber',
+            self::TESTING => 'amber',
+            self::DEPLOYED => 'green',
             self::COMPLETED => 'zinc',
-            self::CANCELLED => 'indigo',
+            self::CANCELLED => 'red',
         };
     }
 
@@ -63,5 +69,43 @@ enum ProjectStatus: string
     public static function getAllFormNames(): array
     {
         return array_map(fn($case) => $case->getFormName(), [self::IDEATION, self::FEASIBILITY, self::SCOPING, self::SCHEDULING, self::DETAILED_DESIGN, self::DEVELOPMENT, self::TESTING, self::DEPLOYED]);
+    }
+
+    public function getStageColor(ProjectStatus $currentStage): string
+    {
+        // Handle special cases
+        if ($this === self::CANCELLED || $currentStage === self::CANCELLED) {
+            return 'red';
+        }
+
+        if ($currentStage === self::COMPLETED) {
+            return $this === self::COMPLETED ? 'green' : 'green'; // all stages green when completed
+        }
+
+        $stageOrder = $this->getStageOrder();
+        $currentOrder = $currentStage->getStageOrder();
+
+        return match (true) {
+            $stageOrder < $currentOrder => 'green',  // completed
+            $stageOrder === $currentOrder => 'amber', // current
+            default => 'zinc'  // not yet reached
+        };
+    }
+
+    private function getStageOrder(): int
+    {
+        $progressStages = self::getProgressStages();
+        $index = array_search($this, $progressStages, true);
+
+        // Return the index + 1 (so we start at 1, not 0), or 999 for cancelled
+        return $index !== false ? $index + 1 : 999;
+    }
+
+    public static function getProgressStages(): array
+    {
+        $allCases = self::cases();
+
+        // Remove CANCELLED as it's not part of the normal progression
+        return array_filter($allCases, fn($case) => $case !== self::CANCELLED);
     }
 }

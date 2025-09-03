@@ -58,11 +58,21 @@
                         <flux:table.cell variant="strong">{{ $project->updated_at->diffForHumans() }}</flux:table.cell>
 
                         <flux:table.cell>
+                            @foreach(App\Enums\ProjectStatus::getProgressStages() as $stage)
+                                <flux:badge
+                                color="{{ $stage->getStageColor($project->status) }}"
+                                size="sm"
+                                icon="check-circle">
+                                </flux:badge>
+                            @endforeach
+
+                            {{--
                             <flux:badge :color="$project->ideation->hasBeenEdited() ? 'green' : 'zinc'" icon="check-circle" title="Ideation"></flux:badge>
                             <flux:badge :color="$project->feasibility->hasBeenEdited() ? 'green' : 'zinc'" icon="check-circle" title="Feasibility"></flux:badge>
                             <flux:badge :color="$project->development->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Development"></flux:badge>
                             <flux:badge :color="$project->testing->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Testing"></flux:badge>
                             <flux:badge :color="$project->deployed->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Deployed"></flux:badge>
+                            --}}
                         </flux:table.cell>
 
                         <flux:table.cell class="text-center">
