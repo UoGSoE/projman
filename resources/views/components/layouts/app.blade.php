@@ -15,47 +15,43 @@
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
     @auth
-        <flux:sidebar sticky stashable class="bg-white dark:bg-zinc-800 print:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-
-            <flux:brand href="/" logo="https://fluxui.dev/img/demo/logo.png" name="{{ config('app.name') }}"
-                class="px-2 dark:hidden print:hidden" />
-            <flux:brand href="/" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="{{ config('app.name') }}"
-                class="px-2 hidden dark:flex print:hidden" />
-
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home
-                </flux:navlist.item>
-                <flux:navlist.item icon="plus-circle" href="{{ route('project.create') }}"
-                    :current="request()->routeIs('project.create')" wire:navigate>New project</flux:navlist.item>
-            </flux:navlist>
-
-            <flux:separator />
-
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="list-bullet" href="/projects" :current="request()->routeIs('projects')"
-                    wire:navigate><span class="flex items-center justify-between"><span>All projects</span>
-                        <flux:badge color="green">3</flux:badge>
-                    </span></flux:navlist.item>
-                <flux:navlist.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')"
-                    wire:navigate>Staff heatmap</flux:navlist.item>
-                <flux:navlist.item icon="users" href="/staff" :current="request()->routeIs('staff')" wire:navigate>Staff
-                </flux:navlist.item>
-                <flux:navlist.item icon="user-group" href="/roles" :current="request()->routeIs('groups')" wire:navigate>
-                    Roles</flux:navlist.item>
-            </flux:navlist>
-            <flux:spacer />
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="information-circle" href="/help" :current="request()->routeIs('help')"
-                    wire:navigate>Help</flux:navlist.item>
-            </flux:navlist>
-            <div class="flex flex-row gap-2 items-center justify-between">
-                <form method="post" action="{{ route('auth.logout') }}" class="w-full">
-                    @csrf
-                    <flux:button class="w-full" icon="arrow-right-start-on-rectangle" type="submit">Logout
-                        {{ auth()->check() ? auth()->user()->full_name : '' }}</flux:button>
-                </form>
-            </div>
+        <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700 print:hidden">
+            <flux:sidebar.header>
+                <flux:sidebar.brand
+                    href="#"                l
+                    logo="https://fluxui.dev/img/demo/logo.png"
+                    logo:dark="https://fluxui.dev/img/demo/dark-mode-logo.png"
+                    name="{{  config('app.name') }}"
+                />
+                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+            </flux:sidebar.header>
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home</flux:sidebar.item>
+                <flux:sidebar.item icon="plus-circle" href="{{ route('project.create') }}"
+                    :current="request()->routeIs('project.create')" wire:navigate>New work package</flux:sidebar.item>
+                <flux:separator class="my-2" />
+                <flux:sidebar.item badge="3" icon="list-bullet" href="/projects" :current="request()->routeIs('projects')" wire:navigate>
+                        All work packages
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')" wire:navigate>Staff heatmap</flux:sidebar.item>
+                <flux:sidebar.item icon="users" href="/staff" :current="request()->routeIs('staff')" wire:navigate>Staff</flux:sidebar.item>
+                <flux:sidebar.item icon="user-group" href="/roles" :current="request()->routeIs('groups')" wire:navigate>Roles</flux:sidebar.item>
+            </flux:sidebar.nav>
+            <flux:sidebar.spacer />
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="cog-6-tooth" href="#">Settings</flux:sidebar.item>
+                <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
+            </flux:sidebar.nav>
+            <flux:sidebar.nav>
+                <flux:sidebar.item tooltip="Logout" icon="arrow-right-start-on-rectangle">
+                    <form method="post" action="{{ route('auth.logout') }}">
+                        @csrf
+                        <flux:button class="w-full" type="submit">
+                            <span class="hidden sm:block">Logout</span>
+                        </flux:button>
+                    </form>
+                </flux:sidebar.item>
+            </flux:sidebar.nav>
         </flux:sidebar>
     @endauth
     <flux:header class="lg:hidden print:hidden">
@@ -64,7 +60,6 @@
         <flux:spacer />
 
         <flux:dropdown position="top" alignt="start">
-            <flux:profile name="{{ auth()->check() ? auth()->user()->full_name : 'Guest' }}" />
 
             <flux:menu>
                 <flux:menu.item icon="arrow-right-start-on-rectangle">

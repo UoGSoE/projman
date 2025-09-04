@@ -12,7 +12,7 @@
             <flux:table.column>Surname</flux:table.column>
             <flux:table.column>Forename</flux:table.column>
             <flux:table.column>Email</flux:table.column>
-            <flux:table.column>Role</flux:table.column>
+            <flux:table.column>Type</flux:table.column>
             <flux:table.column>Roles</flux:table.column>
             <flux:table.column>Actions</flux:table.column>
         </flux:table.columns>

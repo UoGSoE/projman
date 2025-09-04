@@ -1,5 +1,5 @@
 <div>
-    <flux:heading size="xl" level="1">Edit Project</flux:heading>
+    <flux:heading size="xl" level="1">Edit Work Package</flux:heading>
     <flux:subheading class="flex items-center gap-2"><b>Title:</b> {{ $project->title }}</flux:subheading>
     <flux:subheading class="flex items-center gap-2"><b>Requested By:</b> {{ $project->user->full_name }}
     </flux:subheading>
@@ -290,6 +290,7 @@
                 {{-- Assigned To / Priority --}}
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     <flux:select label="Assigned To" wire:model="schedulingForm.assignedTo">
+                        {{--  TODO: this should allow for multiple users --}}
                         @foreach ($this->availableUsers as $user)
                             <flux:select.option value="{{ $user->id }}">
                                 {{ $user->full_name }}

@@ -60,9 +60,10 @@
                         <flux:table.cell>
                             @foreach(App\Enums\ProjectStatus::getProgressStages() as $stage)
                                 <flux:badge
-                                color="{{ $stage->getStageColor($project->status) }}"
-                                size="sm"
-                                icon="check-circle">
+                                    color="{{ $stage->getStageColor($project->status) }}"
+                                    size="sm"
+                                    title="{{ ucfirst($stage->value) }}"
+                                    icon="check-circle">
                                 </flux:badge>
                             @endforeach
 
