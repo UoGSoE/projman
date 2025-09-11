@@ -1,9 +1,11 @@
 <?php
 
 use App\Livewire\UserList;
+use App\Models\Role;
 use App\Models\User;
 use function Pest\Livewire\livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
 
 uses(RefreshDatabase::class);
 
@@ -251,14 +253,14 @@ describe('UserList Component', function () {
         it('handles special characters in search', function () {
             // Create a user with special characters in their name
             $userWithSpecialChars = User::factory()->create([
-                'surname' => 'Test\'s',
+                'surname' => "Test's",
                 'forenames' => 'User & Co.',
             ]);
 
             $component = livewire(UserList::class);
 
             // Search for the user - our sanitization should handle special characters
-            $component->set('search', 'Test\'s');
+            $component->set('search', "Test's");
 
             // The search should work and not cause errors
             $component->call('getUsers');
@@ -267,16 +269,80 @@ describe('UserList Component', function () {
             $component->assertOk();
 
             // Verify the user exists in the database
-            expect(User::where('surname', 'Test\'s')->exists())->toBe(true);
+            expect(User::where('surname', "Test's")->exists())->toBe(true);
         });
+    });
+});
 
-        it('trims whitespace from search', function () {
-            livewire(UserList::class)
-                ->set('search', '  Smith  ')
-                ->assertSeeText('John')
-                ->assertSeeText('Smith')
-                ->assertDontSeeText('Jane')
-                ->assertDontSeeText('Doe');
-        });
+describe('User Role Management', function () {
+    beforeEach(function () {
+        // Create roles for assignment
+        $this->adminRole = Role::factory()->create([
+            'name' => 'Administrator',
+            'description' => 'System administrator role',
+            'is_active' => true,
+        ]);
+
+        $this->userRole = Role::factory()->create([
+            'name' => 'User',
+            'description' => 'Regular user role',
+            'is_active' => true,
+        ]);
+
+        $this->managerRole = Role::factory()->create([
+            'name' => 'Manager',
+            'description' => 'Team manager role',
+            'is_active' => true,
+        ]);
+
+        // Create users
+        $this->adminUser = User::factory()->create(['is_admin' => true]);
+        $this->regularUser = User::factory()->create(['is_admin' => false]);
+    });
+
+    it('opens change user role modal and loads roles correctly', function () {
+        livewire(App\Livewire\UserList::class)
+            ->call('openChangeUserRoleModal', $this->regularUser->id)
+            ->assertSet('selectedUser.id', $this->regularUser->id)
+            ->assertSet(
+                'availableRoles',
+                fn($roles) =>
+                $roles instanceof \Illuminate\Support\Collection &&
+                collect([$this->adminRole->name, $this->userRole->name, $this->managerRole->name])->diff($roles->pluck('name'))->isEmpty()
+            )
+            ->assertSet('userRoles', []);
+    });
+
+    it('updates selected roles using checklist cards', function () {
+        livewire(UserList::class)
+            ->call('openChangeUserRoleModal', $this->regularUser)
+            ->set('userRoles', ['Administrator', 'Manager'])
+            ->assertSet('userRoles', ['Administrator', 'Manager']);
+    });
+
+    it('saves selected roles to user', function () {
+        livewire(UserList::class)
+            ->call('openChangeUserRoleModal', $this->regularUser)
+            ->set('userRoles', ['Administrator', 'Manager'])
+            ->call('saveUserRoles');
+
+        $this->assertTrue($this->regularUser->roles()->where('name', 'Administrator')->exists());
+        $this->assertTrue($this->regularUser->roles()->where('name', 'Manager')->exists());
+    });
+
+    it('resets modal state after close', function () {
+        livewire(UserList::class)
+            ->call('openChangeUserRoleModal', $this->regularUser)
+            ->call('resetChangeUserRoleModal')
+            ->assertSet('selectedUser', null)
+            ->assertSet('userRoles', []);
+    });
+
+    it("discards changes when modal is closed", function () {
+        livewire(UserList::class)
+            ->call('openChangeUserRoleModal', $this->regularUser)
+            ->set('userRoles', ['Administrator', 'Manager'])
+            ->call('resetChangeUserRoleModal')
+            ->assertSet('userRoles', []);
     });
 });

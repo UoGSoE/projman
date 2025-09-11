@@ -20,19 +20,17 @@
         <flux:table.rows>
             @foreach ($users as $user)
                 <flux:table.row :key="'user-' . $user->id">
-                    <flux:table.cell class="flex items-center gap-3">
-                        {{ $user->surname }}
+                    <flux:table.cell>{{ $user->surname }}</flux:table.cell>
+                    <flux:table.cell>{{ $user->forenames }}</flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap">
+                        <a href="mailto:{{ $user->email }}">{{ $user->email }}</a>
                     </flux:table.cell>
-                    <flux:table.cell>
-                        {{ $user->forenames }}
-                    </flux:table.cell>
-                    <flux:table.cell class="whitespace-nowrap"><a
-                            href="mailto:{{ $user->email }}">{{ $user->email }}</a></flux:table.cell>
 
                     <flux:table.cell>
                         <flux:badge size="sm" class="transition-all duration-300"
                             :color="$user->isAdmin() ? 'green' : 'gray'" inset="top bottom">
-                            {{ $user->isAdmin() ? 'Admin' : 'User' }}</flux:badge>
+                            {{ $user->isAdmin() ? 'Admin' : 'User' }}
+                        </flux:badge>
                     </flux:table.cell>
 
                     <flux:table.cell>
@@ -71,7 +69,6 @@
                     <flux:table.cell>
                         <flux:dropdown>
                             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
-
                             <flux:menu>
                                 <flux:menu.item icon="plus" wire:click="toggleAdmin({{ $user->id }})">Toggle
                                     admin</flux:menu.item>
@@ -82,7 +79,6 @@
                                     </flux:modal.trigger>
                                 </flux:menu.item>
                                 <flux:menu.separator />
-
                                 <flux:menu.submenu heading="Sort by">
                                     <flux:menu.radio.group>
                                         <flux:menu.radio checked>Name</flux:menu.radio>
@@ -90,15 +86,7 @@
                                         <flux:menu.radio>Popularity</flux:menu.radio>
                                     </flux:menu.radio.group>
                                 </flux:menu.submenu>
-
-                                <flux:menu.submenu heading="Filter">
-                                    <flux:menu.checkbox checked>Draft</flux:menu.checkbox>
-                                    <flux:menu.checkbox checked>Published</flux:menu.checkbox>
-                                    <flux:menu.checkbox>Archived</flux:menu.checkbox>
-                                </flux:menu.submenu>
-
                                 <flux:menu.separator />
-
                                 <flux:menu.item variant="danger" icon="trash">Delete</flux:menu.item>
                             </flux:menu>
                         </flux:dropdown>
@@ -118,55 +106,37 @@
                 @csrf
                 <div class="space-y-4 max-w-sm">
                     <flux:input label="User"
-                        :value="$selectedUser ? $selectedUser->forenames . ' ' . $selectedUser->surname : ''" readonly
-                        disabled />
+                        :value="$selectedUser ? $selectedUser->forenames . ' ' . $selectedUser->surname : ''"
+                        readonly disabled />
 
-
-                    <flux:label>Current Roles <flux:badge variant="pill" color="green" class="ml-2">
-                            ({{ count($userRoles) }})
-                        </flux:badge>
-                    </flux:label>
-                    <div class="mt-2 flex flex-wrap gap-2">
-                        @if (count($userRoles) > 0)
-                            @foreach ($userRoles as $role)
-                                <flux:badge size="sm" class="cursor-pointer" as="button" icon:trailing="x-mark"
-                                    wire:click="toggleRole('{{ $role }}')">
-                                    {{ ucfirst($role) }}
-                                </flux:badge>
-                            @endforeach
-                        @else
-                            <flux:text class="text-gray-500">No roles assigned</flux:text>
-                        @endif
-                    </div>
-
-
-
-                    <flux:label>Available Roles </flux:label>
-                    <div class="mt-2 flex flex-wrap gap-2">
+                    {{-- <flux:radio.group wire:model="userRoles" label="User Roles" variant="cards" class="flex-col">
                         @foreach ($availableRoles as $role)
-                            @if (!in_array($role, $userRoles))
-                                <flux:badge color="gray" size="sm" class="cursor-pointer" as="button"
-                                    icon:trailing="plus" wire:click="toggleRole('{{ $role }}')">
-                                    {{ ucfirst($role) }}
-                                </flux:badge>
-                            @endif
+                            <flux:radio value="{{ $role }}" label="{{ ucfirst($role) }}"
+                                :checked="in_array($role, $userRoles)" description="Assign the {{ ucfirst($role) }} role" />
                         @endforeach
-                    </div>
+                    </flux:radio.group> --}}
+
+                    <flux:checkbox.group wire:model="userRoles" label="User Roles" variant="cards" class="flex-col">
+                        @foreach ($availableRoles as $role)
+                            <flux:checkbox value="{{ $role->name }}"
+                                label="{{ ucfirst($role->name) }}"
+                                :checked="in_array($role->name, $userRoles)"
+                                description="{{ ucfirst($role->description) }}" />
+                        @endforeach
+                    </flux:checkbox.group>
 
                 </div>
 
-                <div class="flex gap-3">
+                <div class="flex gap-3 mt-6">
                     <flux:spacer />
                     <flux:modal.close>
                         <flux:button variant="ghost" wire:click="resetChangeUserRoleModal">Cancel</flux:button>
                     </flux:modal.close>
-                    {{-- @if ($formModified) --}}
-                    <flux:button variant="primary" type="submit">Save Changes
-                    </flux:button>
-                    {{-- @endif --}}
+                    @if ($formModified)
+                        <flux:button variant="primary" type="submit">Save Changes</flux:button>
+                    @endif
                 </div>
             </form>
         </div>
     </flux:modal>
-
 </div>
