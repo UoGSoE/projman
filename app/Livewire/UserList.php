@@ -79,7 +79,7 @@ class UserList extends Component
         // Get user's current roles from the fresh database data
         $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
         // Get all available roles from the database
-        $this->availableRoles = Role::active()->pluck('name')->toArray();
+        $this->availableRoles = Role::active()->get();
     }
 
     public function saveUserRoles()
