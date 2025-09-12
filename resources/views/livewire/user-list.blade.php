@@ -7,13 +7,13 @@
 
     <flux:separator variant="subtle" class="mt-6" />
 
-    <flux:table :paginate="$users" class="mt-6">
+    <flux:table :paginate="$users" class="mt-6" >
         <flux:table.columns>
-            <flux:table.column>Surname</flux:table.column>
-            <flux:table.column>Forename</flux:table.column>
-            <flux:table.column>Email</flux:table.column>
+            <flux:table.column sortable wire:click="sort('surname')">Surname</flux:table.column>
+            <flux:table.column sortable wire:click="sort('forenames')">Forename</flux:table.column>
+            <flux:table.column sortable wire:click="sort('email')">Email</flux:table.column>
             <flux:table.column>Type</flux:table.column>
-            <flux:table.column>Roles</flux:table.column>
+            <flux:table.column >Roles</flux:table.column>
             <flux:table.column>Actions</flux:table.column>
         </flux:table.columns>
 
@@ -109,18 +109,15 @@
                         :value="$selectedUser ? $selectedUser->forenames . ' ' . $selectedUser->surname : ''"
                         readonly disabled />
 
-                    {{-- <flux:radio.group wire:model="userRoles" label="User Roles" variant="cards" class="flex-col">
-                        @foreach ($availableRoles as $role)
-                            <flux:radio value="{{ $role }}" label="{{ ucfirst($role) }}"
-                                :checked="in_array($role, $userRoles)" description="Assign the {{ ucfirst($role) }} role" />
-                        @endforeach
-                    </flux:radio.group> --}}
-
-                    <flux:checkbox.group wire:model="userRoles" label="User Roles" variant="cards" class="flex-col">
+                    <flux:checkbox.group wire:model.live="userRoles"
+                     wire:change="markFormAsModified"
+                     label="User Roles"
+                     variant="cards"
+                     class="flex-col">
                         @foreach ($availableRoles as $role)
                             <flux:checkbox value="{{ $role->name }}"
                                 label="{{ ucfirst($role->name) }}"
-                                :checked="in_array($role->name, $userRoles)"
+                                :checked="in_array($role->name, (array)$userRoles)"
                                 description="{{ ucfirst($role->description) }}" />
                         @endforeach
                     </flux:checkbox.group>

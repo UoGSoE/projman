@@ -9,9 +9,9 @@
 
     <flux:table :paginate="$roles" class="mt-6">
         <flux:table.columns>
-            <flux:table.column sortable="name">Name</flux:table.column>
-            <flux:table.column>Description</flux:table.column>
-            <flux:table.column sortable="is_active">Active</flux:table.column>
+            <flux:table.column sortable="name" wire:click="sort('name')">Name</flux:table.column>
+            <flux:table.column sortable="description" wire:click="sort('description')">Description</flux:table.column>
+            <flux:table.column sortable="is_active" wire:click="sort('is_active')">Active</flux:table.column>
             <flux:table.column>Actions</flux:table.column>
         </flux:table.columns>
         <flux:table.rows>
@@ -68,12 +68,12 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model="roleName" required />
+                        <flux:input wire:model.live="roleName" required wire:change="markFormAsModified" />
                         <flux:error name="roleName" />
                     </flux:field>
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model="roleDescription" />
+                        <flux:textarea wire:model.live="roleDescription" wire:change="markFormAsModified"/>
                         <flux:error name="roleDescription" />
                     </flux:field>
                     <flux:field>
@@ -81,7 +81,7 @@
                         <flux:description>
                             Active roles will be shown to users.
                         </flux:description>
-                        <flux:switch value wire:model="roleIsActive" />
+                        <flux:switch value wire:model.live="roleIsActive" wire:change="markFormAsModified"/>
                         <flux:error name="roleIsActive" />
                     </flux:field>
                 </div>
@@ -92,9 +92,11 @@
                         <flux:button type="button" variant="ghost" wire:click="resetEditRoleModal">Cancel
                         </flux:button>
                     </flux:modal.close>
+                    @if ($formModified)
                     <flux:button type="submit" variant="primary">
                         Save Changes
                     </flux:button>
+                    @endif
                 </div>
             </div>
         </form>

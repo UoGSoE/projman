@@ -22,8 +22,6 @@ class RolesList extends Component
     public $roleName = '';
     public $roleDescription = '';
     public $roleIsActive = false;
-
-    // Track if form has been modified
     public $formModified = false;
 
     public function render()
@@ -35,13 +33,9 @@ class RolesList extends Component
 
     public function getRoles()
     {
-        // Sanitize search input to prevent potential injection
-        $search = $this->sanitizeSearchInput($this->search);
+        $search = $this->search;
 
-        // Update the search property with sanitized value
-        $this->search = $search;
-
-        return Role::orderBy($this->sortOn, $this->sortDirection)
+        return Role::with('users')->withCount('users')->orderBy($this->sortOn, $this->sortDirection)
             ->when(
                 strlen($search) >= 2,
                 fn($query) => $query->where(function ($query) use ($search) {
@@ -52,23 +46,9 @@ class RolesList extends Component
             ->paginate(10);
     }
 
-    /**
-     * Sanitize search input to prevent potential security issues
-     */
-    private function sanitizeSearchInput(string $input): string
-    {
-        // Remove any potentially dangerous characters and limit length
-        $sanitized = preg_replace('/[^\w\s\-\.]/', '', trim($input));
-        return Str::limit($sanitized, 100);
-    }
 
     public function sort($column)
     {
-        // Validate sort column to prevent injection
-        $allowedColumns = ['name', 'description', 'is_active', 'created_at'];
-        if (!in_array($column, $allowedColumns)) {
-            return;
-        }
 
         if ($this->sortOn === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -90,27 +70,23 @@ class RolesList extends Component
         $this->roleName = $this->selectedRole->name;
         $this->roleDescription = $this->selectedRole->description;
         $this->roleIsActive = $this->selectedRole->is_active;
-
-        // Debug: Log the selected role data
-        logger()->info('Selected role:', ['role' => $this->selectedRole->toArray()]);
     }
 
     public function openDeleteRoleModal(Role $role)
     {
-        $this->selectedRole = $role;
+        $this->selectedRole = $role->loadCount('users');
         // Open the delete confirmation modal
         Flux::modal('delete-role')->show();
     }
 
     public function deleteRole()
     {
-        // Remove the Role parameter since we're using selectedRole
         if (!$this->selectedRole) {
             return;
         }
 
         // Check if role is assigned to any users before deletion
-        if ($this->selectedRole->users()->count() > 0) {
+        if ($this->selectedRole->users_count > 0) {
             Flux::toast('Cannot delete role that is assigned to users', variant: 'error');
             return;
         }
@@ -134,10 +110,6 @@ class RolesList extends Component
             'roleIsActive' => 'boolean'
         ]);
 
-        // Additional sanitization for role name and description
-        $this->roleName = $this->sanitizeRoleName($this->roleName);
-        $this->roleDescription = $this->sanitizeRoleDescription($this->roleDescription);
-
         // Update the role with form data
         $this->selectedRole->name = $this->roleName;
         $this->selectedRole->description = $this->roleDescription;
@@ -152,39 +124,19 @@ class RolesList extends Component
         $this->resetEditRoleModal();
     }
 
-    /**
-     * Sanitize role name to prevent potential security issues
-     */
-    private function sanitizeRoleName(string $input): string
-    {
-        // Remove any potentially dangerous characters and limit length
-        $sanitized = preg_replace('/[^\w\s\-\.]/', '', trim($input));
-        return Str::limit($sanitized, 255);
-    }
-
-    /**
-     * Sanitize role description to prevent potential security issues
-     */
-    private function sanitizeRoleDescription(string $input): string
-    {
-        // Allow more characters but still sanitize dangerous content
-        $sanitized = strip_tags(trim($input));
-        return Str::limit($sanitized, 1000);
-    }
-
     public function resetEditRoleModal()
     {
         $this->selectedRole = null;
         $this->roleName = '';
         $this->roleDescription = '';
         $this->roleIsActive = false;
-        $this->formModified = false;
+        $this->markFormAsNotModified();
     }
 
     public function updated($propertyName)
     {
         if (in_array($propertyName, ['roleName', 'roleDescription', 'roleIsActive'])) {
-            $this->formModified = true;
+            $this->markFormAsModified();
         }
     }
 
@@ -192,5 +144,15 @@ class RolesList extends Component
     {
         // Reset pagination when search changes
         $this->resetPage();
+    }
+
+    public function markFormAsNotModified()
+    {
+        $this->formModified = false;
+    }
+
+    public function markFormAsModified()
+    {
+        $this->formModified = true;
     }
 }

@@ -30,13 +30,9 @@ class UserList extends Component
 
     public function getUsers()
     {
-        // Sanitize search input to prevent potential injection
         $search = $this->search;
 
-        // Update the search property with sanitized value
-        $this->search = $search;
-
-        return User::orderBy($this->sortOn, $this->sortDirection)
+        return User::with('roles')->withCount('roles')->orderBy($this->sortOn, $this->sortDirection)
             ->when(
                 strlen($search) >= 2,
                 fn($query) => $query->where(
@@ -49,12 +45,6 @@ class UserList extends Component
 
     public function sort($column)
     {
-        // Validate sort column to prevent injection
-        $allowedColumns = ['surname', 'forenames', 'username', 'email', 'created_at'];
-        if (!in_array($column, $allowedColumns)) {
-            return;
-        }
-
         if ($this->sortOn === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
@@ -81,7 +71,7 @@ class UserList extends Component
     public function openChangeUserRoleModal(User $user)
     {
 
-        $this->formModified = false;
+        $this->markFormAsNotModified();
 
         // Refresh the user to get fresh data from database
         $this->selectedUser = $user->fresh(['roles']);
@@ -89,27 +79,7 @@ class UserList extends Component
         // Get user's current roles from the fresh database data
         $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
         // Get all available roles from the database
-        $this->availableRoles = Role::active()->get();
-    }
-
-    public function toggleRole($roleName)
-    {
-        // Validate role name
-        $availableRoleNames = $this->availableRoles->pluck('name')->toArray();
-        if (!is_string($roleName) || !in_array($roleName, $availableRoleNames)) {
-            return;
-        }
-
-        if (in_array($roleName, $this->userRoles)) {
-            // Remove role
-            $this->userRoles = array_values(array_filter($this->userRoles, fn($g) => $g !== $roleName));
-        } else {
-            // Add role
-            $this->userRoles = array_values([...$this->userRoles, $roleName]);
-        }
-
-        // Explicitly mark form as modified
-        $this->formModified = true;
+        $this->availableRoles = Role::active()->pluck('name')->toArray();
     }
 
     public function saveUserRoles()
@@ -118,13 +88,16 @@ class UserList extends Component
             return;
         }
 
+        // Ensure userRoles is an array
+        $userRoles = is_array($this->userRoles) ? $this->userRoles : [];
+
         // Validate that all selected roles exist and are active
-        $validRoles = Role::whereIn('name', $this->userRoles)
+        $validRoles = Role::whereIn('name', $userRoles)
             ->where('is_active', true)
             ->pluck('id')
             ->toArray();
 
-        if (count($validRoles) !== count($this->userRoles)) {
+        if (count($validRoles) !== count($userRoles)) {
             Flux::toast('Some selected roles are invalid', variant: 'error');
             return;
         }
@@ -137,7 +110,7 @@ class UserList extends Component
 
         // Update the component state with fresh data
         $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
-        $this->formModified = false;
+        $this->markFormAsNotModified();
 
         Flux::modal('change-user-role')->close();
         Flux::toast('User roles updated successfully', variant: 'success');
@@ -152,12 +125,17 @@ class UserList extends Component
             $this->userRoles = [];
         }
         $this->selectedUser = null;
-        $this->formModified = false;
+        $this->markFormAsNotModified();
     }
 
-    public function updatedUserRoles()
+    public function markFormAsModified()
     {
         $this->formModified = true;
+    }
+
+    public function markFormAsNotModified()
+    {
+        $this->formModified = false;
     }
 
     public function updatedSearch()
