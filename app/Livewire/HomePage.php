@@ -25,7 +25,7 @@ class HomePage extends Component
 
     public function render()
     {
-        auth()->loginUsingId(User::admin()->first()->id);
+        // auth()->loginUsingId(User::admin()->first()->id); //automatically logging in as an admin user every time the HomePage component renders (maybe kept for debugging purposes)
         return view('livewire.home-page', [
             'partOfDay' => $this->partOfDay(),
         ]);
@@ -39,7 +39,7 @@ class HomePage extends Component
     public function partOfDay()
     {
         $hour = now()->hour;
-        return match(true) {
+        return match (true) {
             $hour < 12 => 'morning',
             $hour < 18 => 'afternoon',
             default => 'evening',

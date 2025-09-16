@@ -202,9 +202,15 @@ class TestDataSeeder extends Seeder
             Skill::create($skillData);
         }
 
-        $admin = User::factory()->admin()->create([
+        User::factory()->admin()->create([
             'username' => 'admin2x',
             'email' => 'admin2x@example.ac.uk',
+            'password' => bcrypt('secret'),
+        ]);
+
+        User::factory()->staff()->create([
+            'username' => 'staff2x',
+            'email' => 'staff2x@example.ac.uk',
             'password' => bcrypt('secret'),
         ]);
 
