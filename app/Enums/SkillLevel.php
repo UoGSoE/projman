@@ -39,6 +39,16 @@ enum SkillLevel: string
         };
     }
 
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::BEGINNER => 'blue',
+            self::INTERMEDIATE => 'green',
+            self::ADVANCED => 'orange',
+            self::EXPERT => 'purple',
+        };
+    }
+
     public static function getAll(): array
     {
         return array_column(self::cases(), 'value');

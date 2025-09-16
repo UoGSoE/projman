@@ -36,6 +36,7 @@
                 <flux:sidebar.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')" wire:navigate>Staff heatmap</flux:sidebar.item>
                 <flux:sidebar.item icon="users" href="/staff" :current="request()->routeIs('staff')" wire:navigate>Staff</flux:sidebar.item>
                 <flux:sidebar.item icon="user-group" href="/roles" :current="request()->routeIs('groups')" wire:navigate>Roles</flux:sidebar.item>
+                <flux:sidebar.item icon="academic-cap" href="/skills" :current="request()->routeIs('skills.manage')" wire:navigate>Skills</flux:sidebar.item>
             </flux:sidebar.nav>
             <flux:sidebar.spacer />
             <flux:sidebar.nav>

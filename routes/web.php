@@ -15,5 +15,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::middleware(['admin'])->group(function () {
         Route::get('/staff', \App\Livewire\UserList::class)->name('users.list');
         Route::get('/roles', \App\Livewire\RolesList::class)->name('roles.list');
+        Route::get('/skills', \App\Livewire\SkillsManager::class)->name('skills.manage');
     });
 });

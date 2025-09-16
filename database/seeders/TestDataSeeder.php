@@ -48,55 +48,153 @@ class TestDataSeeder extends Seeder
 
         // Create skills
         $skills = [
+            // Programming Languages
             [
-                'name' => 'Python',
-                'description' => 'Python is a versatile programming language used for web development, data analysis, artificial intelligence, and more.',
-                'skill_category' => 'Programming Languages',
-            ],
-            [
-                'name' => 'Java',
-                'description' => 'Java is a versatile programming language used for web development, data analysis, artificial intelligence, and more.',
-                'skill_category' => 'Programming Languages',
-            ],
-            [
-                'name' => 'C++',
-                'description' => 'C++ is a versatile programming language used for web development, data analysis, artificial intelligence, and more.',
-                'skill_category' => 'Programming Languages',
+                'name' => 'PHP',
+                'description' => 'Server-side scripting language for web development',
+                'skill_category' => 'Programming Languages'
             ],
             [
                 'name' => 'JavaScript',
-                'description' => 'JavaScript is a programming language that enables interactive web pages and is an essential part of web applications.',
-                'skill_category' => 'Programming Languages',
+                'description' => 'Client-side and server-side programming language',
+                'skill_category' => 'Programming Languages'
             ],
             [
-                'name' => 'PHP',
-                'description' => 'PHP is a popular general-purpose scripting language that is especially suited to web development.',
-                'skill_category' => 'Programming Languages',
+                'name' => 'Python',
+                'description' => 'High-level programming language for various applications',
+                'skill_category' => 'Programming Languages'
             ],
+            [
+                'name' => 'Java',
+                'description' => 'Object-oriented programming language',
+                'skill_category' => 'Programming Languages'
+            ],
+            [
+                'name' => 'C#',
+                'description' => 'Microsoft programming language for .NET applications',
+                'skill_category' => 'Programming Languages'
+            ],
+
+            // Frameworks
             [
                 'name' => 'Laravel',
-                'description' => 'Laravel is a web application framework with expressive, elegant syntax for building web applications.',
-                'skill_category' => 'Frameworks',
+                'description' => 'PHP web application framework',
+                'skill_category' => 'Frameworks'
             ],
             [
                 'name' => 'React',
-                'description' => 'React is a JavaScript library for building user interfaces, particularly web applications.',
-                'skill_category' => 'Frameworks',
+                'description' => 'JavaScript library for building user interfaces',
+                'skill_category' => 'Frameworks'
             ],
             [
                 'name' => 'Vue.js',
-                'description' => 'Vue.js is a progressive JavaScript framework for building user interfaces.',
-                'skill_category' => 'Frameworks',
+                'description' => 'Progressive JavaScript framework',
+                'skill_category' => 'Frameworks'
             ],
             [
+                'name' => 'Angular',
+                'description' => 'TypeScript-based web application framework',
+                'skill_category' => 'Frameworks'
+            ],
+            [
+                'name' => 'Django',
+                'description' => 'Python web framework',
+                'skill_category' => 'Frameworks'
+            ],
+
+            // Databases
+            [
                 'name' => 'MySQL',
-                'description' => 'MySQL is an open-source relational database management system.',
-                'skill_category' => 'Databases',
+                'description' => 'Relational database management system',
+                'skill_category' => 'Databases'
             ],
             [
                 'name' => 'PostgreSQL',
-                'description' => 'PostgreSQL is a powerful, open source object-relational database system.',
-                'skill_category' => 'Databases',
+                'description' => 'Advanced open-source relational database',
+                'skill_category' => 'Databases'
+            ],
+            [
+                'name' => 'MongoDB',
+                'description' => 'NoSQL document database',
+                'skill_category' => 'Databases'
+            ],
+            [
+                'name' => 'Redis',
+                'description' => 'In-memory data structure store',
+                'skill_category' => 'Databases'
+            ],
+
+            // DevOps
+            [
+                'name' => 'Docker',
+                'description' => 'Containerization platform',
+                'skill_category' => 'DevOps'
+            ],
+            [
+                'name' => 'Kubernetes',
+                'description' => 'Container orchestration platform',
+                'skill_category' => 'DevOps'
+            ],
+            [
+                'name' => 'AWS',
+                'description' => 'Amazon Web Services cloud platform',
+                'skill_category' => 'DevOps'
+            ],
+            [
+                'name' => 'Git',
+                'description' => 'Version control system',
+                'skill_category' => 'DevOps'
+            ],
+
+            // Design
+            [
+                'name' => 'UI/UX Design',
+                'description' => 'User interface and user experience design',
+                'skill_category' => 'Design'
+            ],
+            [
+                'name' => 'Figma',
+                'description' => 'Collaborative interface design tool',
+                'skill_category' => 'Design'
+            ],
+            [
+                'name' => 'Adobe Creative Suite',
+                'description' => 'Creative software suite for design and multimedia',
+                'skill_category' => 'Design'
+            ],
+
+            // Project Management
+            [
+                'name' => 'Agile',
+                'description' => 'Iterative approach to project management',
+                'skill_category' => 'Project Management'
+            ],
+            [
+                'name' => 'Scrum',
+                'description' => 'Agile framework for managing complex projects',
+                'skill_category' => 'Project Management'
+            ],
+            [
+                'name' => 'Jira',
+                'description' => 'Issue and project tracking tool',
+                'skill_category' => 'Project Management'
+            ],
+
+            // Testing
+            [
+                'name' => 'Unit Testing',
+                'description' => 'Testing individual components in isolation',
+                'skill_category' => 'Testing'
+            ],
+            [
+                'name' => 'Integration Testing',
+                'description' => 'Testing interaction between integrated components',
+                'skill_category' => 'Testing'
+            ],
+            [
+                'name' => 'Selenium',
+                'description' => 'Web application testing framework',
+                'skill_category' => 'Testing'
             ],
         ];
 

@@ -17,7 +17,9 @@ class SkillFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->unique()->words(2, true),
+            'description' => $this->faker->sentence(),
+            'skill_category' => $this->faker->randomElement(['Programming Languages', 'Frameworks', 'Databases', 'DevOps', 'Design', 'Project Management', 'Testing']),
         ];
     }
 }
