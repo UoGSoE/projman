@@ -126,4 +126,26 @@ class User extends Authenticatable
             ->withPivot('skill_level')
             ->withTimestamps();
     }
+    public function updateSkillForUser(Skill $skill, string $level): void
+    {
+        $this->skills()->syncWithoutDetaching([
+            $skill->id => ['skill_level' => $level]
+        ]);
+    }
+
+    /**
+     * Remove a skill from this user.
+     */
+    public function removeSkillForUser(int $skillId): void
+    {
+        $this->skills()->detach($skillId);
+    }
+
+    /**
+     * Check if a skill level is valid.
+     */
+    public static function isValidSkillLevel(string $level): bool
+    {
+        return in_array($level, \App\Enums\SkillLevel::getAll());
+    }
 }

@@ -15,7 +15,7 @@ class Skill extends Model
     protected $fillable = [
         'name',
         'description',
-        'skill_category', //TODO: Thinking about it
+        'skill_category'
     ];
 
     /**
@@ -67,5 +67,71 @@ class Skill extends Model
         return $this->belongsToMany(User::class)
             ->withPivot('skill_level')
             ->withTimestamps();
+    }
+
+    /**
+     * Check if this skill is assigned to any users.
+     */
+    public function isAssignedToUsers(): bool
+    {
+        return $this->users()->exists();
+    }
+
+    /**
+     * Search skills by name, description, or category.
+     */
+    public static function searchSkill(string $query, int $limit = 10)
+    {
+        return static::where('name', 'like', '%' . $query . '%')
+            ->orWhere('description', 'like', '%' . $query . '%')
+            ->orWhere('skill_category', 'like', '%' . $query . '%')
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get all available skill categories.
+     */
+    public static function getAvailableSkillCategories()
+    {
+        return static::distinct()
+            ->whereNotNull('skill_category')
+            ->where('skill_category', '!=', '')
+            ->pluck('skill_category')
+            ->sort()
+            ->values();
+    }
+
+    /**
+     * Get skills with user count and search functionality.
+     */
+    public static function getSkillsWithSearch(string $searchQuery = '', string $sortColumn = 'name', string $sortDirection = 'asc', int $perPage = 10)
+    {
+        return static::withCount('users')
+            ->orderBy($sortColumn, $sortDirection)
+            ->when(
+                strlen($searchQuery) >= 2,
+                fn($query) => $query->where(function ($q) use ($searchQuery) {
+                    $q->where('name', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('description', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('skill_category', 'like', '%' . $searchQuery . '%');
+                })
+            )
+            ->paginate($perPage);
+    }
+
+    /**
+     * Get SQL ordering for skill levels.
+     */
+    public static function getSkillLevelOrdering(): string
+    {
+        return "CASE
+            WHEN skill_level = 'expert' THEN 1
+            WHEN skill_level = 'advanced' THEN 2
+            WHEN skill_level = 'intermediate' THEN 3
+            WHEN skill_level = 'beginner' THEN 4
+            ELSE 5
+        END";
     }
 }

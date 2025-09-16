@@ -52,7 +52,7 @@ class SkillsManager extends Component
     {
         return [
             'skillName' => 'required|string|max:255',
-            'skillDescription' => 'required|string|max:255',
+            'skillDescription' => 'required|string|min:3|max:255',
             'skillCategory' => 'required|string|max:255',
             'newSkillLevel' => 'required|in:beginner,intermediate,advanced,expert',
             'newSkillName' => 'required|string|max:255',
@@ -65,8 +65,8 @@ class SkillsManager extends Component
     {
         return [
             'skillName' => 'required|string|max:255',
-            'skillDescription' => 'required|string|max:255',
-            'skillCategory' => 'required|string|max:255',
+            'skillDescription' => 'required|string|min:3|max:255',
+            'skillCategory' => 'required|string|min:3|max:255',
         ];
     }
 
@@ -110,23 +110,22 @@ class SkillsManager extends Component
     public function render()
     {
         return view('livewire.skills-manager', [
-            'skills' => $this->getPaginatedSkills(),
+            'skills' => $this->getSkills(),
             'users' => $this->getStaffUsers(),
             'filteredSkills' => $this->getFilteredSkillsForAssignment(),
             'maxDisplayedSkills' => self::MAX_DISPLAYED_SKILLS,
-            'filteredCategories' => $this->getAvailableCategories(),
+            'filteredCategories' => $this->getAvailableSkillCategories(),
         ]);
     }
 
-    private function getPaginatedSkills()
+    private function getSkills()
     {
-        return Skill::withCount('users')
-            ->orderBy($this->sortColumn, $this->sortDirection)
-            ->when(
-                strlen($this->skillSearchQuery) >= self::SEARCH_MIN_LENGTH,
-                fn($query) => $query->where($this->buildSkillSearchQuery())
-            )
-            ->paginate(self::SKILLS_PER_PAGE);
+        return Skill::getSkillsWithSearch(
+            $this->skillSearchQuery,
+            $this->sortColumn,
+            $this->sortDirection,
+            self::SKILLS_PER_PAGE
+        );
     }
 
     private function getStaffUsers()
@@ -136,7 +135,7 @@ class SkillsManager extends Component
                 strlen($this->userSearchQuery) >= self::SEARCH_MIN_LENGTH,
                 fn($query) => $query->where($this->buildUserSearchQuery())
             )
-            ->with(['skills' => fn($query) => $query->orderByRaw($this->getSkillLevelOrdering())])
+            ->with(['skills' => fn($query) => $query->orderByRaw(Skill::getSkillLevelOrdering())])
             ->orderBy('surname')
             ->orderBy('forenames')
             ->get();
@@ -148,12 +147,7 @@ class SkillsManager extends Component
             return collect();
         }
 
-        return Skill::where('name', 'like', '%' . $this->skillSearchForAssignment . '%')
-            ->orWhere('description', 'like', '%' . $this->skillSearchForAssignment . '%')
-            ->orWhere('skill_category', 'like', '%' . $this->skillSearchForAssignment . '%')
-            ->orderBy('name')
-            ->limit(10)
-            ->get();
+        return Skill::searchSkill($this->skillSearchForAssignment, 10);
     }
 
     private function buildSkillSearchQuery()
@@ -170,25 +164,9 @@ class SkillsManager extends Component
             ->orWhereRaw("CONCAT(forenames, ' ', surname) LIKE ?", ['%' . $this->userSearchQuery . '%']);
     }
 
-    private function getSkillLevelOrdering(): string
+    private function getAvailableSkillCategories()
     {
-        return "CASE
-            WHEN skill_level = 'expert' THEN 1
-            WHEN skill_level = 'advanced' THEN 2
-            WHEN skill_level = 'intermediate' THEN 3
-            WHEN skill_level = 'beginner' THEN 4
-            ELSE 5
-        END";
-    }
-
-    private function getAvailableCategories()
-    {
-        return Skill::distinct()
-            ->whereNotNull('skill_category')
-            ->where('skill_category', '!=', '')
-            ->pluck('skill_category')
-            ->sort()
-            ->values();
+        return Skill::getAvailableSkillCategories();
     }
 
     public function sort(string $column): void
@@ -291,7 +269,7 @@ class SkillsManager extends Component
 
     private function isSkillAssignedToUsers(Skill $skill): bool
     {
-        return $skill->users()->exists();
+        return $skill->isAssignedToUsers();
     }
 
     private function resetSkillForm(): void
@@ -331,15 +309,9 @@ class SkillsManager extends Component
 
     private function isValidSkillLevel(string $level): bool
     {
-        return in_array($level, SkillLevel::getAll());
+        return User::isValidSkillLevel($level);
     }
 
-    private function assignSkillToUser(User $user, Skill $skill, string $level): void
-    {
-        $user->skills()->syncWithoutDetaching([
-            $skill->id => ['skill_level' => $level]
-        ]);
-    }
 
     public function markFormAsModified(): void
     {
@@ -400,7 +372,7 @@ class SkillsManager extends Component
         $this->validate($this->newSkillWithDetailsRules());
 
         $skill = $this->createSkillFromFormData();
-        $this->assignSkillToUser($this->selectedUser, $skill, $this->newSkillLevel);
+        $this->selectedUser->updateSkillForUser($skill, $this->newSkillLevel);
         $this->refreshSelectedUser();
         $this->userSkillLevels[$skill->id] = $this->newSkillLevel;
         $this->clearNewSkillForm();
@@ -428,7 +400,7 @@ class SkillsManager extends Component
 
         $this->validate($this->skillLevelRules());
 
-        $this->assignSkillToUser($this->selectedUser, $this->selectedSkillForAssignment, $this->newSkillLevel);
+        $this->selectedUser->updateSkillForUser($this->selectedSkillForAssignment, $this->newSkillLevel);
         $this->refreshSelectedUser();
         $this->userSkillLevels[$this->selectedSkillForAssignment->id] = $this->newSkillLevel;
         $this->collapseSkillSelection();
@@ -445,7 +417,7 @@ class SkillsManager extends Component
             return;
         }
 
-        $this->assignSkillToUser($this->selectedUser, Skill::find($skillId), $level);
+        $this->selectedUser->updateSkillForUser(Skill::find($skillId), $level);
         $this->refreshSelectedUser();
         $this->userSkillLevels[$skillId] = $level;
 
@@ -458,7 +430,7 @@ class SkillsManager extends Component
             return;
         }
 
-        $this->selectedUser->skills()->detach($skillId);
+        $this->selectedUser->removeSkillForUser($skillId);
         unset($this->userSkillLevels[$skillId]);
         $this->refreshSelectedUser();
 
@@ -501,6 +473,7 @@ class SkillsManager extends Component
         $this->showCreateSkillForm = false;
     }
 
+    //check if skill can be added to user (user, skill, level are required to do so)
     private function canAddSkill(): bool
     {
         return $this->selectedUser && $this->selectedSkillForAssignment && $this->newSkillLevel;

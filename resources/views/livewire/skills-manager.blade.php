@@ -316,7 +316,6 @@
                                                                 Cancel
                                                             </flux:button>
                                                         </div>
-
                                                 </div>
                                             @endif
                                         </flux:card>

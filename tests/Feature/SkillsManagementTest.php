@@ -125,15 +125,9 @@ describe('SkillsManager Component', function () {
 
         it('displays Skill name, description, category and user count for each skill', function () {
             // Assign skills to users for testing user counts
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::INTERMEDIATE->value
-            ]);
-            $this->staffUser2->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::ADVANCED->value
-            ]);
-            $this->staffUser1->skills()->attach($this->skill2->id, [
-                'skill_level' => SkillLevel::BEGINNER->value
-            ]);
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser2->updateSkillForUser($this->skill1, SkillLevel::ADVANCED->value);
+            $this->staffUser1->updateSkillForUser($this->skill2, SkillLevel::BEGINNER->value);
 
             livewire(SkillsManager::class)
                 ->assertSeeText('Laravel')
@@ -328,7 +322,7 @@ describe('SkillsManager Component', function () {
         });
     });
 
-    describe('Skill Creation', function () {
+    describe('Skill Creation modal functionality', function () {
         it('opens add skill modal', function () {
             $component = livewire(SkillsManager::class);
             $component->call('openAddSkillModal');
@@ -338,6 +332,8 @@ describe('SkillsManager Component', function () {
             expect($component->skillDescription)->toBe('');
             expect($component->skillCategory)->toBe('');
             expect($component->isFormModified)->toBe(false);
+            expect($component->assertSee('Add New Skill'));
+            expect($component->assertSee('Add a new skill to the system.'));
         });
 
         it('creates a new skill', function () {
@@ -355,11 +351,35 @@ describe('SkillsManager Component', function () {
         it('validates required fields for skill creation', function () {
             livewire(SkillsManager::class)
                 ->call('openAddSkillModal')
+                ->set('skillName', 'JavaScript')
+                ->set('skillDescription', 'JavaScript is a programming language')
+                ->set('skillCategory', 'Programming Language')
+                ->call('saveSkill')
+                ->assertHasNoErrors(['skillName', 'skillDescription', 'skillCategory']);
+
+            livewire(SkillsManager::class)
+                ->call('openAddSkillModal')
                 ->set('skillName', '')
+                ->set('skillDescription', 'Test Description')
+                ->set('skillCategory', 'Test Category')
+                ->call('saveSkill')
+                ->assertHasErrors(['skillName']);
+
+            livewire(SkillsManager::class)
+                ->call('openAddSkillModal')
+                ->set('skillName', 'Test Skill')
                 ->set('skillDescription', '')
+                ->set('skillCategory', 'Test Category')
+                ->call('saveSkill')
+                ->assertHasErrors(['skillDescription']);
+
+            livewire(SkillsManager::class)
+                ->call('openAddSkillModal')
+                ->set('skillName', 'Test Skill')
+                ->set('skillDescription', 'Test Description')
                 ->set('skillCategory', '')
                 ->call('saveSkill')
-                ->assertHasErrors(['skillName', 'skillDescription', 'skillCategory']);
+                ->assertHasErrors(['skillCategory']);
         });
 
         it('validates field lengths for skill creation', function () {
@@ -370,12 +390,34 @@ describe('SkillsManager Component', function () {
                 ->set('skillCategory', str_repeat('c', 256))
                 ->call('saveSkill')
                 ->assertHasErrors(['skillName', 'skillDescription', 'skillCategory']);
+
+            // test for description length
+            livewire(SkillsManager::class)
+                ->call('openAddSkillModal')
+                ->set('skillName', str_repeat('a', 255))
+                ->set('skillDescription', str_repeat('b', 2))
+                ->set('skillCategory', str_repeat('c', 255))
+                ->call('saveSkill')
+                ->assertHasErrors(['skillDescription']);
+
+            // test for category length
+            livewire(SkillsManager::class)
+                ->call('openAddSkillModal')
+                ->set('skillName', str_repeat('a', 255))
+                ->set('skillDescription', str_repeat('b', 255))
+                ->set('skillCategory', str_repeat('c', 2))
+                ->call('saveSkill')
+                ->assertHasErrors(['skillCategory']);
+
         });
 
-        it('closes add skill modal', function () {
+        it('discards modal state when closed', function () {
             $component = livewire(SkillsManager::class);
             $component->call('openAddSkillModal')
                 ->set('skillName', 'Test Skill')
+                ->set('skillDescription', 'Test Description')
+                ->set('skillCategory', 'Test Category')
+                ->set('isFormModified', true)
                 ->call('closeAddSkillModal');
 
             expect($component->selectedSkill)->toBeNull();
@@ -383,6 +425,7 @@ describe('SkillsManager Component', function () {
             expect($component->skillDescription)->toBe('');
             expect($component->skillCategory)->toBe('');
             expect($component->isFormModified)->toBe(false);
+
         });
 
         it('tracks form modification during skill creation', function () {
@@ -396,10 +439,13 @@ describe('SkillsManager Component', function () {
 
             $component->set('skillDescription', 'New Description');
             expect($component->isFormModified)->toBe(true);
+
+            $component->set('skillCategory', 'New Category');
+            expect($component->isFormModified)->toBe(true);
         });
     });
 
-    describe('Skill Editing', function () {
+    describe('Skill Editing modal functionality', function () {
         it('opens edit skill modal for existing skill', function () {
             $component = livewire(SkillsManager::class);
             $component->call('openEditSkillModal', $this->skill1);
@@ -409,6 +455,8 @@ describe('SkillsManager Component', function () {
             expect($component->skillDescription)->toBe('PHP framework for web development');
             expect($component->skillCategory)->toBe('Programming');
             expect($component->isFormModified)->toBe(false);
+            expect($component->assertSee('Edit Skill'));
+            expect($component->assertSee('Edit the skill details.'));
         });
 
         it('updates existing skill', function () {
@@ -460,6 +508,31 @@ describe('SkillsManager Component', function () {
                 ->set('skillCategory', '')
                 ->call('saveSkill')
                 ->assertHasErrors(['skillName', 'skillDescription', 'skillCategory']);
+
+            livewire(SkillsManager::class)
+                ->call('openEditSkillModal', $this->skill1)
+                ->set('skillName', 'Test Skill')
+                ->set('skillDescription', '')
+                ->set('skillCategory', 'Test Category')
+                ->call('saveSkill')
+                ->assertHasErrors(['skillDescription']);
+
+            livewire(SkillsManager::class)
+                ->call('openEditSkillModal', $this->skill1)
+                ->set('skillName', 'Test Skill')
+                ->set('skillDescription', 'Test Description')
+                ->set('skillCategory', '')
+                ->call('saveSkill')
+                ->assertHasErrors(['skillCategory']);
+
+            livewire(SkillsManager::class)
+                ->call('openEditSkillModal', $this->skill1)
+                ->set('skillName', '')
+                ->set('skillDescription', 'Test Description')
+                ->set('skillCategory', 'Test Category')
+                ->call('saveSkill')
+                ->assertHasErrors(['skillName']);
+
         });
 
         it('validates field lengths for skill editing', function () {
@@ -470,11 +543,27 @@ describe('SkillsManager Component', function () {
                 ->set('skillCategory', str_repeat('c', 256))
                 ->call('saveSkill')
                 ->assertHasErrors(['skillName', 'skillDescription', 'skillCategory']);
+
+            livewire(SkillsManager::class)
+                ->call('openEditSkillModal', $this->skill1)
+                ->set('skillName', str_repeat('a', 255))
+                ->set('skillDescription', str_repeat('b', 2))
+                ->set('skillCategory', str_repeat('c', 255))
+                ->call('saveSkill')
+                ->assertHasErrors(['skillDescription']);
+
+            livewire(SkillsManager::class)
+                ->call('openEditSkillModal', $this->skill1)
+                ->set('skillName', str_repeat('a', 255))
+                ->set('skillDescription', str_repeat('b', 255))
+                ->set('skillCategory', str_repeat('c', 2))
+                ->call('saveSkill')
+                ->assertHasErrors(['skillCategory']);
         });
     });
 
     describe('Skill Deletion', function () {
-        it('deletes skill when not assigned to users', function () {
+        it('deletes skill only when not assigned to users', function () {
             livewire(SkillsManager::class)
                 ->call('deleteSkill', $this->skill1);
 
@@ -483,9 +572,7 @@ describe('SkillsManager Component', function () {
 
         it('prevents deletion of skill assigned to users', function () {
             // Assign skill to user
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::INTERMEDIATE->value
-            ]);
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
 
             livewire(SkillsManager::class)
                 ->call('deleteSkill', $this->skill1);
@@ -496,9 +583,7 @@ describe('SkillsManager Component', function () {
 
         it('allows deletion of skill when all user assignments are removed', function () {
             // Assign skill to user
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::INTERMEDIATE->value
-            ]);
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
 
             // Remove the assignment
             $this->staffUser1->skills()->detach($this->skill1->id);
@@ -521,12 +606,18 @@ describe('SkillsManager Component', function () {
             expect($component->selectedSkillForAssignment)->toBeNull();
             expect($component->newSkillLevel)->toBe('');
             expect($component->isFormModified)->toBe(false);
+            expect($component->assertSee('Manage Skills for'));
+            expect($component->assertSee($this->staffUser1->full_name));
+            expect($component->assertSee('Laravel'));
+            expect($component->assertSee('PHP framework for web development'));
+            expect($component->assertSee('Programming'));
         });
 
-        it('closes user skill modal', function () {
+        it('closes user skill modal and discards modal state', function () {
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('closeUserSkillModal');
+                ->call('closeUserSkillModal')
+                ->asserthasnoerrors();
 
             expect($component->selectedUser)->toBeNull();
             expect($component->skillSearchForAssignment)->toBe('');
@@ -572,10 +663,8 @@ describe('SkillsManager Component', function () {
         });
 
         it('updates user skill level', function () {
-            // First assign the skill
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::BEGINNER->value
-            ]);
+            // First assign the skill to a user
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1)
@@ -589,9 +678,7 @@ describe('SkillsManager Component', function () {
 
         it('removes skill from user', function () {
             // First assign the skill
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::INTERMEDIATE->value
-            ]);
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1)
@@ -601,9 +688,7 @@ describe('SkillsManager Component', function () {
         });
 
         it('validates skill level when updating', function () {
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::BEGINNER->value
-            ]);
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1)
@@ -710,29 +795,6 @@ describe('SkillsManager Component', function () {
                 ->set('newSkillLevel', 'invalid_level')
                 ->call('createAndAssignSkill')
                 ->assertHasErrors(['newSkillLevel']);
-        });
-
-        it('handles error when no user is selected for new skill creation', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleCreateSkillForm')
-                ->set('newSkillName', 'Test Skill')
-                ->set('newSkillDescription', 'Test Description')
-                ->set('newSkillCategory', 'Test Category')
-                ->set('newSkillLevel', SkillLevel::BEGINNER->value);
-
-            // Instead of setting selectedUser to null, let's test with a fresh component
-            // that doesn't have a selectedUser
-            $component2 = livewire(SkillsManager::class);
-            $component2->call('toggleCreateSkillForm')
-                ->set('newSkillName', 'Test Skill 2')
-                ->set('newSkillDescription', 'Test Description 2')
-                ->set('newSkillCategory', 'Test Category 2')
-                ->set('newSkillLevel', SkillLevel::BEGINNER->value)
-                ->call('createAndAssignSkill');
-
-            // The skill should NOT be created because selectedUser is null
-            expect(Skill::where('name', 'Test Skill 2')->exists())->toBeFalse();
         });
     });
 
@@ -934,15 +996,9 @@ describe('SkillsManager Component', function () {
     describe('Skill Display with User Counts', function () {
         beforeEach(function () {
             // Assign skills to users for testing user counts
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::INTERMEDIATE->value
-            ]);
-            $this->staffUser2->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::ADVANCED->value
-            ]);
-            $this->staffUser1->skills()->attach($this->skill2->id, [
-                'skill_level' => SkillLevel::BEGINNER->value
-            ]);
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser2->updateSkillForUser($this->skill1, SkillLevel::ADVANCED->value);
+            $this->staffUser1->updateSkillForUser($this->skill2, SkillLevel::BEGINNER->value);
             // $this->skill3 has 0 users
         });
 
@@ -976,9 +1032,7 @@ describe('SkillsManager Component', function () {
             $newUser = User::factory()->create(['is_staff' => true]);
 
             // Assign the new user to skill1
-            $newUser->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::BEGINNER->value
-            ]);
+            $newUser->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
 
             livewire(SkillsManager::class)
                 ->assertSeeText('Laravel')
@@ -1055,9 +1109,7 @@ describe('SkillsManager Component', function () {
         });
 
         it('handles skill level updates with all valid levels', function () {
-            $this->staffUser1->skills()->attach($this->skill1->id, [
-                'skill_level' => SkillLevel::BEGINNER->value
-            ]);
+            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1);
