@@ -1,12 +1,12 @@
 <?php
 
+use App\Enums\SkillLevel;
 use App\Livewire\SkillsManager;
 use App\Models\Skill;
 use App\Models\User;
-use App\Enums\SkillLevel;
-use function Pest\Livewire\livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Flux\Flux;
+
+use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
@@ -140,8 +140,6 @@ describe('SkillsManager Component', function () {
 
         /**
          * displays Skill name, description, category and user count
-         *
-         *
          */
     });
 

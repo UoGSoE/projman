@@ -2,10 +2,10 @@
 
 namespace App\Livewire;
 
-use Flux\Flux;
+use App\Enums\SkillLevel;
 use App\Models\Skill;
 use App\Models\User;
-use App\Enums\SkillLevel;
+use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -15,38 +15,53 @@ class SkillsManager extends Component
 
     // Pagination and sorting
     public string $sortColumn = 'name';
+
     public string $sortDirection = 'asc';
+
     public string $skillSearchQuery = '';
+
     public string $userSearchQuery = '';
 
     // UI state
     public string $activeTab = 'available-skills';
+
     public bool $isFormModified = false;
+
     public bool $showCreateSkillForm = false;
 
     // Selected entities
     public ?Skill $selectedSkill = null;
+
     public ?User $selectedUser = null;
+
     public ?Skill $selectedSkillForAssignment = null;
 
     // Skill form data
     public string $skillName = '';
+
     public string $skillDescription = '';
+
     public string $skillCategory = '';
 
     // User skill assignment data
     public string $newSkillLevel = '';
+
     public array $userSkillLevels = [];
+
     public string $skillSearchForAssignment = '';
+
     public string $newSkillName = '';
+
     public string $newSkillDescription = '';
+
     public string $newSkillCategory = '';
 
     // Constants
     private const MAX_DISPLAYED_SKILLS = 3;
-    private const SKILLS_PER_PAGE = 10;
-    private const SEARCH_MIN_LENGTH = 2;
 
+    private const SKILLS_PER_PAGE = 10;
+
+    private const SEARCH_MIN_LENGTH = 2;
 
     protected function rules(): array
     {
@@ -133,9 +148,9 @@ class SkillsManager extends Component
         return User::where('is_staff', true)
             ->when(
                 strlen($this->userSearchQuery) >= self::SEARCH_MIN_LENGTH,
-                fn($query) => $query->where($this->buildUserSearchQuery())
+                fn ($query) => $query->where($this->buildUserSearchQuery())
             )
-            ->with(['skills' => fn($query) => $query->orderByRaw(Skill::getSkillLevelOrdering())])
+            ->with(['skills' => fn ($query) => $query->orderByRaw(Skill::getSkillLevelOrdering())])
             ->orderBy('surname')
             ->orderBy('forenames')
             ->get();
@@ -152,16 +167,16 @@ class SkillsManager extends Component
 
     private function buildSkillSearchQuery()
     {
-        return fn($query) => $query->where('name', 'like', '%' . $this->skillSearchQuery . '%')
-            ->orWhere('description', 'like', '%' . $this->skillSearchQuery . '%')
-            ->orWhere('skill_category', 'like', '%' . $this->skillSearchQuery . '%');
+        return fn ($query) => $query->where('name', 'like', '%'.$this->skillSearchQuery.'%')
+            ->orWhere('description', 'like', '%'.$this->skillSearchQuery.'%')
+            ->orWhere('skill_category', 'like', '%'.$this->skillSearchQuery.'%');
     }
 
     private function buildUserSearchQuery()
     {
-        return fn($query) => $query->where('forenames', 'like', '%' . $this->userSearchQuery . '%')
-            ->orWhere('surname', 'like', '%' . $this->userSearchQuery . '%')
-            ->orWhereRaw("CONCAT(forenames, ' ', surname) LIKE ?", ['%' . $this->userSearchQuery . '%']);
+        return fn ($query) => $query->where('forenames', 'like', '%'.$this->userSearchQuery.'%')
+            ->orWhere('surname', 'like', '%'.$this->userSearchQuery.'%')
+            ->orWhereRaw("CONCAT(forenames, ' ', surname) LIKE ?", ['%'.$this->userSearchQuery.'%']);
     }
 
     private function getAvailableSkillCategories()
@@ -221,6 +236,7 @@ class SkillsManager extends Component
     {
         if ($this->isSkillAssignedToUsers($skill)) {
             Flux::toast('Cannot delete skill that is assigned to users', variant: 'error');
+
             return;
         }
 
@@ -283,8 +299,10 @@ class SkillsManager extends Component
     {
         $this->selectedUser = $user->load('skills');
         $this->resetUserSkillForm();
+        $this->userSkillLevels = $this->selectedUser->skills->pluck('pivot.skill_level', 'id')->toArray();
         $this->markFormAsNotModified();
         Flux::modal('user-skills-form')->show();
+
     }
 
     public function closeUserSkillModal(): void
@@ -311,7 +329,6 @@ class SkillsManager extends Component
     {
         return User::isValidSkillLevel($level);
     }
-
 
     public function markFormAsModified(): void
     {
@@ -364,8 +381,9 @@ class SkillsManager extends Component
 
     public function createAndAssignSkill(): void
     {
-        if (!$this->selectedUser) {
+        if (! $this->selectedUser) {
             Flux::toast('No user selected', variant: 'error');
+
             return;
         }
 
@@ -382,7 +400,7 @@ class SkillsManager extends Component
 
     public function toggleCreateSkillForm(): void
     {
-        $this->showCreateSkillForm = !$this->showCreateSkillForm;
+        $this->showCreateSkillForm = ! $this->showCreateSkillForm;
 
         if ($this->showCreateSkillForm) {
             $this->newSkillName = $this->skillSearchForAssignment;
@@ -394,7 +412,7 @@ class SkillsManager extends Component
 
     public function addSkillWithLevel(): void
     {
-        if (!$this->canAddSkill()) {
+        if (! $this->canAddSkill()) {
             return;
         }
 
@@ -410,10 +428,11 @@ class SkillsManager extends Component
 
     public function updateSkillLevel(int $skillId, string $level): void
     {
-        if (!$this->selectedUser || !$this->isValidSkillLevel($level)) {
-            if (!$this->isValidSkillLevel($level)) {
+        if (! $this->selectedUser || ! $this->isValidSkillLevel($level)) {
+            if (! $this->isValidSkillLevel($level)) {
                 Flux::toast('Invalid skill level', variant: 'error');
             }
+
             return;
         }
 
@@ -426,7 +445,7 @@ class SkillsManager extends Component
 
     public function removeUserSkill(int $skillId): void
     {
-        if (!$this->selectedUser) {
+        if (! $this->selectedUser) {
             return;
         }
 
@@ -461,6 +480,7 @@ class SkillsManager extends Component
     private function refreshSelectedUser(): void
     {
         $this->selectedUser = $this->selectedUser->fresh(['skills']);
+        $this->userSkillLevels = $this->selectedUser->skills->pluck('pivot.skill_level', 'id')->toArray();
     }
 
     private function clearNewSkillForm(): void
@@ -473,10 +493,9 @@ class SkillsManager extends Component
         $this->showCreateSkillForm = false;
     }
 
-    //check if skill can be added to user (user, skill, level are required to do so)
+    // check if skill can be added to user (user, skill, level are required to do so)
     private function canAddSkill(): bool
     {
         return $this->selectedUser && $this->selectedSkillForAssignment && $this->newSkillLevel;
     }
 }
-

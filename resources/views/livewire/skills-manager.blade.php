@@ -15,9 +15,10 @@
 
         <flux:tab.panel name="available-skills">
             <div>
-                <flux:input type="text" wire:model.live="skillSearchQuery" placeholder="Search skills by name, description, or category..." class="w-full" />
+                <flux:input type="text" wire:model.live="skillSearchQuery"
+                    placeholder="Search skills by name, description, or category..." class="w-full" />
                 <div class="overflow-x-auto">
-                    <flux:table :paginate="$skills" class="mt-6" >
+                    <flux:table :paginate="$skills" class="mt-6">
                         <flux:table.columns>
                             <flux:table.column sortable wire:click="sort('name')">Name</flux:table.column>
                             <flux:table.column sortable wire:click="sort('description')">Description</flux:table.column>
@@ -26,31 +27,34 @@
                             <flux:table.column>Actions</flux:table.column>
                         </flux:table.columns>
                         <flux:table.rows>
-                        @foreach($skills as $skill)
-                        <flux:table.row :key="'skill-' . $skill->id">
-                            <flux:table.cell>{{ $skill->name }}</flux:table.cell>
-                            <flux:table.cell>{{ $skill->description }}</flux:table.cell>
-                            <flux:table.cell>{{ $skill->skill_category }}</flux:table.cell>
-                            <flux:table.cell>{{ $skill->users_count }}</flux:table.cell>
-                            <flux:table.cell>
-                                <flux:dropdown>
-                                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
-                                    <flux:menu>
-                                        <flux:menu.item icon="pencil">
-                                            <flux:modal.trigger wire:click="openEditSkillModal({{ $skill->id }})">
-                                                Edit Skill
-                                            </flux:modal.trigger>
-                                        </flux:menu.item>
-                                        <flux:menu.separator />
-                                        <flux:menu.item variant="danger" icon="trash" wire:click="deleteSkill({{ $skill->id }})">
-                                            Delete
-                                        </flux:menu.item>
-                                    </flux:menu>
-                                </flux:dropdown>
-                            </flux:table.cell>
-                        </flux:table.row>
-                        @endforeach
-                    </flux:table.rows>
+                            @foreach ($skills as $skill)
+                                <flux:table.row :key="'skill-' . $skill->id">
+                                    <flux:table.cell>{{ $skill->name }}</flux:table.cell>
+                                    <flux:table.cell>{{ $skill->description }}</flux:table.cell>
+                                    <flux:table.cell>{{ $skill->skill_category }}</flux:table.cell>
+                                    <flux:table.cell>{{ $skill->users_count }}</flux:table.cell>
+                                    <flux:table.cell>
+                                        <flux:dropdown>
+                                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"
+                                                inset="top bottom" />
+                                            <flux:menu>
+                                                <flux:menu.item icon="pencil">
+                                                    <flux:modal.trigger
+                                                        wire:click="openEditSkillModal({{ $skill->id }})">
+                                                        Edit Skill
+                                                    </flux:modal.trigger>
+                                                </flux:menu.item>
+                                                <flux:menu.separator />
+                                                <flux:menu.item variant="danger" icon="trash"
+                                                    wire:click="deleteSkill({{ $skill->id }})">
+                                                    Delete
+                                                </flux:menu.item>
+                                            </flux:menu>
+                                        </flux:dropdown>
+                                    </flux:table.cell>
+                                </flux:table.row>
+                            @endforeach
+                        </flux:table.rows>
                     </flux:table>
                 </div>
             </div>
@@ -58,7 +62,8 @@
 
         <flux:tab.panel name="user-skills">
             <div>
-                <flux:input type="text" wire:model.live="userSearchQuery" placeholder="Search users by name..." class="w-full" />
+                <flux:input type="text" wire:model.live="userSearchQuery" placeholder="Search users by name..."
+                    class="w-full" />
 
                 <flux:table class="mt-6">
                     <flux:table.columns>
@@ -78,14 +83,16 @@
                                         @php
                                             $skillLevel = \App\Enums\SkillLevel::from($skill->pivot->skill_level);
                                         @endphp
-                                        @if($loop->index < $maxDisplayedSkills)
+                                        @if ($loop->index < $maxDisplayedSkills)
                                             <flux:tooltip>
-                                                <flux:badge size="sm" variant="outline" inset="top bottom" :color="$skillLevel->getColor()" class="cursor-help">
+                                                <flux:badge size="sm" variant="outline" inset="top bottom"
+                                                    :color="$skillLevel->getColor()" class="cursor-help">
                                                     {{ $skill->name }}
                                                 </flux:badge>
                                                 <flux:tooltip.content>
                                                     <div class="text-center">
-                                                        <div class="font-semibold">{{ $skillLevel->getDisplayName() }}</div>
+                                                        <div class="font-semibold">{{ $skillLevel->getDisplayName() }}
+                                                        </div>
                                                     </div>
                                                 </flux:tooltip.content>
                                             </flux:tooltip>
@@ -94,25 +101,31 @@
                                         <flux:text class="text-sm">No skills assigned</flux:text>
                                     @endforelse
 
-                                    @if($user->skills->count() > $maxDisplayedSkills)
+                                    @if ($user->skills->count() > $maxDisplayedSkills)
                                         <flux:tooltip>
-                                            <flux:badge size="sm" variant="outline" color="gray" class="cursor-help">
+                                            <flux:badge size="sm" variant="outline" color="gray"
+                                                class="cursor-help">
                                                 +{{ $user->skills->count() - $maxDisplayedSkills }} more
                                             </flux:badge>
                                             <flux:tooltip.content>
                                                 <div class="max-w-xs max-h-48 overflow-y-auto space-y-1">
-                                                    @foreach($user->skills->skip($maxDisplayedSkills) as $skill)
+                                                    @foreach ($user->skills->skip($maxDisplayedSkills) as $skill)
                                                         @php
-                                                            $skillLevel = \App\Enums\SkillLevel::from($skill->pivot->skill_level);
+                                                            $skillLevel = \App\Enums\SkillLevel::from(
+                                                                $skill->pivot->skill_level,
+                                                            );
                                                         @endphp
                                                         <div class="flex">
                                                             <flux:tooltip>
-                                                                <flux:badge size="sm" variant="outline" :color="$skillLevel->getColor()" class="cursor-help">
+                                                                <flux:badge size="sm" variant="outline"
+                                                                    :color="$skillLevel->getColor()"
+                                                                    class="cursor-help">
                                                                     {{ $skill->name }}
                                                                 </flux:badge>
                                                                 <flux:tooltip.content>
                                                                     <div class="text-center">
-                                                                        <div class="font-semibold">{{ $skillLevel->getDisplayName() }}</div>
+                                                                        <div class="font-semibold">
+                                                                            {{ $skillLevel->getDisplayName() }}</div>
                                                                     </div>
                                                                 </flux:tooltip.content>
                                                             </flux:tooltip>
@@ -153,22 +166,22 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model.live="skillName" wire:change="markFormAsModified" placeholder="Enter skill name" />
+                        <flux:input wire:model.live="skillName" wire:change="markFormAsModified"
+                            placeholder="Enter skill name" />
                         <flux:error name="skillName" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model.live="skillDescription" wire:change="markFormAsModified" placeholder="Enter skill description" />
+                        <flux:textarea wire:model.live="skillDescription" wire:change="markFormAsModified"
+                            placeholder="Enter skill description" />
                         <flux:error name="skillDescription" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Category</flux:label>
-                        <flux:autocomplete
-                            wire:model.live="skillCategory"
-                            placeholder="Search or enter skill category">
-                            @foreach($filteredCategories as $category)
+                        <flux:autocomplete wire:model.live="skillCategory" placeholder="Search or enter skill category">
+                            @foreach ($filteredCategories as $category)
                                 <flux:autocomplete.item>{{ $category }}</flux:autocomplete.item>
                             @endforeach
                         </flux:autocomplete>
@@ -200,22 +213,22 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model.live="skillName" wire:change="markFormAsModified" placeholder="Enter skill name" />
+                        <flux:input wire:model.live="skillName" wire:change="markFormAsModified"
+                            placeholder="Enter skill name" />
                         <flux:error name="skillName" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model.live="skillDescription" wire:change="markFormAsModified" placeholder="Enter skill description" />
+                        <flux:textarea wire:model.live="skillDescription" wire:change="markFormAsModified"
+                            placeholder="Enter skill description" />
                         <flux:error name="skillDescription" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Category</flux:label>
-                        <flux:autocomplete
-                            wire:model.live="skillCategory"
-                            placeholder="Search or enter skill category">
-                            @foreach($filteredCategories as $category)
+                        <flux:autocomplete wire:model.live="skillCategory" placeholder="Search or enter skill category">
+                            @foreach ($filteredCategories as $category)
                                 <flux:autocomplete.item>{{ $category }}</flux:autocomplete.item>
                             @endforeach
                         </flux:autocomplete>
@@ -226,7 +239,8 @@
                 <div class="flex gap-3">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button type="button" variant="ghost" wire:click="closeEditSkillModal">Cancel</flux:button>
+                        <flux:button type="button" variant="ghost" wire:click="closeEditSkillModal">Cancel
+                        </flux:button>
                     </flux:modal.close>
                     @if ($isFormModified)
                         <flux:button type="submit" variant="primary">Update Skill</flux:button>
@@ -237,10 +251,14 @@
     </flux:modal>
 
     <flux:modal name="user-skills-form" variant="flyout" @close="closeUserSkillModal">
+
         <form wire:submit="saveUserSkills">
             <div class="space-y-6">
                 <div>
-                    <flux:heading size="lg" class="flex items-center gap-2">Manage Skills for <flux:text class="font-bold text-base" color="blue">{{ $selectedUser ? $selectedUser->full_name : '' }}</flux:text></flux:heading>
+                    <flux:heading size="lg" class="flex items-center gap-2">Manage Skills for <flux:text
+                            class="font-bold text-base" color="blue">
+                            {{ $selectedUser ? $selectedUser->full_name : '' }}</flux:text>
+                    </flux:heading>
                     <flux:text class="mt-2">Add new skills or manage existing skill levels.</flux:text>
                 </div>
 
@@ -248,74 +266,65 @@
                     <div class="space-y-4">
                         <flux:field>
                             <flux:label>Search and Select Skill</flux:label>
-                            <flux:input
-                                type="text"
-                                wire:model.live="skillSearchForAssignment"
-                                placeholder="Type to search skills..."
-                                class="w-full" />
+                            <flux:input type="text" wire:model.live="skillSearchForAssignment"
+                                placeholder="Type to search skills..." class="w-full" />
                         </flux:field>
 
-                        @if($skillSearchForAssignment)
-                            @if($filteredSkills->count() > 0)
+                        @if ($skillSearchForAssignment)
+                            @if ($filteredSkills->count() > 0)
                                 <div class="max-h-48 overflow-y-auto space-y-2">
-                                    @foreach($filteredSkills as $skill)
+                                    @foreach ($filteredSkills as $skill)
                                         @php
-                                            $userHasSkill = $selectedUser && $selectedUser->skills->contains('id', $skill->id);
+                                            $userHasSkill =
+                                                $selectedUser && $selectedUser->skills->contains('id', $skill->id);
                                         @endphp
-                                        <flux:card class="hover:bg-zinc-50 dark:hover:bg-zinc-700 p-4 {{ $userHasSkill ? 'opacity-60' : 'cursor-pointer' }}"
-                                                  wire:click="{{ $userHasSkill ? '' : 'toggleSkillSelection(' . $skill->id . ')' }}">
+                                        <flux:card
+                                            class="hover:bg-zinc-50 dark:hover:bg-zinc-700 p-4 {{ $userHasSkill ? 'opacity-60' : 'cursor-pointer' }}"
+                                            wire:click="{{ $userHasSkill ? '' : 'toggleSkillSelection(' . $skill->id . ')' }}">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex-1">
                                                     <div class="flex items-center gap-2">
                                                         <flux:text class="font-medium">{{ $skill->name }}</flux:text>
-                                                        @if($userHasSkill)
-                                                            <flux:badge size="sm" variant="outline" color="green">
+                                                        @if ($userHasSkill)
+                                                            <flux:badge size="sm" variant="outline"
+                                                                color="green">
                                                                 Already Added
                                                             </flux:badge>
                                                         @endif
                                                     </div>
-                                                    <flux:text class="text-sm" variant="subtle">{{ $skill->description }}</flux:text>
+                                                    <flux:text class="text-sm" variant="subtle">
+                                                        {{ $skill->description }}</flux:text>
                                                 </div>
-                                                @if(!$userHasSkill)
-                                                    <flux:button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        icon="{{ $selectedSkillForAssignment && $selectedSkillForAssignment->id === $skill->id ? 'minus' : 'plus' }}"
-                                                        />
+                                                @if (!$userHasSkill)
+                                                    <flux:button type="button" size="sm" variant="ghost"
+                                                        icon="{{ $selectedSkillForAssignment && $selectedSkillForAssignment->id === $skill->id ? 'minus' : 'plus' }}" />
                                                 @endif
                                             </div>
 
-                                            @if(!$userHasSkill && $selectedSkillForAssignment && $selectedSkillForAssignment->id === $skill->id)
+                                            @if (!$userHasSkill && $selectedSkillForAssignment && $selectedSkillForAssignment->id === $skill->id)
                                                 <div class="pt-4" @click.stop>
 
-                                                        <flux:field>
-                                                            <flux:label>Skill Level</flux:label>
-                                                            <flux:select wire:model.live="newSkillLevel" @click.stop>
-                                                                @foreach(\App\Enums\SkillLevel::cases() as $level)
-                                                                    <flux:select.option value="{{ $level->value }}">{{ $level->getDisplayName() }}</flux:select.option>
-                                                                @endforeach
-                                                            </flux:select>
-                                                        </flux:field>
-                                                        <div class="flex mt-6
+                                                    <flux:field>
+                                                        <flux:label>Skill Level</flux:label>
+                                                        <flux:select wire:model.live="newSkillLevel" @click.stop>
+                                                            @foreach (\App\Enums\SkillLevel::cases() as $level)
+                                                                <flux:select.option value="{{ $level->value }}">
+                                                                    {{ $level->getDisplayName() }}</flux:select.option>
+                                                            @endforeach
+                                                        </flux:select>
+                                                    </flux:field>
+                                                    <div
+                                                        class="flex mt-6
                                                          justify-end">
-                                                            <flux:button
-                                                                type="button"
-                                                                size="sm"
-                                                                variant="primary"
-                                                                wire:click="addSkillWithLevel"
-                                                                @click.stop>
-                                                                Add Skill
-                                                            </flux:button>
-                                                            <flux:button
-                                                                type="button"
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                wire:click="cancelSkillSelection"
-                                                                @click.stop>
-                                                                Cancel
-                                                            </flux:button>
-                                                        </div>
+                                                        <flux:button type="button" size="sm" variant="primary"
+                                                            wire:click="addSkillWithLevel" @click.stop>
+                                                            Add Skill
+                                                        </flux:button>
+                                                        <flux:button type="button" size="sm" variant="ghost"
+                                                            wire:click="cancelSkillSelection" @click.stop>
+                                                            Cancel
+                                                        </flux:button>
+                                                    </div>
                                                 </div>
                                             @endif
                                         </flux:card>
@@ -328,16 +337,13 @@
                                     <flux:text class="text-sm text-zinc-500 mb-4">
                                         Couldn't find the skill you're looking for?
                                     </flux:text>
-                                    <flux:button
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
+                                    <flux:button type="button" size="sm" variant="ghost"
                                         wire:click="toggleCreateSkillForm">
                                         Create "{{ $skillSearchForAssignment }}" skill
                                     </flux:button>
                                 </div>
 
-                                @if($showCreateSkillForm)
+                                @if ($showCreateSkillForm)
                                     <div class="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
                                         <div class="space-y-4">
                                             <flux:heading>Create New Skill</flux:heading>
@@ -345,8 +351,7 @@
                                             <div class="grid grid-cols-1 gap-4">
                                                 <flux:field>
                                                     <flux:label>Skill Name</flux:label>
-                                                    <flux:input
-                                                        wire:model.live="newSkillName"
+                                                    <flux:input wire:model.live="newSkillName"
                                                         placeholder="Enter skill name"
                                                         value="{{ $skillSearchForAssignment }}" />
                                                     <flux:error name="newSkillName" />
@@ -354,19 +359,18 @@
 
                                                 <flux:field>
                                                     <flux:label>Description</flux:label>
-                                                    <flux:textarea
-                                                        wire:model.live="newSkillDescription"
+                                                    <flux:textarea wire:model.live="newSkillDescription"
                                                         placeholder="Enter skill description" />
                                                     <flux:error name="newSkillDescription" />
                                                 </flux:field>
 
                                                 <flux:field>
                                                     <flux:label>Category</flux:label>
-                                                    <flux:autocomplete
-                                                        wire:model.live="newSkillCategory"
+                                                    <flux:autocomplete wire:model.live="newSkillCategory"
                                                         placeholder="Search or enter skill category">
-                                                        @foreach($filteredCategories as $category)
-                                                            <flux:autocomplete.item>{{ $category }}</flux:autocomplete.item>
+                                                        @foreach ($filteredCategories as $category)
+                                                            <flux:autocomplete.item>{{ $category }}
+                                                            </flux:autocomplete.item>
                                                         @endforeach
                                                     </flux:autocomplete>
                                                     <flux:error name="newSkillCategory" />
@@ -375,8 +379,9 @@
                                                 <flux:field>
                                                     <flux:label>Skill Level</flux:label>
                                                     <flux:select wire:model.live="newSkillLevel" required>
-                                                        @foreach(\App\Enums\SkillLevel::cases() as $level)
-                                                            <flux:select.option value="{{ $level->value }}">{{ $level->getDisplayName() }}</flux:select.option>
+                                                        @foreach (\App\Enums\SkillLevel::cases() as $level)
+                                                            <flux:select.option value="{{ $level->value }}">
+                                                                {{ $level->getDisplayName() }}</flux:select.option>
                                                         @endforeach
                                                     </flux:select>
                                                     <flux:error name="newSkillLevel" />
@@ -384,17 +389,11 @@
                                             </div>
 
                                             <div class="flex justify-end gap-2">
-                                                <flux:button
-                                                    type="button"
-                                                    size="sm"
-                                                    variant="ghost"
+                                                <flux:button type="button" size="sm" variant="ghost"
                                                     wire:click="toggleCreateSkillForm">
                                                     Cancel
                                                 </flux:button>
-                                                <flux:button
-                                                    type="button"
-                                                    size="sm"
-                                                    variant="primary"
+                                                <flux:button type="button" size="sm" variant="primary"
                                                     wire:click="createAndAssignSkill">
                                                     Create & Assign Skill
                                                 </flux:button>
@@ -410,27 +409,33 @@
                     <div class="space-y-4">
                         <flux:heading size="md">User Skills</flux:heading>
 
-                        @if($selectedUser && $selectedUser->skills->count() > 0)
+
+                        @if ($selectedUser && $selectedUser->skills->count() > 0)
+
                             <div class="space-y-2">
-                                @foreach($selectedUser->skills as $skill)
+                                @foreach ($selectedUser->skills as $skill)
                                     <flux:card class="hover:bg-zinc-50 dark:hover:bg-zinc-700 cursor-pointer p-4">
                                         <div>
-                                                <div class="flex items-center gap-2">
-                                                    <flux:text class="font-medium block" variant="strong">{{ $skill->name }}</flux:text> |
-                                                    <flux:text class="text-sm" variant="subtle">{{ $skill->skill_category }}</flux:text>
-                                                </div>
-                                                <flux:text class="text-sm">{{ $skill->description }}</flux:text>
+                                            <div class="flex items-center gap-2">
+                                                <flux:text class="font-medium block" variant="strong">
+                                                    {{ $skill->name }}</flux:text> |
+                                                <flux:text class="text-sm" variant="subtle">
+                                                    {{ $skill->skill_category }}</flux:text>
+                                            </div>
+                                            <flux:text class="text-sm">{{ $skill->description }}</flux:text>
                                         </div>
                                         <div class="flex items-center gap-4 mt-4" @click.stop>
-                                            <flux:select wire:model.live="userSkillLevels.{{ $skill->id }}" wire:change="updateSkillLevel({{ $skill->id }}, $event.target.value)" @click.stop>
-                                                @foreach(\App\Enums\SkillLevel::cases() as $level)
-                                                    <flux:select.option value="{{ $level->value }}">{{ $level->getDisplayName() }}</flux:select.option>
+
+                                            <flux:select wire:model.live="userSkillLevels.{{ $skill->id }}"
+                                                wire:change="updateSkillLevel({{ $skill->id }}, $event.target.value)"
+                                                @click.stop>
+                                                @foreach (\App\Enums\SkillLevel::cases() as $level)
+                                                    <flux:select.option value="{{ $level->value }}">
+                                                        {{ $level->getDisplayName() }}</flux:select.option>
                                                 @endforeach
                                             </flux:select>
-                                            <flux:button
-                                                size="xs"
-                                                wire:click="removeUserSkill({{ $skill->id }})"
-                                                icon="trash"
+                                            <flux:button size="xs"
+                                                wire:click="removeUserSkill({{ $skill->id }})" icon="trash"
                                                 @click.stop>
                                             </flux:button>
                                         </div>
@@ -446,7 +451,8 @@
                 <div class="flex gap-3">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button type="button" variant="ghost" wire:click="closeUserSkillModal">Close</flux:button>
+                        <flux:button type="button" variant="ghost" wire:click="closeUserSkillModal">Close
+                        </flux:button>
                     </flux:modal.close>
                 </div>
             </div>
