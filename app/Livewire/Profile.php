@@ -4,130 +4,69 @@ namespace App\Livewire;
 
 use App\Enums\SkillLevel;
 use App\Models\Skill;
-use Flux\Flux;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class Profile extends Component
 {
-    use WithPagination;
-
     public string $skillSearchQuery = '';
-
-    public string $selectedCategory = '';
-
-    public array $userSkillLevels = [];
-
-    public string $addSkillLevel = '';
-
-    private const SKILLS_PER_PAGE = 12;
 
     private const SEARCH_MIN_LENGTH = 2;
 
-    protected function rules(): array
-    {
-        return [
-            'addSkillLevel' => 'required|in:beginner,intermediate,advanced,expert',
-        ];
-    }
+    public array $userSkill = [];
 
-    protected function messages(): array
-    {
-        return [
-            'addSkillLevel.required' => 'Skill level is required.',
-            'addSkillLevel.in' => 'Invalid skill level selected.',
-        ];
-    }
+    public bool $showMySkills = false;
 
     public function render()
     {
-        $userSkills = $this->getUserSkills();
-        $this->userSkillLevels = $userSkills->pluck('pivot.skill_level', 'id')->toArray();
-
         return view('livewire.profile', [
-            'userSkills' => $userSkills,
-            'availableSkills' => $this->getAvailableSkills(),
-            'skillCategories' => $this->getSkillCategories(),
             'skillLevels' => SkillLevel::cases(),
+            'allSkills' => $this->getAllSkills(),
         ]);
     }
 
-    private function getUserSkills()
+    public function mount()
     {
-
-        return auth()->user()->skills()
-            ->orderByRaw(Skill::getSkillLevelOrdering())
-            ->get();
+        $this->buildSkillArray();
     }
 
-    private function getAvailableSkills()
+    private function getAllSkills()
     {
-        $query = Skill::query();
-
-        // Apply search filter
-        if (strlen($this->skillSearchQuery) >= self::SEARCH_MIN_LENGTH) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', '%'.$this->skillSearchQuery.'%')
-                    ->orWhere('description', 'like', '%'.$this->skillSearchQuery.'%')
-                    ->orWhere('skill_category', 'like', '%'.$this->skillSearchQuery.'%');
+        if ($this->showMySkills) {
+            $query = auth()->user()->skills();
+        } else {
+            $query = Skill::query();
+        }
+        $skills = $query->when(strlen($this->skillSearchQuery) >= self::SEARCH_MIN_LENGTH, function ($query) {
+            $query->where(function ($query) {
+                $query->where('name', 'like', '%'.$this->skillSearchQuery.'%')
+                    ->orWhere('description', 'like', '%'.$this->skillSearchQuery.'%');
             });
-        }
+        })->orderBy('name')->get();
 
-        // Apply category filter
-        if ($this->selectedCategory) {
-            $query->where('skill_category', $this->selectedCategory);
-        }
-
-        // Exclude skills already assigned to user
-        $userSkillIds = auth()->user()->skills()->pluck('skills.id');
-        if ($userSkillIds->isNotEmpty()) {
-            $query->whereNotIn('id', $userSkillIds);
-        }
-
-        return $query->orderBy('name')
-            ->paginate(self::SKILLS_PER_PAGE);
-    }
-
-    private function getSkillCategories()
-    {
-        return Skill::getAvailableSkillCategories();
+        return $skills;
     }
 
     public function updatedSkillSearchQuery(): void
     {
-        $this->resetPage();
+        // Search query updated - no pagination to reset
     }
 
-    public function updatedSelectedCategory(): void
+    public function buildSkillArray()
     {
-        $this->resetPage();
-    }
-
-    public function updateSkillLevel(int $skillId, string $level): void
-    {
-        auth()->user()->updateSkillForUser(Skill::find($skillId), $level);
-        $this->userSkillLevels[$skillId] = $level;
-        Flux::toast('Skill level updated successfully', variant: 'success');
-    }
-
-    public function removeSkill(Skill $skill): void
-    {
-        auth()->user()->removeSkillForUser($skill->id);
-        unset($this->userSkillLevels[$skill->id]);
-        Flux::toast('Skill removed successfully', variant: 'success');
-    }
-
-    public function addSkillWithLevel(int $skillId): void
-    {
-        $this->validate(['addSkillLevel' => 'required|in:beginner,intermediate,advanced,expert']);
-
-        $skill = Skill::find($skillId);
-        if ($skill) {
-            auth()->user()->updateSkillForUser($skill, $this->addSkillLevel);
-            $this->userSkillLevels[$skillId] = $this->addSkillLevel;
-            Flux::toast('Skill added successfully', variant: 'success');
-            $this->addSkillLevel = '';
+        $user = auth()->user();
+        $skills = Skill::orderBy('name')->get();
+        foreach ($skills as $skill) {
+            $this->userSkill[$skill->id] = [
+                'skill_level' => $user->getSkillLevel($skill),
+            ];
         }
-        $this->skillLevelPopover = false;
+
+        return $this->userSkill;
+    }
+
+    public function updateUserSkill(int $skillId): void
+    {
+        $skillLevel = $this->userSkill[$skillId]['skill_level'];
+        auth()->user()->updateSkill($skillId, $skillLevel);
     }
 }

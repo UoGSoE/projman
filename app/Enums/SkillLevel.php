@@ -7,7 +7,6 @@ enum SkillLevel: string
     case BEGINNER = 'beginner';
     case INTERMEDIATE = 'intermediate';
     case ADVANCED = 'advanced';
-    case EXPERT = 'expert';
 
     public function getDisplayName(): string
     {
@@ -15,7 +14,6 @@ enum SkillLevel: string
             self::BEGINNER => 'Beginner',
             self::INTERMEDIATE => 'Intermediate',
             self::ADVANCED => 'Advanced',
-            self::EXPERT => 'Expert',
         };
     }
 
@@ -25,7 +23,6 @@ enum SkillLevel: string
             self::BEGINNER => 'Basic understanding, can work with assistance',
             self::INTERMEDIATE => 'Good understanding, can work independently on most tasks',
             self::ADVANCED => 'Strong understanding, can handle complex tasks and mentor others',
-            self::EXPERT => 'Mastery level, can lead and innovate in this area',
         };
     }
 
@@ -35,7 +32,6 @@ enum SkillLevel: string
             self::BEGINNER => 1,
             self::INTERMEDIATE => 2,
             self::ADVANCED => 3,
-            self::EXPERT => 4,
         };
     }
 
@@ -45,7 +41,6 @@ enum SkillLevel: string
             self::BEGINNER => 'blue',
             self::INTERMEDIATE => 'green',
             self::ADVANCED => 'orange',
-            self::EXPERT => 'purple',
         };
     }
 
@@ -56,6 +51,6 @@ enum SkillLevel: string
 
     public static function getAllDisplayNames(): array
     {
-        return array_map(fn($case) => $case->getDisplayName(), self::cases());
+        return array_map(fn ($case) => $case->getDisplayName(), self::cases());
     }
 }

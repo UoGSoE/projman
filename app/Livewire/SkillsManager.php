@@ -390,7 +390,7 @@ class SkillsManager extends Component
         $this->validate($this->newSkillWithDetailsRules());
 
         $skill = $this->createSkillFromFormData();
-        $this->selectedUser->updateSkillForUser($skill, $this->newSkillLevel);
+        $this->selectedUser->updateSkill($skill->id, $this->newSkillLevel);
         $this->refreshSelectedUser();
         $this->userSkillLevels[$skill->id] = $this->newSkillLevel;
         $this->clearNewSkillForm();
@@ -418,7 +418,7 @@ class SkillsManager extends Component
 
         $this->validate($this->skillLevelRules());
 
-        $this->selectedUser->updateSkillForUser($this->selectedSkillForAssignment, $this->newSkillLevel);
+        $this->selectedUser->updateSkill($this->selectedSkillForAssignment->id, $this->newSkillLevel);
         $this->refreshSelectedUser();
         $this->userSkillLevels[$this->selectedSkillForAssignment->id] = $this->newSkillLevel;
         $this->collapseSkillSelection();
@@ -436,7 +436,7 @@ class SkillsManager extends Component
             return;
         }
 
-        $this->selectedUser->updateSkillForUser(Skill::find($skillId), $level);
+        $this->selectedUser->updateSkill($skillId, $level);
         $this->refreshSelectedUser();
         $this->userSkillLevels[$skillId] = $level;
 
@@ -449,7 +449,7 @@ class SkillsManager extends Component
             return;
         }
 
-        $this->selectedUser->removeSkillForUser($skillId);
+        $this->selectedUser->removeSkill($skillId);
         unset($this->userSkillLevels[$skillId]);
         $this->refreshSelectedUser();
 

@@ -3,13 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Validation\Rule;
-use App\Models\Skill;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
@@ -112,7 +110,7 @@ class User extends Authenticatable
 
     public function getFullNameAttribute()
     {
-        return $this->forenames . ' ' . $this->surname;
+        return $this->forenames.' '.$this->surname;
     }
 
     public function roles(): BelongsToMany
@@ -126,17 +124,25 @@ class User extends Authenticatable
             ->withPivot('skill_level')
             ->withTimestamps();
     }
-    public function updateSkillForUser(Skill $skill, string $level): void
+
+    public function updateSkill(int $skillId, string $level): void
     {
+        if ($level == 'none') {
+            $this->removeSkill($skillId);
+
+            return;
+        }
+
         $this->skills()->syncWithoutDetaching([
-            $skill->id => ['skill_level' => $level]
+            $skillId => ['skill_level' => $level],
         ]);
+
     }
 
     /**
      * Remove a skill from this user.
      */
-    public function removeSkillForUser(int $skillId): void
+    public function removeSkill(int $skillId): void
     {
         $this->skills()->detach($skillId);
     }
@@ -147,5 +153,20 @@ class User extends Authenticatable
     public static function isValidSkillLevel(string $level): bool
     {
         return in_array($level, \App\Enums\SkillLevel::getAll());
+    }
+
+    public function getSkillLevel(Skill $skill): string
+    {
+        $currentSkill = $this->skills()->where('skill_id', $skill->id)->first();
+        if (! $currentSkill) {
+            return 'none';
+        }
+
+        return $currentSkill->pivot->skill_level;
+    }
+
+    public function hasSkill(int $skillId): bool
+    {
+        return $this->skills->where('skill_id', $skillId)->count() > 0;
     }
 }
