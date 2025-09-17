@@ -125,9 +125,9 @@ describe('SkillsManager Component', function () {
 
         it('displays Skill name, description, category and user count for each skill', function () {
             // Assign skills to users for testing user counts
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
-            $this->staffUser2->updateSkillForUser($this->skill1, SkillLevel::ADVANCED->value);
-            $this->staffUser1->updateSkillForUser($this->skill2, SkillLevel::BEGINNER->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser2->updateSkill($this->skill1->id, SkillLevel::ADVANCED->value);
+            $this->staffUser1->updateSkill($this->skill2->id, SkillLevel::BEGINNER->value);
 
             livewire(SkillsManager::class)
                 ->assertSeeText('Laravel')
@@ -570,7 +570,7 @@ describe('SkillsManager Component', function () {
 
         it('prevents deletion of skill assigned to users', function () {
             // Assign skill to user
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
 
             livewire(SkillsManager::class)
                 ->call('deleteSkill', $this->skill1);
@@ -581,7 +581,7 @@ describe('SkillsManager Component', function () {
 
         it('allows deletion of skill when all user assignments are removed', function () {
             // Assign skill to user
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
 
             // Remove the assignment
             $this->staffUser1->skills()->detach($this->skill1->id);
@@ -662,7 +662,7 @@ describe('SkillsManager Component', function () {
 
         it('updates user skill level', function () {
             // First assign the skill to a user
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1)
@@ -676,7 +676,7 @@ describe('SkillsManager Component', function () {
 
         it('removes skill from user', function () {
             // First assign the skill
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1)
@@ -686,7 +686,7 @@ describe('SkillsManager Component', function () {
         });
 
         it('validates skill level when updating', function () {
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1)
@@ -994,9 +994,9 @@ describe('SkillsManager Component', function () {
     describe('Skill Display with User Counts', function () {
         beforeEach(function () {
             // Assign skills to users for testing user counts
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::INTERMEDIATE->value);
-            $this->staffUser2->updateSkillForUser($this->skill1, SkillLevel::ADVANCED->value);
-            $this->staffUser1->updateSkillForUser($this->skill2, SkillLevel::BEGINNER->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser2->updateSkill($this->skill1->id, SkillLevel::ADVANCED->value);
+            $this->staffUser1->updateSkill($this->skill2->id, SkillLevel::BEGINNER->value);
             // $this->skill3 has 0 users
         });
 
@@ -1030,7 +1030,7 @@ describe('SkillsManager Component', function () {
             $newUser = User::factory()->create(['is_staff' => true]);
 
             // Assign the new user to skill1
-            $newUser->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
+            $newUser->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
 
             livewire(SkillsManager::class)
                 ->assertSeeText('Laravel')
@@ -1107,7 +1107,7 @@ describe('SkillsManager Component', function () {
         });
 
         it('handles skill level updates with all valid levels', function () {
-            $this->staffUser1->updateSkillForUser($this->skill1, SkillLevel::BEGINNER->value);
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
 
             $component = livewire(SkillsManager::class);
             $component->call('openUserSkillModal', $this->staffUser1);
