@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-require __DIR__ . '/sso-auth.php';
+require __DIR__.'/sso-auth.php';
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', \App\Livewire\HomePage::class)->name('home');
@@ -11,14 +11,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/project/{project}', \App\Livewire\ProjectViewer::class)->name('project.show');
     Route::get('/project/{project}/edit', \App\Livewire\ProjectEditor::class)->name('project.edit');
     Route::get('/staff/heatmap', \App\Livewire\HeatMapViewer::class)->name('project.heatmap');
+    Route::get('/profile', \App\Livewire\Profile::class)->name('profile');
 
     Route::middleware(['admin'])->group(function () {
         Route::get('/staff', \App\Livewire\UserList::class)->name('users.list');
         Route::get('/roles', \App\Livewire\RolesList::class)->name('roles.list');
         Route::get('/skills', \App\Livewire\SkillsManager::class)->name('skills.manage');
-    });
-
-    Route::middleware(['staff'])->group(function () {
-        Route::get('/profile', \App\Livewire\Profile::class)->name('profile');
     });
 });

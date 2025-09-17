@@ -3,12 +3,16 @@
     <flux:separator variant="subtle" class="mt-6" />
 
     <div class="flex flex-col md:flex-row gap-6 pt-6">
+        {{-- My Skills --}}
         <div class="flex-1 md:w-1/2">
             <flux:heading size="lg" class="mb-4">My Skills</flux:heading>
             <div class="space-y-6">
                 @if ($userSkills->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
                         @foreach ($userSkills as $skill)
+                            @php
+                                // dd($skill->pivot->skill_level);
+                            @endphp
                             <flux:card class="">
                                 <div class="flex">
                                     <div class="flex-1">
@@ -34,10 +38,12 @@
                                     </div>
                                 </div>
 
-                                <div class="cursor-pointer" wire:click="openUpdateSkillLevelModal({{ $skill->id }})">
+                                <div class="cursor-pointer">
                                     <flux:text size="sm" class="mb-2">{{ $skill->description }}</flux:text>
                                     <div class="flex justify-between items-center">
-                                        <flux:select size="sm" wire:model="newSkillLevel">
+                                        <flux:select size="sm" wire:model="userSkillLevels.{{ $skill->id }}"
+                                            wire:change="updateSkillLevel({{ $skill->id }}, $event.target.value)"
+                                            value="{{ $skill->pivot->skill_level }}">
                                             @foreach ($skillLevels as $level)
                                                 <flux:select.option value="{{ $level->value }}">
                                                     {{ $level->getDisplayName() }}</flux:select.option>
@@ -59,6 +65,7 @@
             </div>
         </div>
 
+        {{-- Add Skills --}}
         <div class="flex-1 md:w-1/2">
             <flux:heading size="lg" class="mb-4">Add Skills</flux:heading>
             <div class="space-y-6">
@@ -81,37 +88,49 @@
                 @if ($availableSkills->count() > 0)
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         @foreach ($availableSkills as $skill)
-                            <flux:card class="hover:shadow-lg transition-shadow p-4">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <flux:text class="font-medium block" variant="strong">{{ $skill->name }}
-                                    </flux:text> |
-                                    <flux:text class="text-sm" variant="subtle">{{ $skill->skill_category }}
-                                    </flux:text>
-                                </div>
-                                <flux:text size="sm" class="mb-3">{{ $skill->description }}</flux:text>
-                                <div class="flex justify-between items-center">
-                                    <flux:dropdown>
-                                        <flux:button size="sm" icon="plus" variant="ghost">
-                                            Add Skill
-                                        </flux:button>
-                                        <flux:popover class="min-w-[200px]">
-                                            <div class="space-y-4">
-                                                <flux:field>
-                                                    <flux:label>Select your skill level</flux:label>
-                                                    <flux:select wire:model="addSkillLevel"
-                                                        wire:change="addSkillWithLevel({{ $skill->id }})">
-                                                        @foreach ($skillLevels as $level)
-                                                            <flux:select.option value="{{ $level->value }}">
-                                                                {{ $level->getDisplayName() }}
-                                                            </flux:select.option>
-                                                        @endforeach
-                                                    </flux:select>
-                                                </flux:field>
+                            <flux:dropdown position="bottom-center">
+                                <button type="button"
+                                    class="w-54 rounded-lg p-2 flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200">
+                                    <div class="self-stretch w-0.5 bg-zinc-800 rounded-full"></div>
+                                    <div>
+                                        <flux:heading>Team sync</flux:heading>
+                                        <flux:text class="mt-1">10:00 AM</flux:text>
+                                    </div>
+                                </button>
+                                <flux:card class="p-4 w-full">
+                                    <div class="flex justify-between self-stretch w-full">
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-3">
+                                                <flux:text class="font-medium block" variant="strong">
+                                                    {{ $skill->name }}
+                                                </flux:text> |
+                                                <flux:text class="text-sm" variant="subtle">
+                                                    {{ $skill->skill_category }}
+                                                </flux:text>
                                             </div>
-                                        </flux:popover>
-                                    </flux:dropdown>
-                                </div>
-                            </flux:card>
+                                            <flux:text size="sm" class="mb-3">{{ $skill->description }}
+                                            </flux:text>
+                                        </div>
+                                    </div>
+                                </flux:card>
+
+
+                                <flux:popover class="min-w-[200px]">
+                                    <div class="space-y-4">
+                                        <flux:field>
+                                            <flux:label>Select your skill level</flux:label>
+                                            <flux:select wire:model="addSkillLevel"
+                                                wire:change="addSkillWithLevel({{ $skill->id }})">
+                                                @foreach ($skillLevels as $level)
+                                                    <flux:select.option value="{{ $level->value }}">
+                                                        {{ $level->getDisplayName() }}
+                                                    </flux:select.option>
+                                                @endforeach
+                                            </flux:select>
+                                        </flux:field>
+                                    </div>
+                                </flux:popover>
+                            </flux:dropdown>
                         @endforeach
                     </div>
 
@@ -130,78 +149,5 @@
             </div>
         </div>
     </div>
-
-
-    <flux:modal name="update-skill-level" variant="flyout" @close="closeUpdateSkillLevelModal">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">Update Skill Level</flux:heading>
-                <flux:text class="mt-2">Update your proficiency level for this skill.</flux:text>
-            </div>
-            @if ($selectedSkill)
-                <div class="space-y-4">
-                    <div>
-                        <flux:heading size="sm">{{ $selectedSkill->name }}</flux:heading>
-                        <flux:text size="sm">{{ $selectedSkill->description }}</flux:text>
-                    </div>
-                    <flux:field>
-                        <flux:label>Skill Level</flux:label>
-                        <flux:select wire:model="newSkillLevel">
-                            @foreach ($skillLevels as $level)
-                                <flux:select.option value="{{ $level->value }}">
-                                    {{ $level->getDisplayName() }} - {{ $level->getDescription() }}
-                                </flux:select.option>
-                            @endforeach
-                        </flux:select>
-                    </flux:field>
-                </div>
-            @endif
-            <div class="flex gap-3">
-                <flux:spacer />
-                <flux:modal.close>
-                    <flux:button type="button" variant="ghost" wire:click="closeUpdateSkillLevelModal">Cancel
-                    </flux:button>
-                </flux:modal.close>
-                <flux:button wire:click="updateSkillLevel">Update Level</flux:button>
-            </div>
-        </div>
-    </flux:modal>
-
-    <flux:modal name="add-existing-skill" variant="flyout" @close="closeAddExistingSkillModal">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">Add Skill</flux:heading>
-                <flux:text class="mt-2">Add this skill to your profile with your proficiency level.
-                </flux:text>
-            </div>
-            @if ($selectedSkill)
-                <div class="space-y-4">
-                    <div>
-                        <flux:heading size="sm">{{ $selectedSkill->name }}</flux:heading>
-                        <flux:text size="sm">{{ $selectedSkill->description }}</flux:text>
-                    </div>
-                    <flux:field>
-                        <flux:label>Skill Level</flux:label>
-                        <flux:select wire:model="addSkillLevel">
-                            @foreach ($skillLevels as $level)
-                                <flux:select.option value="{{ $level->value }}">
-                                    {{ $level->getDisplayName() }} - {{ $level->getDescription() }}
-                                </flux:select.option>
-                            @endforeach
-                        </flux:select>
-                    </flux:field>
-                </div>
-            @endif
-            <div class="flex gap-3">
-                <flux:spacer />
-                <flux:modal.close>
-                    <flux:button type="button" variant="ghost" wire:click="closeAddExistingSkillModal">
-                        Cancel
-                    </flux:button>
-                </flux:modal.close>
-                <flux:button wire:click="confirmAddExistingSkill">Add Skill</flux:button>
-            </div>
-        </div>
-    </flux:modal>
 </div>
 </div>
