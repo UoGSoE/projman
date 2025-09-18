@@ -173,9 +173,24 @@ describe('Profile Component', function () {
 
     describe('Update User Skill', function () {
         it('updates user skill when radio group is changed', function () {
-            livewire(Profile::class)
-                ->set('userSkill.{$this->skill1->id}.skill_level', SkillLevel::INTERMEDIATE->value)
+            // dd($this->skill1->id);
+            $component = livewire(Profile::class)
+                ->set("userSkill.{$this->skill1->id}.skill_level", SkillLevel::INTERMEDIATE->value)
+                ->call('updateUserSkill', $this->skill1->id)
                 ->assertSeeText('Laravel');
+
+            $this->user->refresh();
+            expect($this->user->getSkillLevel($this->skill1))->toBe(SkillLevel::INTERMEDIATE->value);
+        });
+
+        it('removes user skill when radio group is changed to none', function () {
+            $component = livewire(Profile::class)
+                ->set("userSkill.{$this->skill1->id}.skill_level", 'none')
+                ->call('updateUserSkill', $this->skill1->id)
+                ->assertSeeText('Laravel');
+
+            $this->user->refresh();
+            expect($this->user->skills)->toHaveCount(1);
         });
     });
 
