@@ -25,7 +25,7 @@ class ScopingFactory extends Factory
             'in_scope' => fake()->paragraph(),
             'out_of_scope' => fake()->paragraph(),
             'assumptions' => fake()->paragraph(),
-            'skills_required' => fake()->words(5, true),
+            'skills_required' => null,
         ];
     }
 }

@@ -2,20 +2,19 @@
 
 namespace App\Models;
 
-use App\Enums\SkillLevel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Validation\Rule;
 
 class Skill extends Model
 {
     /** @use HasFactory<\Database\Factories\SkillFactory> */
     use HasFactory;
+
     protected $fillable = [
         'name',
         'description',
-        'skill_category'
+        'skill_category',
     ];
 
     /**
@@ -28,7 +27,7 @@ class Skill extends Model
         return [
             'name' => 'string',
             'description' => 'string',
-            'skill_category' => 'string'
+            'skill_category' => 'string',
         ];
     }
 
@@ -82,9 +81,9 @@ class Skill extends Model
      */
     public static function searchSkill(string $query, int $limit = 10)
     {
-        return static::where('name', 'like', '%' . $query . '%')
-            ->orWhere('description', 'like', '%' . $query . '%')
-            ->orWhere('skill_category', 'like', '%' . $query . '%')
+        return static::where('name', 'like', '%'.$query.'%')
+            ->orWhere('description', 'like', '%'.$query.'%')
+            ->orWhere('skill_category', 'like', '%'.$query.'%')
             ->orderBy('name')
             ->limit($limit)
             ->get();
@@ -112,10 +111,10 @@ class Skill extends Model
             ->orderBy($sortColumn, $sortDirection)
             ->when(
                 strlen($searchQuery) >= 2,
-                fn($query) => $query->where(function ($q) use ($searchQuery) {
-                    $q->where('name', 'like', '%' . $searchQuery . '%')
-                        ->orWhere('description', 'like', '%' . $searchQuery . '%')
-                        ->orWhere('skill_category', 'like', '%' . $searchQuery . '%');
+                fn ($query) => $query->where(function ($q) use ($searchQuery) {
+                    $q->where('name', 'like', '%'.$searchQuery.'%')
+                        ->orWhere('description', 'like', '%'.$searchQuery.'%')
+                        ->orWhere('skill_category', 'like', '%'.$searchQuery.'%');
                 })
             )
             ->paginate($perPage);

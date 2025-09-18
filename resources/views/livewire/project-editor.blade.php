@@ -353,15 +353,14 @@
                 {{-- Assumptions --}}
                 <flux:textarea label="Assumptions" rows="3" wire:model="scopingForm.assumptions" />
 
-                {{-- Skills / Competency --}}
-                <flux:select variant="listbox" multiple label="Skills / Competency required"
-                    wire:model="scopingForm.skillsRequired">
-                    @foreach ($scopingForm->availableSkills as $id => $label)
-                        <flux:select.option value="{{ $id }}">
-                            {{ $label }}
-                        </flux:select.option>
+                <flux:pillbox multiple searchable placeholder="Choose skills/competency..."
+                    label="Skills / Competency required" wire:model.live="scopingForm.skillsRequired">
+                    @foreach ($availableSkills as $skill)
+                        <flux:pillbox.option value="{{ $skill->id }}">
+                            {{ $skill->name }}
+                        </flux:pillbox.option>
                     @endforeach
-                </flux:select>
+                </flux:pillbox>
 
                 <flux:separator />
 

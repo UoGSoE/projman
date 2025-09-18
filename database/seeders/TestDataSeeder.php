@@ -2,16 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Project;
-use App\Models\Ideation;
-use App\Models\Feasibility;
-use App\Models\Role;
-use App\Models\ProjectHistory;
-use App\Models\Skill;
 use App\Enums\SkillLevel;
-use Illuminate\Database\Seeder;
+use App\Models\Project;
+use App\Models\ProjectHistory;
+use App\Models\Role;
+use App\Models\Skill;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
 
 class TestDataSeeder extends Seeder
 {
@@ -47,159 +45,12 @@ class TestDataSeeder extends Seeder
         Role::factory(10)->create();
 
         // Create skills
-        $skills = [
-            // Programming Languages
-            [
-                'name' => 'PHP',
-                'description' => 'Server-side scripting language for web development',
-                'skill_category' => 'Programming Languages'
-            ],
-            [
-                'name' => 'JavaScript',
-                'description' => 'Client-side and server-side programming language',
-                'skill_category' => 'Programming Languages'
-            ],
-            [
-                'name' => 'Python',
-                'description' => 'High-level programming language for various applications',
-                'skill_category' => 'Programming Languages'
-            ],
-            [
-                'name' => 'Java',
-                'description' => 'Object-oriented programming language',
-                'skill_category' => 'Programming Languages'
-            ],
-            [
-                'name' => 'C#',
-                'description' => 'Microsoft programming language for .NET applications',
-                'skill_category' => 'Programming Languages'
-            ],
-
-            // Frameworks
-            [
-                'name' => 'Laravel',
-                'description' => 'PHP web application framework',
-                'skill_category' => 'Frameworks'
-            ],
-            [
-                'name' => 'React',
-                'description' => 'JavaScript library for building user interfaces',
-                'skill_category' => 'Frameworks'
-            ],
-            [
-                'name' => 'Vue.js',
-                'description' => 'Progressive JavaScript framework',
-                'skill_category' => 'Frameworks'
-            ],
-            [
-                'name' => 'Angular',
-                'description' => 'TypeScript-based web application framework',
-                'skill_category' => 'Frameworks'
-            ],
-            [
-                'name' => 'Django',
-                'description' => 'Python web framework',
-                'skill_category' => 'Frameworks'
-            ],
-
-            // Databases
-            [
-                'name' => 'MySQL',
-                'description' => 'Relational database management system',
-                'skill_category' => 'Databases'
-            ],
-            [
-                'name' => 'PostgreSQL',
-                'description' => 'Advanced open-source relational database',
-                'skill_category' => 'Databases'
-            ],
-            [
-                'name' => 'MongoDB',
-                'description' => 'NoSQL document database',
-                'skill_category' => 'Databases'
-            ],
-            [
-                'name' => 'Redis',
-                'description' => 'In-memory data structure store',
-                'skill_category' => 'Databases'
-            ],
-
-            // DevOps
-            [
-                'name' => 'Docker',
-                'description' => 'Containerization platform',
-                'skill_category' => 'DevOps'
-            ],
-            [
-                'name' => 'Kubernetes',
-                'description' => 'Container orchestration platform',
-                'skill_category' => 'DevOps'
-            ],
-            [
-                'name' => 'AWS',
-                'description' => 'Amazon Web Services cloud platform',
-                'skill_category' => 'DevOps'
-            ],
-            [
-                'name' => 'Git',
-                'description' => 'Version control system',
-                'skill_category' => 'DevOps'
-            ],
-
-            // Design
-            [
-                'name' => 'UI/UX Design',
-                'description' => 'User interface and user experience design',
-                'skill_category' => 'Design'
-            ],
-            [
-                'name' => 'Figma',
-                'description' => 'Collaborative interface design tool',
-                'skill_category' => 'Design'
-            ],
-            [
-                'name' => 'Adobe Creative Suite',
-                'description' => 'Creative software suite for design and multimedia',
-                'skill_category' => 'Design'
-            ],
-
-            // Project Management
-            [
-                'name' => 'Agile',
-                'description' => 'Iterative approach to project management',
-                'skill_category' => 'Project Management'
-            ],
-            [
-                'name' => 'Scrum',
-                'description' => 'Agile framework for managing complex projects',
-                'skill_category' => 'Project Management'
-            ],
-            [
-                'name' => 'Jira',
-                'description' => 'Issue and project tracking tool',
-                'skill_category' => 'Project Management'
-            ],
-
-            // Testing
-            [
-                'name' => 'Unit Testing',
-                'description' => 'Testing individual components in isolation',
-                'skill_category' => 'Testing'
-            ],
-            [
-                'name' => 'Integration Testing',
-                'description' => 'Testing interaction between integrated components',
-                'skill_category' => 'Testing'
-            ],
-            [
-                'name' => 'Selenium',
-                'description' => 'Web application testing framework',
-                'skill_category' => 'Testing'
-            ],
-        ];
-
+        $skills = $this->getSkills();
         foreach ($skills as $skillData) {
-            Skill::create($skillData);
+            Skill::factory()->create([
+                'name' => $skillData['name'],
+                'description' => $skillData['description'],
+            ]);
         }
 
         User::factory()->admin()->create([
@@ -280,5 +131,98 @@ class TestDataSeeder extends Seeder
                 }
             }
         }
+    }
+
+    public function getSkills()
+    {
+        return [
+            // Windows
+            ['name' => 'Windows - Desktop Support', 'description' => 'Providing technical support and troubleshooting for Windows desktop environments.'],
+            ['name' => 'Windows - Active Directory / SCCM', 'description' => 'Managing users, devices, and policies with Active Directory and SCCM.'],
+            ['name' => 'Windows - Deployment & Imaging', 'description' => 'Setting up and deploying Windows systems using imaging tools.'],
+            ['name' => 'Windows - Group Policy Management', 'description' => 'Creating and applying group policies to manage Windows environments.'],
+            ['name' => 'Windows - PowerShell Scripting', 'description' => 'Automating administrative tasks using PowerShell scripts.'],
+            ['name' => 'Windows Server Administration', 'description' => 'Installing, configuring, and maintaining Windows Server environments.'],
+
+            // macOS
+            ['name' => 'macOS - Desktop Support', 'description' => 'Supporting and troubleshooting Apple macOS devices for end users.'],
+            ['name' => 'macOS - Deployment & Management', 'description' => 'Deploying and managing macOS systems across an organisation.'],
+            ['name' => 'macOS - Jamf / MDM Administration', 'description' => 'Managing Apple devices using Jamf or other Mobile Device Management tools.'],
+            ['name' => 'macOS - Integration with AD', 'description' => 'Connecting macOS systems to Active Directory for authentication and access.'],
+
+            // Linux
+            ['name' => 'Linux - Desktop Support', 'description' => 'Providing user support for Linux desktop environments.'],
+            ['name' => 'Linux - Server Administration (Rocky / Ubuntu)', 'description' => 'Managing and maintaining Linux servers such as Rocky Linux and Ubuntu.'],
+            ['name' => 'Linux - Shell Scripting & Automation', 'description' => 'Automating tasks and workflows with Linux shell scripts.'],
+            ['name' => 'Linux - System Monitoring & Logging', 'description' => 'Monitoring system performance and analysing log files on Linux systems.'],
+            ['name' => 'Linux - Security Hardening', 'description' => 'Securing Linux systems by applying best practices and configurations.'],
+
+            // Directory & Identity
+            ['name' => 'Identity Management - Active Directory', 'description' => 'Managing identities, permissions, and authentication using AD.'],
+            ['name' => 'Identity Management - LDAP', 'description' => 'Administering and integrating Lightweight Directory Access Protocol systems.'],
+            ['name' => 'Single Sign-On (SSO) / Shibboleth / SAML', 'description' => 'Implementing and supporting SSO solutions for unified authentication.'],
+            ['name' => 'Multi-Factor Authentication (MFA) Integration', 'description' => 'Enhancing security with multi-factor authentication solutions.'],
+            ['name' => 'Federated Identity Management', 'description' => 'Linking identity systems across organisations for secure access.'],
+
+            // Infrastructure
+            ['name' => 'Virtualisation - VMware / Hyper-V', 'description' => 'Creating and managing virtual machines with VMware or Hyper-V.'],
+            ['name' => 'Containerisation - Docker / Podman', 'description' => 'Deploying and managing containerised applications using Docker or Podman.'],
+            ['name' => 'Networking - Routing & Switching', 'description' => 'Configuring and supporting network routing and switching devices.'],
+            ['name' => 'Networking - Firewalls & Security', 'description' => 'Protecting networks using firewalls and security best practices.'],
+            ['name' => 'Networking - DNS / DHCP / IP Management', 'description' => 'Administering DNS, DHCP, and IP address management services.'],
+            ['name' => 'Storage Administration (NAS / SAN)', 'description' => 'Managing and maintaining NAS and SAN storage systems.'],
+            ['name' => 'Backup & Disaster Recovery', 'description' => 'Implementing backup strategies and disaster recovery plans.'],
+            ['name' => 'Cloud Services - Microsoft 365 / Azure', 'description' => 'Supporting and administering Microsoft 365 and Azure environments.'],
+            ['name' => 'Cloud Services - AWS / Google Cloud', 'description' => 'Managing cloud infrastructure and services on AWS or Google Cloud.'],
+
+            // HPC & Research Computing
+            ['name' => 'High Performance Computing (HPC) Cluster Support', 'description' => 'Supporting and maintaining HPC clusters for research workloads.'],
+            ['name' => 'GPU Computing Support', 'description' => 'Configuring and supporting GPU-based high performance computing.'],
+            ['name' => 'Slurm / Job Scheduling', 'description' => 'Managing and monitoring workloads with Slurm and other schedulers.'],
+            ['name' => 'Linux Cluster Administration', 'description' => 'Administering and supporting Linux-based computing clusters.'],
+            ['name' => 'Parallel Computing (MPI / OpenMP)', 'description' => 'Supporting parallel computing frameworks such as MPI and OpenMP.'],
+            ['name' => 'Research Data Management', 'description' => 'Organising and securing research data in line with best practices.'],
+
+            // Support & Front-line
+            ['name' => 'First-line Helpdesk Support', 'description' => 'Providing initial IT support and issue resolution for users.'],
+            ['name' => 'Second-line Technical Support', 'description' => 'Handling escalated technical issues requiring in-depth knowledge.'],
+            ['name' => 'Hardware Procurement & Installation', 'description' => 'Sourcing, installing, and maintaining IT hardware.'],
+            ['name' => 'AV & Classroom Technology Support', 'description' => 'Supporting audio-visual and classroom technology systems.'],
+            ['name' => 'Printing & Device Management', 'description' => 'Managing printers and peripheral devices within an organisation.'],
+            ['name' => 'End-User Training & Documentation', 'description' => 'Creating documentation and training resources for end users.'],
+            ['name' => 'IT Asset Management', 'description' => 'Tracking and managing the lifecycle of IT assets.'],
+            ['name' => 'Software Licensing & Compliance', 'description' => 'Ensuring software usage complies with licensing agreements.'],
+
+            // Development
+            ['name' => 'Web Development - Laravel / PHP', 'description' => 'Building and maintaining web applications with Laravel and PHP.'],
+            ['name' => 'Web Development - Python / Django / Flask', 'description' => 'Developing web applications using Python frameworks like Django and Flask.'],
+            ['name' => 'Web Development - JavaScript / Node.js', 'description' => 'Creating dynamic web applications with JavaScript and Node.js.'],
+            ['name' => 'Front-end Development - Vue.js / React', 'description' => 'Designing and implementing front-end interfaces with Vue.js or React.'],
+            ['name' => 'Database Administration (MySQL / PostgreSQL)', 'description' => 'Administering and optimising MySQL and PostgreSQL databases.'],
+            ['name' => 'Database - MS SQL Server / Oracle', 'description' => 'Managing enterprise databases such as MS SQL Server and Oracle.'],
+            ['name' => 'API Development & Integration', 'description' => 'Building and integrating APIs for data and service connectivity.'],
+            ['name' => 'Version Control - Git / GitHub / GitLab', 'description' => 'Using Git-based tools for source control and collaboration.'],
+            ['name' => 'Continuous Integration / Deployment (CI/CD)', 'description' => 'Automating builds, testing, and deployments through CI/CD pipelines.'],
+            ['name' => 'Testing & Quality Assurance', 'description' => 'Ensuring software quality through structured testing processes.'],
+
+            // Security & Policy
+            ['name' => 'Information Security & Data Protection', 'description' => 'Implementing security measures to safeguard data and systems.'],
+            ['name' => 'Penetration Testing & Vulnerability Management', 'description' => 'Identifying and mitigating security vulnerabilities through testing.'],
+            ['name' => 'GDPR Compliance & Governance', 'description' => 'Ensuring IT practices comply with GDPR and data governance standards.'],
+            ['name' => 'Incident Response & Monitoring', 'description' => 'Responding to and monitoring IT security incidents effectively.'],
+            ['name' => 'IT Policy Development & Documentation', 'description' => 'Creating and maintaining IT policies and procedures.'],
+
+            // Softer / non-technical
+            ['name' => 'Project Management', 'description' => 'Planning and managing IT projects from start to finish.'],
+            ['name' => 'Agile / Scrum Methodologies', 'description' => 'Applying Agile and Scrum principles to software and project delivery.'],
+            ['name' => 'ITIL / Service Management', 'description' => 'Implementing IT service management practices based on ITIL.'],
+            ['name' => 'Communication & Teamwork', 'description' => 'Working collaboratively and communicating effectively in teams.'],
+            ['name' => 'User Requirements Gathering', 'description' => 'Collecting and analysing user requirements for IT solutions.'],
+            ['name' => 'Technical Documentation & Writing', 'description' => 'Producing clear and accurate technical documentation.'],
+            ['name' => 'Training & User Support', 'description' => 'Delivering user training and providing ongoing support.'],
+            ['name' => 'Change Management', 'description' => 'Managing organisational change related to IT systems and processes.'],
+            ['name' => 'Stakeholder Engagement', 'description' => 'Building and maintaining strong relationships with stakeholders.'],
+            ['name' => 'Problem Solving & Troubleshooting', 'description' => 'Identifying, analysing, and resolving technical problems effectively.'],
+        ];
     }
 }

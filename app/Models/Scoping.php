@@ -29,4 +29,11 @@ class Scoping extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    protected function casts(): array
+    {
+        return [
+            'skills_required' => 'array',
+        ];
+    }
 }

@@ -2,34 +2,41 @@
 
 namespace App\Livewire;
 
-use Flux\Flux;
-use App\Models\User;
-use App\Models\Project;
-use Livewire\Component;
-use Livewire\Attributes\Url;
-use Livewire\Attributes\Computed;
-use App\Livewire\Forms\ScopingForm;
-use App\Livewire\Forms\TestingForm;
+use App\Enums\ProjectStatus;
 use App\Livewire\Forms\DeployedForm;
-use App\Livewire\Forms\IdeationForm;
-use Illuminate\Support\Facades\Auth;
-use App\Livewire\Forms\SchedulingForm;
+use App\Livewire\Forms\DetailedDesignForm;
 use App\Livewire\Forms\DevelopmentForm;
 use App\Livewire\Forms\FeasibilityForm;
-use App\Livewire\Forms\DetailedDesignForm;
-use App\Events\ProjectStageChange;
-use App\Enums\ProjectStatus;
-use Illuminate\Support\Str;
+use App\Livewire\Forms\IdeationForm;
+use App\Livewire\Forms\SchedulingForm;
+use App\Livewire\Forms\ScopingForm;
+use App\Livewire\Forms\TestingForm;
+use App\Models\Project;
+use App\Models\Skill;
+use App\Models\User;
+use Flux\Flux;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
+use Livewire\Component;
 
 class ProjectEditor extends Component
 {
     public IdeationForm $ideationForm;
+
     public FeasibilityForm $feasibilityForm;
+
     public ScopingForm $scopingForm;
+
     public SchedulingForm $schedulingForm;
+
     public DetailedDesignForm $detailedDesignForm;
+
     public DevelopmentForm $developmentForm;
+
     public TestingForm $testingForm;
+
     public DeployedForm $deployedForm;
 
     public $userSearch = '';
@@ -38,7 +45,9 @@ class ProjectEditor extends Component
     public $tab = 'ideation';
 
     public ?int $projectId = null;
+
     public ?Project $project = null;
+
     public ?string $projectName = null;
 
     public $skills = [
@@ -48,6 +57,8 @@ class ProjectEditor extends Component
     public $users = [
         '1' => 'Jenny',
     ];
+
+    public Collection $availableSkills;
 
     public function mount(Project $project)
     {
@@ -61,7 +72,7 @@ class ProjectEditor extends Component
             'development',
             'testing',
             'deployed',
-            'history'
+            'history',
         ]);
         $this->projectId = $project->id;
         $this->project = $project;
@@ -69,6 +80,8 @@ class ProjectEditor extends Component
         foreach (ProjectStatus::getAllFormNames() as $formName) {
             $this->$formName->setProject($project);
         }
+
+        $this->availableSkills = Skill::orderBy('name')->get();
     }
 
     public function render()
@@ -84,7 +97,7 @@ class ProjectEditor extends Component
 
         $this->$formName->save();
 
-        $this->project->addHistory(Auth::user(), 'Saved ' . $formType);
+        $this->project->addHistory(Auth::user(), 'Saved '.$formType);
 
         Flux::toast('Project saved', variant: 'success');
     }
@@ -94,9 +107,9 @@ class ProjectEditor extends Component
 
         $this->project->advanceToNextStage();
 
-        $this->project->addHistory(Auth::user(), 'Advanced to ' . $this->project->status->value);
+        $this->project->addHistory(Auth::user(), 'Advanced to '.$this->project->status->value);
 
-        Flux::toast('Project saved and advanced to ' . ucfirst($this->project->status->value), variant: 'success');
+        Flux::toast('Project saved and advanced to '.ucfirst($this->project->status->value), variant: 'success');
 
     }
 
@@ -104,10 +117,11 @@ class ProjectEditor extends Component
     public function availableUsers()
     {
         $searchTerm = $this->userSearch;
+
         return User::query()
             ->when(
                 strlen($searchTerm) > 1,
-                fn($query) => $query->where('surname', 'like', '%' . $searchTerm . '%')
+                fn ($query) => $query->where('surname', 'like', '%'.$searchTerm.'%')
             )
             ->limit(20)
             ->get();

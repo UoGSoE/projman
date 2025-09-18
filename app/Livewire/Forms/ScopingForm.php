@@ -44,20 +44,11 @@ class ScopingForm extends Form
         $this->inScope = $project->scoping->in_scope;
         $this->outOfScope = $project->scoping->out_of_scope;
         $this->assumptions = $project->scoping->assumptions;
+        // $temp = $project->scoping->skills_required;
+        // dd($temp);
         // Convert stored JSON back to array, or use the string as single value for backward compatibility
-        $storedSkills = $project->scoping->skills_required;
-        if (is_string($storedSkills)) {
-            // Check if it's JSON
-            $decoded = json_decode($storedSkills, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $this->skillsRequired = $decoded;
-            } else {
-                // Treat as single value for backward compatibility
-                $this->skillsRequired = [$storedSkills];
-            }
-        } else {
-            $this->skillsRequired = is_array($storedSkills) ? $storedSkills : [];
-        }
+        $this->skillsRequired = $project->scoping->skills_required ?? [];
+
     }
 
     public function save()
@@ -68,7 +59,7 @@ class ScopingForm extends Form
             'in_scope' => $this->inScope,
             'out_of_scope' => $this->outOfScope,
             'assumptions' => $this->assumptions,
-            'skills_required' => json_encode($this->skillsRequired),
+            'skills_required' => $this->skillsRequired,
         ]);
     }
 }

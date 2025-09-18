@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('in_scope')->nullable();
             $table->text('out_of_scope')->nullable();
             $table->text('assumptions')->nullable();
-            $table->string('skills_required')->nullable();
+            $table->json('skills_required')->nullable();
             $table->timestamps();
         });
     }
