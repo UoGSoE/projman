@@ -49,7 +49,7 @@ describe('Profile Component', function () {
         ]);
         $this->actingAs($this->user);
         $this->user->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
-        $this->user->updateSkill($this->skill2->id, SkillLevel::BEGINNER->value);
+        $this->user->updateSkill($this->skill2->id, SkillLevel::INTERMEDIATE->value);
 
     });
 
@@ -142,6 +142,14 @@ describe('Profile Component', function () {
                 ->assertSeeText('Laravel')
                 ->assertDontSeeText('React');
         });
+
+        it('orders skills by name', function () {
+            $component = livewire(Profile::class);
+            $skills = $component->viewData('allSkills');
+
+            $skillNames = $skills->pluck('name')->toArray();
+            expect($skillNames)->toBe(['Laravel', 'Project Management', 'Python', 'React', 'Vue.js']);
+        });
     });
 
     describe('Toggle Show My Skills', function () {
@@ -168,6 +176,40 @@ describe('Profile Component', function () {
             livewire(Profile::class)
                 ->set('userSkill.{$this->skill1->id}.skill_level', SkillLevel::INTERMEDIATE->value)
                 ->assertSeeText('Laravel');
+        });
+    });
+
+    describe('Edge Cases', function () {
+        it('handles user with no skills', function () {
+            $newUser = User::factory()->create(['is_staff' => true]);
+            $this->actingAs($newUser);
+
+            $component = livewire(Profile::class);
+            $userSkills = $component->get('userSkill');
+
+            foreach ($userSkills as $skillId => $skillData) {
+                expect($skillData['skill_level'])->toBe('none');
+            }
+
+            $component->set('showMySkills', true);
+            $component->assertSeeText('No skills found');
+        });
+
+        it('handles search with special characters', function () {
+            $component = livewire(Profile::class);
+            $component->set('skillSearchQuery', 'Vue.js');
+
+            $skills = $component->viewData('allSkills');
+            expect($skills)->toHaveCount(1);
+            expect($skills->first()->name)->toBe('Vue.js');
+        });
+
+        it('handles empty search query', function () {
+            $component = livewire(Profile::class);
+            $component->set('skillSearchQuery', '');
+
+            $skills = $component->viewData('allSkills');
+            expect($skills)->toHaveCount(5);
         });
     });
 });

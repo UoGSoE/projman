@@ -46,11 +46,6 @@ class Profile extends Component
         return $skills;
     }
 
-    public function updatedSkillSearchQuery(): void
-    {
-        // Search query updated - no pagination to reset
-    }
-
     public function buildSkillArray()
     {
         $user = auth()->user();
