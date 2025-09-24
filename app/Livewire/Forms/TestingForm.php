@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Forms;
 
-use Flux\Flux;
-use Livewire\Form;
-use Livewire\Attributes\Validate;
 use App\Models\Project;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class TestingForm extends Form
 {
@@ -29,7 +28,7 @@ class TestingForm extends Form
     #[Validate('required|string|max:2048')]
     public ?string $nonFunctionalTests;
 
-    #[Validate('required|url|max:255')]
+    #[Validate('url|max:255')]
     public ?string $testRepository;
 
     #[Validate('required|string|max:255')]

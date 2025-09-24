@@ -130,17 +130,13 @@
                 {{-- Functional & Non-Functional Testing --}}
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <flux:textarea label="Functional Testing" rows="2"
-                            wire:model="testingForm.functionalTestingTitle" />
-                        <flux:textarea rows="6" wire:model="testingForm.functionalTests"
-                            placeholder="FR1:&#10;FR2:&#10;FR3:" />
+                        <flux:textarea rows="6" label="Functional Testing"
+                            wire:model="testingForm.functionalTests" placeholder="FR1:&#10;FR2:&#10;FR3:" />
                     </div>
 
                     <div>
-                        <flux:textarea label="Non-Functional Testing" rows="2"
-                            wire:model="testingForm.nonFunctionalTestingTitle" />
-                        <flux:textarea rows="6" wire:model="testingForm.nonFunctionalTests"
-                            placeholder="NFR1:&#10;NFR2:&#10;NFR3:" />
+                        <flux:textarea rows="6" label="Non-Functional Testing"
+                            wire:model="testingForm.nonFunctionalTests" placeholder="NFR1:&#10;NFR2:&#10;NFR3:" />
                     </div>
                 </div>
 
@@ -228,29 +224,29 @@
                 <div class="grid grid-cols-5 gap-4">
                     <flux:input label="Approvals" value="Approvals" disabled />
                     <flux:select label="Delivery" wire:model="detailedDesignForm.approvalDelivery">
-                        @foreach ($detailedDesignForm->availableApprovalStates as $id => $label)
-                            <flux:select.option value="{{ $id }}">
+                        @foreach ($detailedDesignForm->availableApprovalStates as $label)
+                            <flux:select.option value="{{ $label }}">
                                 {{ $label }}
                             </flux:select.option>
                         @endforeach
                     </flux:select>
                     <flux:select label="Operations" wire:model="detailedDesignForm.approvalOperations">
-                        @foreach ($detailedDesignForm->availableApprovalStates as $id => $label)
-                            <flux:select.option value="{{ $id }}">
+                        @foreach ($detailedDesignForm->availableApprovalStates as $label)
+                            <flux:select.option value="{{ $label }}">
                                 {{ $label }}
                             </flux:select.option>
                         @endforeach
                     </flux:select>
                     <flux:select label="Resilience" wire:model="detailedDesignForm.approvalResilience">
-                        @foreach ($detailedDesignForm->availableApprovalStates as $id => $label)
-                            <flux:select.option value="{{ $id }}">
+                        @foreach ($detailedDesignForm->availableApprovalStates as $label)
+                            <flux:select.option value="{{ $label }}">
                                 {{ $label }}
                             </flux:select.option>
                         @endforeach
                     </flux:select>
                     <flux:select label="Change Board" wire:model="detailedDesignForm.approvalChangeBoard">
-                        @foreach ($detailedDesignForm->availableApprovalStates as $id => $label)
-                            <flux:select.option value="{{ $id }}">
+                        @foreach ($detailedDesignForm->availableApprovalStates as $label)
+                            <flux:select.option value="{{ $label }}">
                                 {{ $label }}
                             </flux:select.option>
                         @endforeach

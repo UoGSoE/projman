@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Forms;
 
-use Flux\Flux;
-use Livewire\Form;
-use Livewire\Attributes\Validate;
 use App\Models\Project;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class DeployedForm extends Form
 {
@@ -39,7 +38,7 @@ class DeployedForm extends Form
     #[Validate('required|string|max:255')]
     public ?string $version;
 
-    #[Validate('required|url|max:255')]
+    #[Validate('url|max:255')]
     public ?string $productionUrl;
 
     #[Validate('nullable|string|max:2048')]
@@ -78,7 +77,7 @@ class DeployedForm extends Form
         $this->deployedBy = $project->deployed->deployed_by;
         $this->environment = $project->deployed->environment;
         $this->status = $project->deployed->status;
-        $this->deploymentDate = $project->deployed->deployment_date;
+        $this->deploymentDate = $project->deployed->deployment_date->format('Y-m-d');
         $this->version = $project->deployed->version;
         $this->productionUrl = $project->deployed->production_url;
         $this->deploymentNotes = $project->deployed->deployment_notes;

@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Forms;
 
-use Flux\Flux;
-use Livewire\Form;
-use Livewire\Attributes\Validate;
 use App\Models\Project;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class DetailedDesignForm extends Form
 {
@@ -29,19 +28,19 @@ class DetailedDesignForm extends Form
     #[Validate('required|string|max:2048')]
     public ?string $nonFunctionalRequirements;
 
-    #[Validate('required|url|max:255')]
+    #[Validate('url|max:255')]
     public ?string $hldDesignLink;
 
-    #[Validate('required|integer|exists:users,id')]
+    #[Validate('required|string|max:255')]
     public ?string $approvalDelivery = '';
 
-    #[Validate('required|integer|exists:users,id')]
+    #[Validate('required|string|max:255')]
     public ?string $approvalOperations = '';
 
-    #[Validate('required|integer|exists:users,id')]
+    #[Validate('required|string|max:255')]
     public ?string $approvalResilience = '';
 
-    #[Validate('required|integer|exists:users,id')]
+    #[Validate('required|string|max:255')]
     public ?string $approvalChangeBoard = '';
 
     public function setProject(Project $project)

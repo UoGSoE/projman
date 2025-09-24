@@ -2,11 +2,9 @@
 
 namespace App\Livewire\Forms;
 
-use Flux\Flux;
-use Livewire\Form;
 use App\Models\Project;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class DevelopmentForm extends Form
 {
@@ -40,7 +38,7 @@ class DevelopmentForm extends Form
     #[Validate('required|string|max:2048')]
     public ?string $developmentNotes;
 
-    #[Validate('required|url|max:255')]
+    #[Validate('url|max:255')]
     public ?string $repositoryLink;
 
     #[Validate('required|string|max:255')]
@@ -64,8 +62,8 @@ class DevelopmentForm extends Form
         $this->developmentNotes = $project->development->development_notes;
         $this->repositoryLink = $project->development->repository_link;
         $this->status = $project->development->status;
-        $this->startDate = $project->development->start_date;
-        $this->completionDate = $project->development->completion_date;
+        $this->startDate = $project->development->start_date->format('Y-m-d');
+        $this->completionDate = $project->development->completion_date->format('Y-m-d');
         $this->codeReviewNotes = $project->development->code_review_notes;
     }
 
