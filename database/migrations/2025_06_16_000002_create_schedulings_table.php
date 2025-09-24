@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
             $table->text('key_skills')->nullable();
-            $table->text('cose_it_staff')->nullable();
+            $table->json('cose_it_staff')->nullable();
             $table->date('estimated_start_date')->nullable();
             $table->date('estimated_completion_date')->nullable();
             $table->date('change_board_date')->nullable();
