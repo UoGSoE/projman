@@ -43,7 +43,6 @@ enum SkillLevel: string
             self::ADVANCED => 'orange',
         };
     }
-
     public static function getAll(): array
     {
         return array_column(self::cases(), 'value');

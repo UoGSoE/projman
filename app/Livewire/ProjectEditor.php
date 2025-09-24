@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use App\Enums\SkillLevel;
 
 class ProjectEditor extends Component
 {
@@ -82,6 +83,9 @@ class ProjectEditor extends Component
         }
 
         $this->availableSkills = Skill::orderBy('name')->get();
+
+        // Update the CoSE IT staff field with skill-matched users
+        $this->updateCoseItStaffField();
     }
 
     public function render()
@@ -125,5 +129,73 @@ class ProjectEditor extends Component
             )
             ->limit(20)
             ->get();
+    }
+
+
+    #[Computed]
+    public function skillMatchedUsers()
+    {
+        $requiredSkillIds = $this->scopingForm->skillsRequired ?? [];
+
+        if (empty($requiredSkillIds)) {
+            return collect();
+        }
+
+        return $this->getUsersMatchedBySkills($requiredSkillIds);
+    }
+
+    public function getUsersMatchedBySkills(array $requiredSkillIds): Collection
+    {
+        if (empty($requiredSkillIds)) {
+            return User::whereRaw('1 = 0')->get(); // Return empty Eloquent Collection
+        }
+
+        return User::with(['skills' => function ($query) use ($requiredSkillIds) {
+            // eager load only skills with ids in the array requiredSkillIds for each user
+            // this helps to not include skills we dont need to match
+            $query->whereIn('skill_id', $requiredSkillIds);
+        }])
+        ->whereHas('skills', function ($query) use ($requiredSkillIds) {
+            // whereHas filters the users to only include those with skills with ids in the array requiredSkillIds
+            $query->whereIn('skill_id', $requiredSkillIds);
+        })
+        ->get()
+        ->map(function ($user) {
+            $totalScore = $user->skills->sum(function ($skill) use ($user) {
+                $level = SkillLevel::from($user->getSkillLevel($skill));
+                return $level->getNumericValue();
+            });
+            $user->total_skill_score = $totalScore;
+            return $user;
+        })
+        ->sortByDesc('total_skill_score')
+        ->values();
+    }
+     public function updatedSkillMatchedUsers()
+    {
+        $this->updateCoseItStaffField();
+    }
+
+    private function updateCoseItStaffField()
+    {
+        $skillMatchedUsers = $this->skillMatchedUsers;
+
+        if ($skillMatchedUsers->isNotEmpty()) {
+            $requiredSkillIds = $this->scopingForm->skillsRequired ?? [];
+            $totalRequired = is_array($requiredSkillIds) ? count($requiredSkillIds) : 0;
+
+            $staffList = $skillMatchedUsers->map(function ($user) use ($requiredSkillIds, $totalRequired) {
+                $userSkillIds = $user->skills->pluck('id')->toArray();
+                $matchedCount = is_array($requiredSkillIds)
+                    ? count(array_intersect($requiredSkillIds, $userSkillIds))
+                    : 0;
+
+                return $user->full_name.' - '.' ('.($matchedCount).'/'.($totalRequired).')'.' skills match';
+            })->join("\n");
+
+            $this->schedulingForm->coseItStaff = $staffList;
+        } else {
+            $this->schedulingForm->coseItStaff = 'No users matched with required skills';
+        }
     }
 }

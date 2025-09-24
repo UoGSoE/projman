@@ -291,11 +291,33 @@
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     <flux:select label="Assigned To" wire:model="schedulingForm.assignedTo">
                         {{--  TODO: this should allow for multiple users --}}
-                        @foreach ($this->availableUsers as $user)
-                            <flux:select.option value="{{ $user->id }}">
-                                {{ $user->full_name }}
-                            </flux:select.option>
-                        @endforeach
+                        @if ($this->skillMatchedUsers->isNotEmpty())
+                            @php
+                                $totalRequiredSkills = count($this->scopingForm->skillsRequired ?? []);
+                            @endphp
+                            @foreach ($this->skillMatchedUsers as $user)
+                                @php
+                                    // Count how many of the required skills this user has
+                                    $userSkillIds = $user->skills->pluck('id')->toArray();
+                                    $matchedSkillsCount = count(
+                                        array_intersect($this->scopingForm->skillsRequired ?? [], $userSkillIds),
+                                    );
+                                    $skillMatchRatio =
+                                        $totalRequiredSkills > 0
+                                            ? $matchedSkillsCount . '/' . $totalRequiredSkills
+                                            : '0/0';
+                                @endphp
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }} ({{ $skillMatchRatio }})
+                                </flux:select.option>
+                            @endforeach
+                        @else
+                            @foreach ($this->availableUsers as $user)
+                                <flux:select.option value="{{ $user->id }}">
+                                    {{ $user->full_name }}
+                                </flux:select.option>
+                            @endforeach
+                        @endif
                     </flux:select>
 
                     <flux:select label="Priority" wire:model="schedulingForm.priority">

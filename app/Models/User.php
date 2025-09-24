@@ -168,5 +168,7 @@ class User extends Authenticatable
     public function hasSkill(int $skillId): bool
     {
         return $this->skills->where('id', $skillId)->count() > 0;
+        //or
+        //return $this->skills()->where('skill_id', $skillId)->count() > 0;
     }
 }
