@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Busyness;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,6 +28,8 @@ class User extends Authenticatable
         'is_admin',
         'email',
         'password',
+        'busyness_week_1',
+        'busyness_week_2',
     ];
 
     /**
@@ -51,6 +54,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_staff' => 'boolean',
             'is_admin' => 'boolean',
+            'busyness_week_1' => Busyness::class,
+            'busyness_week_2' => Busyness::class,
         ];
     }
 
@@ -168,7 +173,27 @@ class User extends Authenticatable
     public function hasSkill(int $skillId): bool
     {
         return $this->skills->where('id', $skillId)->count() > 0;
-        //or
-        //return $this->skills()->where('skill_id', $skillId)->count() > 0;
+        // or
+        // return $this->skills()->where('skill_id', $skillId)->count() > 0;
+    }
+
+    public function getBusynessWeek1Attribute($value): ?Busyness
+    {
+        return $value ? Busyness::from($value) : null;
+    }
+
+    public function setBusynessWeek1Attribute($value): void
+    {
+        $this->attributes['busyness_week_1'] = $value instanceof Busyness ? $value->value : $value;
+    }
+
+    public function getBusynessWeek2Attribute($value): ?Busyness
+    {
+        return $value ? Busyness::from($value) : null;
+    }
+
+    public function setBusynessWeek2Attribute($value): void
+    {
+        $this->attributes['busyness_week_2'] = $value instanceof Busyness ? $value->value : $value;
     }
 }

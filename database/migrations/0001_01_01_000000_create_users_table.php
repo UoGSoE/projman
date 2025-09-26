@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->integer('busyness_week_1')->nullable();
+            $table->integer('busyness_week_2')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
