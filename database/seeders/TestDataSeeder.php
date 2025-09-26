@@ -213,6 +213,7 @@ class TestDataSeeder extends Seeder
         }
 
         $stagesToCreate = array_slice($progression, 0, $targetIndex + 1);
+        $faker = fake();
 
         foreach ($stagesToCreate as $stage) {
             $modelClass = $stageMap[$stage->value] ?? null;
@@ -231,7 +232,19 @@ class TestDataSeeder extends Seeder
                     break;
                 case ProjectStatus::SCHEDULING:
                     $attributes['assigned_to'] = $assignee->id;
+                    $requiredSkillIds = collect(optional($project->scoping)->skills_required ?? []);
+                    if ($requiredSkillIds->isEmpty()) {
+                        $requiredSkillIds = $this->sampleSkillIds();
+                        $project->scoping?->update(['skills_required' => $requiredSkillIds->all()]);
+                    }
+
+                    $attributes['key_skills'] = $this->skillNamesFor($requiredSkillIds);
                     $attributes['cose_it_staff'] = $this->randomStaffIds($staffMembers, random_int(1, 3), [$assignee->id, $project->user_id]);
+                    $attributes['estimated_start_date'] = Carbon::now()->addDays(random_int(10, 30));
+                    $attributes['estimated_completion_date'] = Carbon::now()->addDays(random_int(40, 80));
+                    $attributes['change_board_date'] = Carbon::now()->addDays(random_int(15, 45));
+                    $attributes['priority'] = $faker->randomElement(['low', 'medium', 'high', 'critical']);
+                    $attributes['team_assignment'] = $faker->words(2, true);
                     break;
                 case ProjectStatus::DETAILED_DESIGN:
                     $attributes['designed_by'] = $assignee->id;
@@ -239,6 +252,13 @@ class TestDataSeeder extends Seeder
                 case ProjectStatus::DEVELOPMENT:
                     $attributes['lead_developer'] = $assignee->id;
                     $attributes['development_team'] = $this->randomStaffIds($staffMembers, random_int(1, 4), [$assignee->id, $project->user_id]);
+                    $attributes['technical_approach'] = $faker->paragraph();
+                    $attributes['development_notes'] = $faker->paragraph();
+                    $attributes['repository_link'] = $faker->url();
+                    $attributes['status'] = $faker->randomElement(['planning', 'in_progress', 'review', 'completed']);
+                    $attributes['start_date'] = Carbon::now()->subDays(random_int(10, 60));
+                    $attributes['completion_date'] = Carbon::now()->addDays(random_int(15, 90));
+                    $attributes['code_review_notes'] = $faker->sentence();
                     break;
                 case ProjectStatus::TESTING:
                     $attributes['test_lead'] = $assignee->id;
@@ -248,7 +268,16 @@ class TestDataSeeder extends Seeder
                     break;
             }
 
-            $modelClass::factory()->create($attributes);
+            if ($stage === ProjectStatus::SCOPING) {
+                $skillIds = $this->sampleSkillIds();
+                $attributes['skills_required'] = $skillIds->all();
+            }
+
+            $record = $modelClass::factory()->create($attributes);
+
+            if ($relation = $this->relationNameForStage($stage)) {
+                $project->setRelation($relation, $record);
+            }
         }
     }
 
@@ -274,6 +303,13 @@ class TestDataSeeder extends Seeder
             return;
         }
 
+        $requiredSkillIds = collect(optional($project->scoping)->skills_required ?? []);
+
+        if ($requiredSkillIds->isEmpty()) {
+            $requiredSkillIds = $this->sampleSkillIds();
+            $project->scoping?->update(['skills_required' => $requiredSkillIds->all()]);
+        }
+
         $scheduling = $project->scheduling;
 
         if (! $scheduling) {
@@ -282,6 +318,7 @@ class TestDataSeeder extends Seeder
             $scheduling = Scheduling::factory()->create([
                 'project_id' => $project->id,
                 'assigned_to' => $assigned,
+                'key_skills' => $this->skillNamesFor($requiredSkillIds),
                 'cose_it_staff' => $this->randomStaffIds($availableStaff, random_int(2, 4), [$assigned]),
             ]);
 
@@ -310,6 +347,7 @@ class TestDataSeeder extends Seeder
             $scheduling->forceFill([
                 'assigned_to' => $assigned,
                 'cose_it_staff' => $team->all(),
+                'key_skills' => $this->skillNamesFor($requiredSkillIds),
             ])->save();
 
             $project->setRelation('scheduling', $scheduling);
@@ -357,6 +395,7 @@ class TestDataSeeder extends Seeder
 
             case Scoping::class:
                 $assessor = $staffId ?? $project->user_id;
+                $skillIds = $this->sampleSkillIds();
 
                 return [
                     'assessed_by' => $assessor,
@@ -364,19 +403,23 @@ class TestDataSeeder extends Seeder
                     'in_scope' => $faker->paragraph(),
                     'out_of_scope' => $faker->paragraph(),
                     'assumptions' => $faker->paragraph(),
-                    'skills_required' => $faker->words(3, true),
+                    'skills_required' => $skillIds->all(),
                 ];
 
             case Scheduling::class:
                 $assigned = $this->pickStaffId($staffMembers, [$project->user_id]);
                 $start = Carbon::now()->addDays(random_int(10, 40));
                 $completion = $start->copy()->addDays(random_int(20, 60));
+                $existingSkills = collect(optional($project->scoping)->skills_required ?? []);
+                if ($existingSkills->isEmpty()) {
+                    $existingSkills = $this->sampleSkillIds();
+                }
 
                 $team = collect($this->randomStaffIds($staffMembers, random_int(2, 4), [$assigned, $project->user_id]));
 
                 return [
                     'assigned_to' => $assigned,
-                    'key_skills' => $faker->sentence(),
+                    'key_skills' => $this->skillNamesFor($existingSkills),
                     'cose_it_staff' => $team->all(),
                     'estimated_start_date' => $start,
                     'estimated_completion_date' => $completion,
@@ -458,6 +501,57 @@ class TestDataSeeder extends Seeder
         }
 
         return [];
+    }
+
+    private function relationNameForStage(ProjectStatus $status): ?string
+    {
+        return match ($status) {
+            ProjectStatus::IDEATION => 'ideation',
+            ProjectStatus::FEASIBILITY => 'feasibility',
+            ProjectStatus::SCOPING => 'scoping',
+            ProjectStatus::SCHEDULING => 'scheduling',
+            ProjectStatus::DETAILED_DESIGN => 'detailedDesign',
+            ProjectStatus::DEVELOPMENT => 'development',
+            ProjectStatus::TESTING => 'testing',
+            ProjectStatus::DEPLOYED => 'deployed',
+            default => null,
+        };
+    }
+
+    private function sampleSkillIds(int $min = 2, int $max = 4): Collection
+    {
+        $totalSkills = Skill::count();
+
+        if ($totalSkills === 0) {
+            return collect();
+        }
+
+        $upper = max(1, min($max, $totalSkills));
+        $lower = max(1, min($min, $upper));
+        $take = random_int($lower, $upper);
+
+        return Skill::query()
+            ->inRandomOrder()
+            ->take($take)
+            ->pluck('id');
+    }
+
+    private function skillNamesFor(Collection $skillIds): string
+    {
+        if ($skillIds->isEmpty()) {
+            return 'General support';
+        }
+
+        $names = Skill::query()
+            ->whereIn('id', $skillIds)
+            ->get(['id', 'name'])
+            ->keyBy('id');
+
+        return $skillIds
+            ->map(fn ($id) => $names->get($id)?->name)
+            ->filter()
+            ->take(3)
+            ->implode(', ');
     }
 
 
