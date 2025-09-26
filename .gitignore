@@ -46,3 +46,5 @@ storage/debugbar
 /.crush/
 CRUSH.md
 .devdbrc
+fluxui*
+

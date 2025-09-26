@@ -6,11 +6,13 @@ use App\Enums\ProjectStatus;
 use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Models\Traits\CanCheckIfEdited;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class Project extends Model
@@ -34,6 +36,7 @@ class Project extends Model
 
     protected $casts = [
         'status' => ProjectStatus::class,
+        'deadline' => 'date',
     ];
 
     /**
@@ -130,6 +133,19 @@ class Project extends Model
     public function scopeCancelled($query)
     {
         return $query->where('status', ProjectStatus::CANCELLED->value);
+    }
+
+    public function scopeCurrentlyActive(Builder $query): Builder
+    {
+        return $query
+            ->whereNotIn('status', [
+                ProjectStatus::COMPLETED->value,
+                ProjectStatus::CANCELLED->value,
+            ])
+            ->where(function (Builder $query) {
+                $query->whereNull('deadline')
+                    ->orWhereDate('deadline', '>=', Carbon::today());
+            });
     }
 
     public function cancel()
