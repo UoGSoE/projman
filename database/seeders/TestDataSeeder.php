@@ -2,23 +2,50 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Busyness;
+use App\Enums\ProjectStatus;
 use App\Enums\SkillLevel;
+use App\Models\Deployed;
+use App\Models\DetailedDesign;
+use App\Models\Development;
+use App\Models\Feasibility;
+use App\Models\Ideation;
 use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Models\Role;
+use App\Models\Scheduling;
+use App\Models\Scoping;
 use App\Models\Skill;
+use App\Models\Testing;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class TestDataSeeder extends Seeder
 {
-    // Stop the model events from firing to prevent side effects so we can seed exactly what we want
     use WithoutModelEvents;
 
     public function run(): void
     {
-        // Create some default roles
+        $this->seedRoles();
+        $this->seedSkills();
+
+        $this->seedCoreUsers();
+        $this->seedStaffTeam();
+        $this->seedAdditionalStaff(5);
+
+        $staffMembers = User::where('is_staff', true)->get();
+
+        $this->assignRolesAndSkills($staffMembers);
+        $this->seedProjectPortfolio($staffMembers);
+        $this->updateBusynessFromWorkload();
+    }
+
+    private function seedRoles(): void
+    {
         $roles = [
             [
                 'name' => 'CoSE',
@@ -41,118 +68,373 @@ class TestDataSeeder extends Seeder
             Role::create($roleData);
         }
 
-        // Create additional random roles for testing
         Role::factory(10)->create();
+    }
 
-        // Create skills
-        $skills = $this->getSkills();
-        foreach ($skills as $skillData) {
+    private function seedSkills(): void
+    {
+        foreach ($this->getSkills() as $skillData) {
             Skill::factory()->create([
                 'name' => $skillData['name'],
                 'description' => $skillData['description'],
             ]);
         }
+    }
 
+    private function seedCoreUsers(): void
+    {
         User::factory()->admin()->create([
             'username' => 'admin2x',
             'email' => 'admin2x@example.ac.uk',
             'password' => bcrypt('secret'),
+            'busyness_week_1' => Busyness::MEDIUM,
+            'busyness_week_2' => Busyness::MEDIUM,
         ]);
 
         User::factory()->staff()->create([
             'username' => 'staff2x',
             'email' => 'staff2x@example.ac.uk',
             'password' => bcrypt('secret'),
+            'busyness_week_1' => Busyness::LOW,
+            'busyness_week_2' => Busyness::MEDIUM,
         ]);
+    }
 
-        $users = User::factory()->count(10)->create();
+    private function seedStaffTeam(): void
+    {
+        collect($this->staffProfiles())->each(function (array $profile, int $index) {
+            User::factory()->staff()->create([
+                'forenames' => $profile['forenames'],
+                'surname' => $profile['surname'],
+                'username' => Str::slug($profile['forenames'].' '.$profile['surname']).($index + 1),
+                'email' => Str::slug($profile['forenames']).'.'.Str::slug($profile['surname']).'@example.ac.uk',
+                'busyness_week_1' => $profile['week_1'],
+                'busyness_week_2' => $profile['week_2'],
+            ]);
+        });
+    }
 
-        // Assign random roles to users
+    private function seedAdditionalStaff(int $count): void
+    {
+        $levels = collect(Busyness::cases());
+
+        $users = User::factory()->count($count)->create();
+        $users->each(function (User $user) use ($levels) {
+            $user->forceFill([
+                'busyness_week_1' => $levels->random(),
+                'busyness_week_2' => $levels->random(),
+            ])->save();
+        });
+    }
+
+    private function assignRolesAndSkills(Collection $staffMembers): void
+    {
         $allRoles = Role::all();
-        foreach ($users as $user) {
-            // Assign 1-3 random roles to each user
-            $randomRoles = $allRoles->random(rand(1, min(3, $allRoles->count())));
-            $user->roles()->attach($randomRoles->pluck('id'));
-        }
-
-        // Assign skills to users (except admin)
         $allSkills = Skill::all();
-        $skillLevels = SkillLevel::cases();
+        $skillLevels = collect(SkillLevel::cases());
 
-        foreach ($users as $user) {
-            // Assign 3-8 random skills to each user with random skill levels
-            $randomSkills = $allSkills->random(rand(3, min(8, $allSkills->count())));
-            foreach ($randomSkills as $skill) {
-                $skillLevel = $skillLevels[array_rand($skillLevels)];
-                $user->skills()->attach($skill->id, ['skill_level' => $skillLevel->value]);
+        foreach ($staffMembers as $member) {
+            if ($allRoles->isNotEmpty()) {
+                $roles = $allRoles->shuffle()->take(random_int(1, min(3, $allRoles->count())));
+                $member->roles()->syncWithoutDetaching($roles->pluck('id')->all());
             }
-        }
 
-        foreach (User::all() as $user) {
-            foreach (range(1, 10) as $i) {
-                $project = Project::factory()->create([
-                    'user_id' => $user->id,
-                    'updated_at' => now()->subDays(rand(1, 100)),
-                ]);
-                $stage = rand(0, count(config('projman.subforms')) - 1);
-                foreach (config('projman.subforms') as $index => $formName) {
-                    // Create base data for each form type
-                    $formData = [
-                        'project_id' => $project->id,
-                        'created_at' => $index <= $stage ? now()->subDays(rand(1, 100)) : now(),
-                    ];
-
-                    // Add user ID fields based on form type
-                    if ($formName === 'App\Models\Feasibility') {
-                        $formData['assessed_by'] = $users->random()->id;
-                    } elseif ($formName === 'App\Models\Scoping') {
-                        $formData['assessed_by'] = $users->random()->id;
-                    } elseif ($formName === 'App\Models\DetailedDesign') {
-                        $formData['designed_by'] = $users->random()->id;
-                    } elseif ($formName === 'App\Models\Development') {
-                        $formData['lead_developer'] = $users->random()->id;
-                    } elseif ($formName === 'App\Models\Testing') {
-                        $formData['test_lead'] = $users->random()->id;
-                    } elseif ($formName === 'App\Models\Deployed') {
-                        $formData['deployed_by'] = $users->random()->id;
-                    } elseif ($formName === 'App\Models\Scheduling') {
-                        $formData['assigned_to'] = $users->random()->id;
-                    }
-
-                    $formName::factory()->create($formData);
-                }
-
-                foreach (range(1, rand(1, 100)) as $j) {
-                    ProjectHistory::factory()->create([
-                        'project_id' => $project->id,
-                        'user_id' => $users->random()->id,
-                        'created_at' => now()->subDays(rand(1, 100)),
+            if ($allSkills->isNotEmpty()) {
+                $skills = $allSkills->shuffle()->take(random_int(4, min(8, $allSkills->count())));
+                foreach ($skills as $skill) {
+                    $member->skills()->syncWithoutDetaching([
+                        $skill->id => ['skill_level' => $skillLevels->random()->value],
                     ]);
                 }
             }
         }
     }
 
-    public function getSkills()
+    private function seedProjectPortfolio(Collection $staffMembers): void
+    {
+        $stageMap = $this->stageModelMap();
+        $progression = array_values(ProjectStatus::getProgressStages());
+        $statusPool = [
+            ProjectStatus::IDEATION,
+            ProjectStatus::FEASIBILITY,
+            ProjectStatus::SCOPING,
+            ProjectStatus::SCHEDULING,
+            ProjectStatus::DETAILED_DESIGN,
+            ProjectStatus::DEVELOPMENT,
+            ProjectStatus::TESTING,
+            ProjectStatus::DEPLOYED,
+            ProjectStatus::COMPLETED,
+            ProjectStatus::CANCELLED,
+        ];
+
+        foreach ($staffMembers as $member) {
+            $projectCount = random_int(4, 6);
+            $statuses = collect([ProjectStatus::COMPLETED])
+                ->when(random_int(0, 1), fn ($collection) => $collection->push(ProjectStatus::CANCELLED))
+                ->merge(collect($statusPool)->shuffle()->take($projectCount))
+                ->take($projectCount)
+                ->shuffle();
+
+            foreach ($statuses as $status) {
+                $timeline = $this->projectTimeline($status);
+
+                $project = Project::factory()
+                    ->for($member, 'user')
+                    ->create([
+                        'status' => $status,
+                        'deadline' => $timeline['deadline'],
+                    ]);
+
+                $project->forceFill([
+                    'created_at' => $timeline['created_at'],
+                    'updated_at' => $timeline['updated_at'],
+                ])->save();
+
+                $this->seedStageData($project, $status, $staffMembers, $progression, $stageMap);
+                $this->seedHistoryEntries($project, $staffMembers, $timeline['created_at'], $timeline['updated_at']);
+            }
+        }
+    }
+
+    private function seedStageData(Project $project, ProjectStatus $status, Collection $staffMembers, array $progression, array $stageMap): void
+    {
+        if ($status === ProjectStatus::CANCELLED) {
+            $targetIndex = random_int(0, max(0, count($progression) - 2));
+        } elseif ($status === ProjectStatus::COMPLETED) {
+            $targetIndex = count($progression) - 1;
+        } else {
+            $targetIndex = array_search($status, $progression, true);
+        }
+
+        if ($targetIndex === false) {
+            return;
+        }
+
+        $stagesToCreate = array_slice($progression, 0, $targetIndex + 1);
+
+        foreach ($stagesToCreate as $stage) {
+            $modelClass = $stageMap[$stage->value] ?? null;
+
+            if (! $modelClass) {
+                continue;
+            }
+
+            $attributes = ['project_id' => $project->id];
+            $assignee = $staffMembers->random();
+
+            switch ($stage) {
+                case ProjectStatus::FEASIBILITY:
+                case ProjectStatus::SCOPING:
+                    $attributes['assessed_by'] = $assignee->id;
+                    break;
+                case ProjectStatus::SCHEDULING:
+                    $attributes['assigned_to'] = $assignee->id;
+                    $attributes['cose_it_staff'] = $this->randomStaffIds($staffMembers, random_int(1, 3));
+                    break;
+                case ProjectStatus::DETAILED_DESIGN:
+                    $attributes['designed_by'] = $assignee->id;
+                    break;
+                case ProjectStatus::DEVELOPMENT:
+                    $attributes['lead_developer'] = $assignee->id;
+                    $attributes['development_team'] = $this->randomStaffIds($staffMembers, random_int(1, 4));
+                    break;
+                case ProjectStatus::TESTING:
+                    $attributes['test_lead'] = $assignee->id;
+                    break;
+                case ProjectStatus::DEPLOYED:
+                    $attributes['deployed_by'] = $assignee->id;
+                    break;
+            }
+
+            $modelClass::factory()->create($attributes);
+        }
+    }
+
+    private function seedHistoryEntries(Project $project, Collection $staffMembers, Carbon $createdAt, Carbon $updatedAt): void
+    {
+        $historyCount = random_int(2, 5);
+        $start = $createdAt->copy();
+        $end = $updatedAt->copy();
+
+        foreach (range(1, $historyCount) as $index) {
+            $timestamp = $start->copy()->addDays(random_int(1, max(1, $start->diffInDays($end) ?: 1)));
+
+            if ($timestamp->gt($end)) {
+                $timestamp = $end->copy();
+            }
+
+            $history = ProjectHistory::factory()->create([
+                'project_id' => $project->id,
+                'user_id' => $staffMembers->random()->id,
+                'description' => fake()->sentence(),
+            ]);
+
+            $history->forceFill([
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ])->save();
+        }
+    }
+
+    private function updateBusynessFromWorkload(): void
+    {
+        $staffMembers = User::where('is_staff', true)->get();
+
+        foreach ($staffMembers as $member) {
+            $activeCount = $member->projects()
+                ->whereNotIn('status', [
+                    ProjectStatus::COMPLETED->value,
+                    ProjectStatus::CANCELLED->value,
+                ])->count();
+
+            $weekOne = $this->busynessLevelForCount($activeCount);
+            $weekTwo = $this->busynessLevelForCount(max(0, $activeCount + random_int(-1, 1)));
+
+            $member->forceFill([
+                'busyness_week_1' => $weekOne,
+                'busyness_week_2' => $weekTwo,
+            ])->save();
+        }
+    }
+
+    private function busynessLevelForCount(int $activeProjects): Busyness
+    {
+        return match (true) {
+            $activeProjects >= 5 => Busyness::HIGH,
+            $activeProjects >= 3 => Busyness::MEDIUM,
+            $activeProjects >= 1 => Busyness::LOW,
+            default => Busyness::UNKNOWN,
+        };
+    }
+
+    private function projectTimeline(ProjectStatus $status): array
+    {
+        $now = now();
+
+        return match ($status) {
+            ProjectStatus::COMPLETED => [
+                'deadline' => $now->copy()->subDays(random_int(7, 40)),
+                'created_at' => $now->copy()->subDays(random_int(220, 320)),
+                'updated_at' => $now->copy()->subDays(random_int(5, 20)),
+            ],
+            ProjectStatus::CANCELLED => [
+                'deadline' => null,
+                'created_at' => $now->copy()->subDays(random_int(160, 260)),
+                'updated_at' => $now->copy()->subDays(random_int(2, 15)),
+            ],
+            ProjectStatus::DEVELOPMENT, ProjectStatus::TESTING => [
+                'deadline' => $now->copy()->addDays(random_int(7, 30)),
+                'created_at' => $now->copy()->subDays(random_int(120, 200)),
+                'updated_at' => $now->copy()->subDays(random_int(0, 4)),
+            ],
+            ProjectStatus::DEPLOYED => [
+                'deadline' => $now->copy()->addDays(random_int(0, 7)),
+                'created_at' => $now->copy()->subDays(random_int(140, 220)),
+                'updated_at' => $now->copy()->subDays(random_int(0, 3)),
+            ],
+            ProjectStatus::SCOPING, ProjectStatus::SCHEDULING, ProjectStatus::DETAILED_DESIGN => [
+                'deadline' => $now->copy()->addDays(random_int(20, 60)),
+                'created_at' => $now->copy()->subDays(random_int(90, 180)),
+                'updated_at' => $now->copy()->subDays(random_int(1, 10)),
+            ],
+            default => [
+                'deadline' => $now->copy()->addDays(random_int(30, 90)),
+                'created_at' => $now->copy()->subDays(random_int(60, 160)),
+                'updated_at' => $now->copy()->subDays(random_int(3, 12)),
+            ],
+        };
+    }
+
+    private function randomStaffIds(Collection $staffMembers, int $count): array
+    {
+        return $staffMembers
+            ->shuffle()
+            ->take(min($count, $staffMembers->count()))
+            ->pluck('id')
+            ->values()
+            ->all();
+    }
+
+    private function stageModelMap(): array
     {
         return [
-            // Windows
-            ['name' => 'Windows - Desktop Support', 'description' => 'Providing technical support and troubleshooting for Windows desktop environments.'],
-            ['name' => 'Windows - Active Directory / SCCM', 'description' => 'Managing users, devices, and policies with Active Directory and SCCM.'],
-            ['name' => 'Windows - Deployment & Imaging', 'description' => 'Setting up and deploying Windows systems using imaging tools.'],
-            ['name' => 'Windows - Group Policy Management', 'description' => 'Creating and applying group policies to manage Windows environments.'],
-            ['name' => 'Windows - PowerShell Scripting', 'description' => 'Automating administrative tasks using PowerShell scripts.'],
-            ['name' => 'Windows Server Administration', 'description' => 'Installing, configuring, and maintaining Windows Server environments.'],
+            ProjectStatus::IDEATION->value => Ideation::class,
+            ProjectStatus::FEASIBILITY->value => Feasibility::class,
+            ProjectStatus::SCOPING->value => Scoping::class,
+            ProjectStatus::SCHEDULING->value => Scheduling::class,
+            ProjectStatus::DETAILED_DESIGN->value => DetailedDesign::class,
+            ProjectStatus::DEVELOPMENT->value => Development::class,
+            ProjectStatus::TESTING->value => Testing::class,
+            ProjectStatus::DEPLOYED->value => Deployed::class,
+        ];
+    }
 
-            // macOS
-            ['name' => 'macOS - Desktop Support', 'description' => 'Supporting and troubleshooting Apple macOS devices for end users.'],
-            ['name' => 'macOS - Deployment & Management', 'description' => 'Deploying and managing macOS systems across an organisation.'],
-            ['name' => 'macOS - Jamf / MDM Administration', 'description' => 'Managing Apple devices using Jamf or other Mobile Device Management tools.'],
-            ['name' => 'macOS - Integration with AD', 'description' => 'Connecting macOS systems to Active Directory for authentication and access.'],
+    private function staffProfiles(): array
+    {
+        return [
+            ['forenames' => 'Amelia', 'surname' => 'Wu', 'week_1' => Busyness::LOW, 'week_2' => Busyness::MEDIUM],
+            ['forenames' => 'Noah', 'surname' => 'Patel', 'week_1' => Busyness::MEDIUM, 'week_2' => Busyness::HIGH],
+            ['forenames' => 'Freya', 'surname' => 'Campbell', 'week_1' => Busyness::LOW, 'week_2' => Busyness::LOW],
+            ['forenames' => 'Luca', 'surname' => 'Martinez', 'week_1' => Busyness::MEDIUM, 'week_2' => Busyness::HIGH],
+            ['forenames' => 'Elena', 'surname' => 'Hughes', 'week_1' => Busyness::HIGH, 'week_2' => Busyness::MEDIUM],
+            ['forenames' => 'Kofi', 'surname' => 'Mensah', 'week_1' => Busyness::UNKNOWN, 'week_2' => Busyness::LOW],
+            ['forenames' => 'Chloe', 'surname' => 'Murphy', 'week_1' => Busyness::MEDIUM, 'week_2' => Busyness::MEDIUM],
+            ['forenames' => 'Jonah', 'surname' => 'Schulte', 'week_1' => Busyness::HIGH, 'week_2' => Busyness::HIGH],
+        ];
+    }
 
-            // Linux
-            ['name' => 'Linux - Desktop Support', 'description' => 'Providing user support for Linux desktop environments.'],
-            ['name' => 'Linux - Server Administration (Rocky / Ubuntu)', 'description' => 'Managing and maintaining Linux servers such as Rocky Linux and Ubuntu.'],
+    private function getSkills(): array
+    {
+        return [
+            ['name' => 'Project Management - Agile Planning & Monitoring', 'description' => 'Managing prioritised backlogs, creating sprint plans, allocating resource assignments, and monitoring delivery progress in Agile environments.'],
+            ['name' => 'Project Management - Risk & Issue Management', 'description' => 'Ensuring risk and issue logs and monitoring of resolution.'],
+            ['name' => 'Project Management - Stakeholder Communication', 'description' => 'Keeping stakeholders informed and aware of project progress and upcoming work.'],
+            ['name' => 'Project Management - Budget & Resource Management', 'description' => 'Tracking costs, resource usage, and forecast budget to complete.'],
+            ['name' => 'Project Management - Project Governance & Reporting', 'description' => 'Preparing meeting packs, following governance processes, and providing status updates.'],
+            ['name' => 'Project Management - Team Leadership & Coaching', 'description' => 'Managing workloads, coaching staff, and ensuring consistent quality of delivery.'],
+            ['name' => 'Project Management - Continuous Improvement & Retrospectives', 'description' => 'Leading retrospectives, identifying process improvements, and following up on actions.'],
+            ['name' => 'Project Management - Contract & Vendor Management', 'description' => 'Managing third-party suppliers, contracts, service dependencies, and service level agreements.'],
+
+            // Business Analysis
+            ['name' => 'Business Analysis - Requirements Elicitation & Analysis', 'description' => 'Gathering, analysing, and documenting business, functional, and non-functional requirements.'],
+            ['name' => 'Business Analysis - Process Mapping & Optimisation', 'description' => 'Creating process maps, identifying process gaps, and optimising workflows.'],
+            ['name' => 'Business Analysis - Use Cases & User Stories', 'description' => 'Writing use cases, user stories, acceptance criteria, and maintaining product backlogs.'],
+            ['name' => 'Business Analysis - Stakeholder Collaboration', 'description' => 'Working closely with stakeholders to ensure alignment and clarity of requirements.'],
+            ['name' => 'Business Analysis - Business Case Development', 'description' => 'Creating business cases, feasibility studies, and cost-benefit analyses.'],
+            ['name' => 'Business Analysis - Change Management Support', 'description' => 'Supporting change impact assessments and transition planning.'],
+
+            // Service Design / Product Management
+            ['name' => 'Service Design - User Research & Interviews', 'description' => 'Conducting user research, interviews, and workshops to gather insights.'],
+            ['name' => 'Service Design - Personas & Experience Maps', 'description' => 'Creating user personas, journey maps, and service blueprints.'],
+            ['name' => 'Service Design - Prototyping & Wireframing', 'description' => 'Designing prototypes, mockups, and wireframes for digital experiences.'],
+            ['name' => 'Service Design - UX Writing & Content Design', 'description' => 'Crafting user-friendly content, microcopy, and supporting structured content models.'],
+            ['name' => 'Service Design - Usability Testing & User Feedback', 'description' => 'Planning and conducting usability tests and analysing user feedback.'],
+            ['name' => 'Service Design - Accessibility & Inclusive Design', 'description' => 'Ensuring services are accessible and inclusive for all users.'],
+            ['name' => 'Service Design - Roadmapping & Prioritisation', 'description' => 'Building roadmaps based on user needs and organisational priorities.'],
+            ['name' => 'Service Design - Service Support & Continuous Improvement', 'description' => 'Monitoring service performance and identifying areas for improvement.'],
+
+            // Data & Reporting
+            ['name' => 'Data - Data Strategy & Data Governance', 'description' => 'Developing data strategies and governance frameworks for effective management.'],
+            ['name' => 'Data - Data Modelling & Entity Design', 'description' => 'Designing logical and physical data models to support business processes.'],
+            ['name' => 'Data - Data Warehousing & ETL Processes', 'description' => 'Designing and implementing ETL pipelines and data warehousing solutions.'],
+            ['name' => 'Data - Business Intelligence & Dashboards', 'description' => 'Building dashboards and reports using BI tools to support decision-making.'],
+            ['name' => 'Data - Data Quality & Cleansing', 'description' => 'Ensuring data accuracy through validation, cleansing, and quality checks.'],
+            ['name' => 'Data - Data Privacy & Compliance', 'description' => 'Implementing data protection measures and ensuring compliance with regulations.'],
+            ['name' => 'Data - Database Administration & Optimisation', 'description' => 'Managing, tuning, and maintaining database performance and reliability.'],
+            ['name' => 'Data - Data Integration & APIs', 'description' => 'Integrating data from multiple systems using APIs and integration platforms.'],
+
+            // Cloud & Platform Engineering
+            ['name' => 'Cloud Engineering - AWS Architecture & Operations', 'description' => 'Designing and operating workloads on Amazon Web Services.'],
+            ['name' => 'Cloud Engineering - Microsoft Azure', 'description' => 'Designing, implementing, and managing services on Azure.'],
+            ['name' => 'Cloud Engineering - Google Cloud', 'description' => 'Designing, implementing, and managing services on Google Cloud Platform.'],
+            ['name' => 'Cloud Engineering - Infrastructure as Code', 'description' => 'Automating infrastructure using IaC tools like Terraform or CloudFormation.'],
+            ['name' => 'Cloud Engineering - CI/CD Automation', 'description' => 'Implementing CI/CD pipelines for cloud-native applications.'],
+            ['name' => 'Cloud Engineering - Cloud Security & Access Management', 'description' => 'Managing cloud security policies, IAM, and compliance.'],
+            ['name' => 'Cloud Engineering - Cost Optimisation', 'description' => 'Monitoring and optimising cloud costs and resource usage.'],
+            ['name' => 'Cloud Engineering - Observability & Monitoring', 'description' => 'Implementing monitoring, alerting, and observability practices for cloud systems.'],
+
+            // SysOps & Infrastructure
+            ['name' => 'Linux - Administration & Maintenance', 'description' => 'Configuring, managing, and maintaining Linux servers such as Rocky Linux and Ubuntu.'],
             ['name' => 'Linux - Shell Scripting & Automation', 'description' => 'Automating tasks and workflows with Linux shell scripts.'],
             ['name' => 'Linux - System Monitoring & Logging', 'description' => 'Monitoring system performance and analysing log files on Linux systems.'],
             ['name' => 'Linux - Security Hardening', 'description' => 'Securing Linux systems by applying best practices and configurations.'],

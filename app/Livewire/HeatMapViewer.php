@@ -13,10 +13,14 @@ class HeatMapViewer extends Component
     public function render()
     {
         $days = $this->upcomingWorkingDays();
-        $staff = $this->staffMembers();
+        $staff = $this->staffWithBusyness($days);
         $activeProjects = $this->activeProjects();
 
-        return view('livewire.heat-map-viewer', compact('days', 'staff', 'activeProjects'));
+        return view('livewire.heat-map-viewer', [
+            'days' => $days,
+            'staff' => $staff,
+            'activeProjects' => $activeProjects,
+        ]);
     }
 
     /**
@@ -57,16 +61,35 @@ class HeatMapViewer extends Component
     }
 
     /**
-     * Staff members represented in the heatmap.
+     * Staff members represented in the heatmap with per-day busyness.
      */
-    private function staffMembers()
+    private function staffWithBusyness(array $days)
     {
-        return User::query()
+        $staff = User::query()
             ->where('is_staff', true)
             ->select('id', 'forenames', 'surname', 'busyness_week_1', 'busyness_week_2')
             ->orderBy('surname')
             ->orderBy('forenames')
             ->get();
+
+        $dayCount = count($days);
+
+        return $staff->map(function (User $user) use ($dayCount) {
+            return [
+                'user' => $user,
+                'busyness' => $this->busynessSeries($user, $dayCount),
+            ];
+        });
+    }
+
+    /**
+     * Busyness enum sequence for the requested number of days.
+     *
+     * @return array<int, Busyness>
+     */
+    private function busynessSeries(User $user, int $dayCount): array
+    {
+        return array_map(fn ($index) => $this->busynessForDay($user, $index), range(0, $dayCount - 1));
     }
 
     /**

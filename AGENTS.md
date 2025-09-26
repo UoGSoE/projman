@@ -18,6 +18,8 @@
 - Honor `.editorconfig`: LF endings, UTF-8, four-space indentation (two for YAML), and a final newline.
 - Follow PSR-12; classes use StudlyCase, config keys snake_case, and Livewire components end in `Component`.
 - Tests live in `tests/Feature` with descriptive `*Test.php` names that mirror the behavior under test.
+- When returning views, pass data with explicit short array syntax (`return view('...', ['key' => $value])`) instead of `compact()`.
+- Avoid Blade `@php` blocks; move logic into components, view models, or dedicated helpers before rendering.
 
 ## Testing Guidelines
 - Pest with Laravel helpers backs the suite; favor factories and database refresh traits over manual fixtures.

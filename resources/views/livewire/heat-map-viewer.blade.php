@@ -20,20 +20,16 @@
                     </div>
                 @endforeach
 
-                @foreach ($staff as $user)
+                @foreach ($staff as $entry)
                     <div class="px-3 py-2">
-                        <flux:text class="font-medium">{{ $user->forenames }} {{ $user->surname }}</flux:text>
+                        <flux:text class="font-medium">{{ $entry['user']->forenames }} {{ $entry['user']->surname }}</flux:text>
                     </div>
 
-                    @foreach ($days as $index => $day)
-                        @php
-                            $busyness = $this->busynessForDay($user, $index);
-                        @endphp
-
+                    @foreach ($entry['busyness'] as $index => $busyness)
                         <div
                             class="h-10 rounded-md border border-white/10 shadow-sm transition-colors {{ $busyness->color() }}"
-                            title="{{ $user->forenames }} {{ $user->surname }} — {{ $day->format('D j M') }} ({{ $busyness->label() }})"
-                            aria-label="{{ $user->forenames }} {{ $user->surname }}: {{ $day->format('D j M') }} {{ $busyness->label() }}"
+                            title="{{ $entry['user']->forenames }} {{ $entry['user']->surname }} — {{ $days[$index]->format('D j M') }} ({{ $busyness->label() }})"
+                            aria-label="{{ $entry['user']->forenames }} {{ $entry['user']->surname }}: {{ $days[$index]->format('D j M') }} {{ $busyness->label() }}"
                         ></div>
                     @endforeach
                 @endforeach
