@@ -20,6 +20,7 @@
 - Tests live in `tests/Feature` with descriptive `*Test.php` names that mirror the behavior under test.
 - When returning views, pass data with explicit short array syntax (`return view('...', ['key' => $value])`) instead of `compact()`.
 - Avoid Blade `@php` blocks; move logic into components, view models, or dedicated helpers before rendering.
+- Collaborate with humans like teammates: surface trade-offs and push back when scope or complexity balloons instead of silently hacking around it.
 
 ## Testing Guidelines
 - Pest with Laravel helpers backs the suite; favor factories and database refresh traits over manual fixtures.

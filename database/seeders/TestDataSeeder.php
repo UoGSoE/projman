@@ -311,49 +311,44 @@ class TestDataSeeder extends Seeder
             $project->scoping?->update(['skills_required' => $requiredSkillIds->all()]);
         }
 
-        $scheduling = $project->scheduling;
+        $assigned = optional($project->scheduling)->assigned_to;
 
-        if (! $scheduling) {
+        if (! $assigned || $assigned === $project->user_id) {
             $assigned = $availableStaff->random()->id;
+        }
 
-            $additional = $this->randomStaffIds($availableStaff, random_int(1, 4), [$assigned]);
+        $existingExtras = collect(optional($project->scheduling)->cose_it_staff ?? [])
+            ->filter(fn ($id) => $id !== $project->user_id && $id !== $assigned)
+            ->values();
 
-            $scheduling = Scheduling::factory()->create([
-                'project_id' => $project->id,
-                'assigned_to' => $assigned,
-                'key_skills' => $this->skillNamesFor($requiredSkillIds),
-                'cose_it_staff' => $additional,
-            ]);
+        $extraTarget = random_int(0, 3);
+        $needed = max(0, $extraTarget - $existingExtras->count());
 
-            $project->setRelation('scheduling', $scheduling);
+        $newExtras = $needed > 0
+            ? $this->randomStaffIds($availableStaff, $needed, array_merge([$assigned], $existingExtras->all()))
+            : [];
+
+        $team = $existingExtras
+            ->concat($newExtras)
+            ->prepend($assigned)
+            ->unique()
+            ->values();
+
+        $upperBound = min(5, $team->count());
+        $finalSize = max(1, random_int(1, $upperBound));
+        $team = $team->take($finalSize);
+
+        $payload = [
+            'assigned_to' => $assigned,
+            'cose_it_staff' => $team->all(),
+            'key_skills' => $this->skillNamesFor($requiredSkillIds),
+        ];
+
+        if ($project->scheduling) {
+            $project->scheduling->forceFill($payload)->save();
         } else {
-            $assigned = $scheduling->assigned_to;
-
-            if (! $assigned || $assigned === $project->user_id) {
-                $assigned = $availableStaff->random()->id;
-            }
-
-            $additional = collect($scheduling->cose_it_staff ?? [])
-                ->filter(fn ($id) => $id !== $project->user_id && $id !== $assigned)
-                ->values();
-
-            if ($additional->isEmpty()) {
-                $additional = collect($this->randomStaffIds($availableStaff, random_int(1, 4), [$assigned]));
-            }
-
-            $team = $additional
-                ->prepend($assigned)
-                ->unique()
-                ->take(random_int(1, 5))
-                ->values();
-
-            $scheduling->forceFill([
-                'assigned_to' => $assigned,
-                'cose_it_staff' => $team->all(),
-                'key_skills' => $this->skillNamesFor($requiredSkillIds),
-            ])->save();
-
-            $project->setRelation('scheduling', $scheduling);
+            $payload['project_id'] = $project->id;
+            $project->setRelation('scheduling', Scheduling::factory()->create($payload));
         }
     }
 
