@@ -239,7 +239,8 @@ class TestDataSeeder extends Seeder
                     }
 
                     $attributes['key_skills'] = $this->skillNamesFor($requiredSkillIds);
-                    $attributes['cose_it_staff'] = $this->randomStaffIds($staffMembers, random_int(1, 3), [$assignee->id, $project->user_id]);
+                    $teamSize = random_int(1, 4);
+                    $attributes['cose_it_staff'] = $this->randomStaffIds($staffMembers, $teamSize, [$assignee->id, $project->user_id]);
                     $attributes['estimated_start_date'] = Carbon::now()->addDays(random_int(10, 30));
                     $attributes['estimated_completion_date'] = Carbon::now()->addDays(random_int(40, 80));
                     $attributes['change_board_date'] = Carbon::now()->addDays(random_int(15, 45));
@@ -251,7 +252,7 @@ class TestDataSeeder extends Seeder
                     break;
                 case ProjectStatus::DEVELOPMENT:
                     $attributes['lead_developer'] = $assignee->id;
-                    $attributes['development_team'] = $this->randomStaffIds($staffMembers, random_int(1, 4), [$assignee->id, $project->user_id]);
+                    $attributes['development_team'] = $this->randomStaffIds($staffMembers, random_int(1, 3), [$assignee->id, $project->user_id]);
                     $attributes['technical_approach'] = $faker->paragraph();
                     $attributes['development_notes'] = $faker->paragraph();
                     $attributes['repository_link'] = $faker->url();
@@ -315,11 +316,13 @@ class TestDataSeeder extends Seeder
         if (! $scheduling) {
             $assigned = $availableStaff->random()->id;
 
+            $additional = $this->randomStaffIds($availableStaff, random_int(1, 4), [$assigned]);
+
             $scheduling = Scheduling::factory()->create([
                 'project_id' => $project->id,
                 'assigned_to' => $assigned,
                 'key_skills' => $this->skillNamesFor($requiredSkillIds),
-                'cose_it_staff' => $this->randomStaffIds($availableStaff, random_int(2, 4), [$assigned]),
+                'cose_it_staff' => $additional,
             ]);
 
             $project->setRelation('scheduling', $scheduling);
@@ -330,18 +333,18 @@ class TestDataSeeder extends Seeder
                 $assigned = $availableStaff->random()->id;
             }
 
-            $team = collect($scheduling->cose_it_staff ?? [])
+            $additional = collect($scheduling->cose_it_staff ?? [])
                 ->filter(fn ($id) => $id !== $project->user_id && $id !== $assigned)
                 ->values();
 
-            if ($team->isEmpty()) {
-                $team = collect($this->randomStaffIds($availableStaff, random_int(2, 4), [$assigned]));
+            if ($additional->isEmpty()) {
+                $additional = collect($this->randomStaffIds($availableStaff, random_int(1, 4), [$assigned]));
             }
 
-            $team = $team
+            $team = $additional
                 ->prepend($assigned)
                 ->unique()
-                ->take(5)
+                ->take(random_int(1, 5))
                 ->values();
 
             $scheduling->forceFill([
