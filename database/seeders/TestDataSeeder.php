@@ -192,7 +192,7 @@ class TestDataSeeder extends Seeder
 
                 $this->seedStageData($project, $status, $staffMembers, $progression, $stageMap);
                 $this->ensureTeamForInFlightProject($project, $status, $staffMembers);
-                $this->ensureStagePlaceholders($project, $stageMap);
+                $this->ensureStagePlaceholders($project, $stageMap, $staffMembers);
                 $this->seedHistoryEntries($project, $staffMembers, $timeline['created_at'], $timeline['updated_at']);
             }
         }
@@ -316,12 +316,150 @@ class TestDataSeeder extends Seeder
         }
     }
 
-    private function ensureStagePlaceholders(Project $project, array $stageMap): void
+    private function ensureStagePlaceholders(Project $project, array $stageMap, Collection $staffMembers): void
     {
         foreach ($stageMap as $modelClass) {
-            $modelClass::firstOrCreate(['project_id' => $project->id]);
+            $modelClass::firstOrCreate(
+                ['project_id' => $project->id],
+                $this->stagePlaceholderData($modelClass, $project, $staffMembers)
+            );
         }
     }
+
+    private function stagePlaceholderData(string $modelClass, Project $project, Collection $staffMembers): array
+    {
+        $faker = fake();
+        $staffId = $this->pickStaffId($staffMembers, [$project->user_id]);
+
+        switch ($modelClass) {
+            case Ideation::class:
+                return [
+                    'school_group' => $faker->randomElement(['Engineering', 'Computing', 'Chemistry', 'Business']),
+                    'objective' => $faker->sentence(),
+                    'business_case' => $faker->paragraph(),
+                    'benefits' => $faker->paragraph(),
+                    'deadline' => Carbon::now()->addDays(random_int(45, 120)),
+                    'strategic_initiative' => $faker->randomElement(['thing', 'other', 'something']),
+                ];
+
+            case Feasibility::class:
+                $assessor = $staffId ?? $project->user_id;
+
+                return [
+                    'assessed_by' => $assessor,
+                    'date_assessed' => Carbon::now()->addDays(random_int(7, 30)),
+                    'technical_credence' => $faker->sentences(2, true),
+                    'cost_benefit_case' => $faker->paragraph(),
+                    'dependencies_prerequisites' => $faker->paragraph(),
+                    'deadlines_achievable' => $faker->boolean(),
+                    'alternative_proposal' => $faker->sentence(),
+                ];
+
+            case Scoping::class:
+                $assessor = $staffId ?? $project->user_id;
+
+                return [
+                    'assessed_by' => $assessor,
+                    'estimated_effort' => $faker->sentence(),
+                    'in_scope' => $faker->paragraph(),
+                    'out_of_scope' => $faker->paragraph(),
+                    'assumptions' => $faker->paragraph(),
+                    'skills_required' => $faker->words(3, true),
+                ];
+
+            case Scheduling::class:
+                $assigned = $this->pickStaffId($staffMembers, [$project->user_id]);
+                $start = Carbon::now()->addDays(random_int(10, 40));
+                $completion = $start->copy()->addDays(random_int(20, 60));
+
+                $team = collect($this->randomStaffIds($staffMembers, random_int(2, 4), [$assigned, $project->user_id]));
+
+                return [
+                    'assigned_to' => $assigned,
+                    'key_skills' => $faker->sentence(),
+                    'cose_it_staff' => $team->all(),
+                    'estimated_start_date' => $start,
+                    'estimated_completion_date' => $completion,
+                    'change_board_date' => Carbon::now()->addDays(random_int(5, 25)),
+                    'priority' => $faker->randomElement(['low', 'medium', 'high', 'critical']),
+                    'team_assignment' => $faker->words(2, true),
+                ];
+
+            case DetailedDesign::class:
+                $designer = $this->pickStaffId($staffMembers, [$project->user_id]);
+
+                return [
+                    'designed_by' => $designer,
+                    'service_function' => $faker->sentence(),
+                    'functional_requirements' => $faker->paragraph(),
+                    'non_functional_requirements' => $faker->paragraph(),
+                    'hld_design_link' => $faker->url(),
+                    'approval_delivery' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'approval_operations' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'approval_resilience' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'approval_change_board' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                ];
+
+            case Development::class:
+                $lead = $this->pickStaffId($staffMembers, [$project->user_id]);
+                $team = collect($this->randomStaffIds($staffMembers, random_int(1, 3), [$lead, $project->user_id]));
+                $start = Carbon::now()->subDays(random_int(30, 90));
+                $completion = $start->copy()->addDays(random_int(20, 80));
+
+                return [
+                    'lead_developer' => $lead,
+                    'development_team' => $team->prepend($lead)->unique()->values()->all(),
+                    'technical_approach' => $faker->paragraph(),
+                    'development_notes' => $faker->paragraph(),
+                    'repository_link' => $faker->url(),
+                    'status' => $faker->randomElement(['planning', 'in_progress', 'review', 'completed']),
+                    'start_date' => $start,
+                    'completion_date' => $completion,
+                    'code_review_notes' => $faker->sentence(),
+                ];
+
+            case Testing::class:
+                $lead = $this->pickStaffId($staffMembers, [$project->user_id]);
+
+                return [
+                    'test_lead' => $lead,
+                    'service_function' => $faker->sentence(),
+                    'functional_testing_title' => $faker->sentence(),
+                    'functional_tests' => $faker->paragraph(),
+                    'non_functional_testing_title' => $faker->sentence(),
+                    'non_functional_tests' => $faker->paragraph(),
+                    'test_repository' => $faker->url(),
+                    'testing_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'user_acceptance' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'testing_lead_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'service_delivery_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'service_resilience_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                ];
+
+            case Deployed::class:
+                $deployer = $this->pickStaffId($staffMembers, [$project->user_id]);
+
+                return [
+                    'deployed_by' => $deployer,
+                    'environment' => $faker->randomElement(['development', 'staging', 'production']),
+                    'status' => $faker->randomElement(['pending', 'deployed', 'failed', 'rolled_back']),
+                    'deployment_date' => Carbon::now()->subDays(random_int(1, 14)),
+                    'version' => $faker->semver(),
+                    'production_url' => $faker->url(),
+                    'deployment_notes' => $faker->sentence(),
+                    'rollback_plan' => $faker->sentence(),
+                    'monitoring_notes' => $faker->sentence(),
+                    'deployment_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'operations_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'user_acceptance' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'service_delivery_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'change_advisory_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                ];
+        }
+
+        return [];
+    }
+
 
     private function seedHistoryEntries(Project $project, Collection $staffMembers, Carbon $createdAt, Carbon $updatedAt): void
     {
@@ -434,6 +572,19 @@ class TestDataSeeder extends Seeder
             ->pluck('id')
             ->values()
             ->all();
+    }
+
+    private function pickStaffId(Collection $staffMembers, array $except = []): ?int
+    {
+        $filtered = $staffMembers
+            ->filter(fn ($member) => ! in_array($member->id, $except, true))
+            ->values();
+
+        if ($filtered->isEmpty()) {
+            $filtered = $staffMembers->values();
+        }
+
+        return optional($filtered->shuffle()->first())->id;
     }
 
     private function stageModelMap(): array
