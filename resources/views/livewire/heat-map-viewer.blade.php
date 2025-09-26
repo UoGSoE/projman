@@ -72,14 +72,15 @@
                         @if ($project->team_members->isNotEmpty())
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($project->team_members as $member)
-                                    <flux:badge
-                                        size="sm"
-                                        icon="user"
-                                        variant="subtle"
-                                        @if ($project->assigned_user_id === $member->id) color="sky" @endif
-                                    >
-                                        {{ $member->forenames }} {{ $member->surname }}
-                                    </flux:badge>
+                                    @if ($project->assigned_user_id === $member->id)
+                                        <flux:badge size="sm" icon="user" variant="subtle" color="sky">
+                                            {{ $member->forenames }} {{ $member->surname }}
+                                        </flux:badge>
+                                    @else
+                                        <flux:badge size="sm" icon="user" variant="subtle">
+                                            {{ $member->forenames }} {{ $member->surname }}
+                                        </flux:badge>
+                                    @endif
                                 @endforeach
                             </div>
                         @endif
