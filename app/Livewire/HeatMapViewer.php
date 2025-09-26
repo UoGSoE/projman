@@ -115,6 +115,7 @@ class HeatMapViewer extends Component
             ->get()
             ->map(function (Project $project) {
                 $project->setRelation('team_members', $this->collectTeamMembers($project));
+                $project->setAttribute('assigned_user_id', optional($project->scheduling)->assigned_to);
 
                 return $project;
             });
@@ -125,10 +126,7 @@ class HeatMapViewer extends Component
      */
     private function collectTeamMembers(Project $project)
     {
-        $ownerId = $project->user_id;
-
         $userIds = collect([
-            $ownerId,
             optional($project->scheduling)->assigned_to,
             optional($project->detailedDesign)->designed_by,
             optional($project->development)->lead_developer,
@@ -141,12 +139,6 @@ class HeatMapViewer extends Component
             ->merge(optional($project->development)->development_team ?? [])
             ->unique()
             ->values();
-
-        if ($ownerId) {
-            $userIds = $userIds
-                ->reject(fn ($id) => $id === $ownerId)
-                ->prepend($ownerId);
-        }
 
         $userIds = $userIds->take(5);
 
@@ -162,6 +154,7 @@ class HeatMapViewer extends Component
 
         return $userIds
             ->map(fn ($id) => $users->get($id))
-            ->filter();
+            ->filter()
+            ->values();
     }
 }
