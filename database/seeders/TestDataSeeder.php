@@ -191,6 +191,8 @@ class TestDataSeeder extends Seeder
                 ])->save();
 
                 $this->seedStageData($project, $status, $staffMembers, $progression, $stageMap);
+                $this->ensureTeamForInFlightProject($project, $status, $staffMembers);
+                $this->ensureStagePlaceholders($project, $stageMap);
                 $this->seedHistoryEntries($project, $staffMembers, $timeline['created_at'], $timeline['updated_at']);
             }
         }
@@ -229,14 +231,14 @@ class TestDataSeeder extends Seeder
                     break;
                 case ProjectStatus::SCHEDULING:
                     $attributes['assigned_to'] = $assignee->id;
-                    $attributes['cose_it_staff'] = $this->randomStaffIds($staffMembers, random_int(1, 3));
+                    $attributes['cose_it_staff'] = $this->randomStaffIds($staffMembers, random_int(1, 3), [$assignee->id, $project->user_id]);
                     break;
                 case ProjectStatus::DETAILED_DESIGN:
                     $attributes['designed_by'] = $assignee->id;
                     break;
                 case ProjectStatus::DEVELOPMENT:
                     $attributes['lead_developer'] = $assignee->id;
-                    $attributes['development_team'] = $this->randomStaffIds($staffMembers, random_int(1, 4));
+                    $attributes['development_team'] = $this->randomStaffIds($staffMembers, random_int(1, 4), [$assignee->id, $project->user_id]);
                     break;
                 case ProjectStatus::TESTING:
                     $attributes['test_lead'] = $assignee->id;
@@ -247,6 +249,77 @@ class TestDataSeeder extends Seeder
             }
 
             $modelClass::factory()->create($attributes);
+        }
+    }
+
+    private function ensureTeamForInFlightProject(Project $project, ProjectStatus $status, Collection $staffMembers): void
+    {
+        $stagesRequiringTeam = [
+            ProjectStatus::DETAILED_DESIGN,
+            ProjectStatus::DEVELOPMENT,
+            ProjectStatus::TESTING,
+            ProjectStatus::DEPLOYED,
+            ProjectStatus::COMPLETED,
+        ];
+
+        if (! in_array($status, $stagesRequiringTeam, true)) {
+            return;
+        }
+
+        $availableStaff = $staffMembers
+            ->filter(fn ($member) => $member->id !== $project->user_id)
+            ->values();
+
+        if ($availableStaff->isEmpty()) {
+            return;
+        }
+
+        $scheduling = $project->scheduling;
+
+        if (! $scheduling) {
+            $assigned = $availableStaff->random()->id;
+
+            $scheduling = Scheduling::factory()->create([
+                'project_id' => $project->id,
+                'assigned_to' => $assigned,
+                'cose_it_staff' => $this->randomStaffIds($availableStaff, random_int(2, 4), [$assigned]),
+            ]);
+
+            $project->setRelation('scheduling', $scheduling);
+        } else {
+            $assigned = $scheduling->assigned_to;
+
+            if (! $assigned || $assigned === $project->user_id) {
+                $assigned = $availableStaff->random()->id;
+            }
+
+            $team = collect($scheduling->cose_it_staff ?? [])
+                ->filter(fn ($id) => $id !== $project->user_id && $id !== $assigned)
+                ->values();
+
+            if ($team->isEmpty()) {
+                $team = collect($this->randomStaffIds($availableStaff, random_int(2, 4), [$assigned]));
+            }
+
+            $team = $team
+                ->prepend($assigned)
+                ->unique()
+                ->take(5)
+                ->values();
+
+            $scheduling->forceFill([
+                'assigned_to' => $assigned,
+                'cose_it_staff' => $team->all(),
+            ])->save();
+
+            $project->setRelation('scheduling', $scheduling);
+        }
+    }
+
+    private function ensureStagePlaceholders(Project $project, array $stageMap): void
+    {
+        foreach ($stageMap as $modelClass) {
+            $modelClass::firstOrCreate(['project_id' => $project->id]);
         }
     }
 
@@ -345,11 +418,19 @@ class TestDataSeeder extends Seeder
         };
     }
 
-    private function randomStaffIds(Collection $staffMembers, int $count): array
+    private function randomStaffIds(Collection $staffMembers, int $count, array $except = []): array
     {
-        return $staffMembers
+        $filtered = $staffMembers
+            ->filter(fn ($member) => ! in_array($member->id, $except, true))
+            ->values();
+
+        if ($filtered->isEmpty()) {
+            return [];
+        }
+
+        return $filtered
             ->shuffle()
-            ->take(min($count, $staffMembers->count()))
+            ->take(min($count, $filtered->count()))
             ->pluck('id')
             ->values()
             ->all();
