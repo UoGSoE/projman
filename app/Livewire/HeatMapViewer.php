@@ -100,10 +100,68 @@ class HeatMapViewer extends Component
         return Project::query()
             ->currentlyActive()
             ->select('id', 'user_id', 'title', 'deadline', 'status')
-            ->with(['user:id,forenames,surname'])
+            ->with([
+                'user:id,forenames,surname',
+                'scheduling:id,project_id,cose_it_staff,assigned_to',
+                'development:id,project_id,lead_developer,development_team',
+                'testing:id,project_id,test_lead',
+                'detailedDesign:id,project_id,designed_by',
+                'feasibility:id,project_id,assessed_by',
+                'scoping:id,project_id,assessed_by',
+            ])
             ->orderByRaw('deadline IS NULL')
             ->orderBy('deadline')
             ->orderBy('title')
-            ->get();
+            ->get()
+            ->map(function (Project $project) {
+                $project->setRelation('team_members', $this->collectTeamMembers($project));
+
+                return $project;
+            });
+    }
+
+    /**
+     * Gather unique staff members allocated to a project across stages.
+     */
+    private function collectTeamMembers(Project $project)
+    {
+        $ownerId = $project->user_id;
+
+        $userIds = collect([
+            $ownerId,
+            optional($project->scheduling)->assigned_to,
+            optional($project->detailedDesign)->designed_by,
+            optional($project->development)->lead_developer,
+            optional($project->testing)->test_lead,
+            optional($project->feasibility)->assessed_by,
+            optional($project->scoping)->assessed_by,
+        ])
+            ->filter()
+            ->merge(optional($project->scheduling)->cose_it_staff ?? [])
+            ->merge(optional($project->development)->development_team ?? [])
+            ->unique()
+            ->values();
+
+        if ($ownerId) {
+            $userIds = $userIds
+                ->reject(fn ($id) => $id === $ownerId)
+                ->prepend($ownerId);
+        }
+
+        $userIds = $userIds->take(5);
+
+        if ($userIds->isEmpty()) {
+            return collect();
+        }
+
+        $users = User::query()
+            ->select('id', 'forenames', 'surname')
+            ->whereIn('id', $userIds)
+            ->get()
+            ->keyBy('id');
+
+        return $userIds
+            ->map(fn ($id) => $users->get($id))
+            ->filter();
     }
 }

@@ -44,29 +44,40 @@
         @if ($activeProjects->isEmpty())
             <flux:callout icon="inbox" variant="secondary" class="mt-4">
                 <flux:callout.heading>No active projects</flux:callout.heading>
-                <flux:callout.text>Assigning a new project or re-opening an existing one will surface here automatically.</flux:callout.text>
             </flux:callout>
         @else
             <flux:card class="mt-4 space-y-4">
                 @foreach ($activeProjects as $project)
-                    <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                            <flux:text class="font-medium">{{ $project->title }}</flux:text>
-                            <flux:text variant="subtle" class="text-sm">
-                                Owned by {{ $project->user?->forenames }} {{ $project->user?->surname }}
-                            </flux:text>
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <flux:text class="font-medium">{{ $project->title }}</flux:text>
+                                <flux:text variant="subtle" class="text-sm">
+                                    Owned by {{ $project->user?->forenames }} {{ $project->user?->surname }}
+                                </flux:text>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                @if ($project->deadline)
+                                    <flux:badge size="sm" icon="calendar-days" variant="solid" color="amber">
+                                        Due {{ $project->deadline->format('d M Y') }}
+                                    </flux:badge>
+                                @endif
+                                <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
+                                    {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
+                                </flux:badge>
+                            </div>
                         </div>
 
-                        <div class="flex items-center gap-3">
-                            @if ($project->deadline)
-                                <flux:badge size="sm" icon="calendar-days" variant="solid" color="amber">
-                                    Due {{ $project->deadline->format('d M Y') }}
-                                </flux:badge>
-                            @endif
-                            <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
-                                {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
-                            </flux:badge>
-                        </div>
+                        @if ($project->team_members->isNotEmpty())
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($project->team_members as $member)
+                                    <flux:badge size="sm" variant="subtle" icon="user">
+                                        {{ $member->forenames }} {{ $member->surname }}
+                                    </flux:badge>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
 
                     @unless($loop->last)
