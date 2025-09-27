@@ -1,25 +1,19 @@
 <div class="space-y-8">
     <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-            <flux:heading size="xl" level="1" class="flex items-center gap-2">
+            <flux:heading size="xl" level="1" class="flex flex-wrap items-center gap-2">
                 {{ $user->full_name }}
                 @if ($user->isAdmin())
                     <flux:badge size="sm" variant="solid" color="green" icon="shield-check">Administrator</flux:badge>
                 @endif
+                @foreach ($user->roles as $role)
+                    <flux:badge size="sm" inset="top bottom">
+                        {{ $role->name }}
+                    </flux:badge>
+                @endforeach
             </flux:heading>
-            <div class="mt-2 space-y-2">
-                <div class="flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-                    <a href="mailto:{{ $user->email }}" class="hover:underline">{{ $user->email }}</a>
-                </div>
-                @if ($user->roles->isNotEmpty())
-                    <div class="flex flex-wrap gap-2">
-                        @foreach ($user->roles as $role)
-                            <flux:badge size="sm" variant="outline" inset="top bottom">
-                                {{ $role->name }}
-                            </flux:badge>
-                        @endforeach
-                    </div>
-                @endif
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+                <flux:link  variant="subtle" href="mailto:{{ $user->email }}">{{ $user->email }}</flux:link>
             </div>
         </div>
     </div>

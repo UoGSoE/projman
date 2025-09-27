@@ -48,11 +48,13 @@
                             <flux:badge size="sm" class="transition-all duration-300" :color="$project->status->colour()" inset="top bottom">
                                 {{ $project->status }}
                             </flux:badge>
-                            <a href="{{ route('project.show', $project) }}" class="hover:underline cursor-pointer">{{ $project->title }}</a>
+                            <flux:link :href="route('project.show', $project)">{{ $project->title }}</flux:link>
                         </flux:table.cell>
 
                         @if (! $userId)
-                            <flux:table.cell class="whitespace-nowrap">{{ $project->user->full_name }}</flux:table.cell>
+                            <flux:table.cell class="whitespace-nowrap">
+                                <flux:link :href="route('user.show', $project->user)">{{ $project->user->full_name }}</flux:link>
+                            </flux:table.cell>
                         @endif
 
                         <flux:table.cell variant="strong">{{ $project->updated_at->diffForHumans() }}</flux:table.cell>
