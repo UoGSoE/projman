@@ -6,6 +6,7 @@ use App\Enums\Busyness;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class HeatMapViewer extends Component
@@ -97,7 +98,7 @@ class HeatMapViewer extends Component
      */
     private function activeProjects()
     {
-        return Project::query()
+        $projects = Project::query()
             ->currentlyActive()
             ->select('id', 'user_id', 'title', 'deadline', 'status')
             ->with([
@@ -112,21 +113,33 @@ class HeatMapViewer extends Component
             ->orderByRaw('deadline IS NULL')
             ->orderBy('deadline')
             ->orderBy('title')
-            ->get()
-            ->map(function (Project $project) {
-                $project->setRelation('team_members', $this->collectTeamMembers($project));
-                $project->setAttribute('assigned_user_id', optional($project->scheduling)->assigned_to);
+            ->get();
 
-                return $project;
-            });
+        $teamMembers = $this->teamMembersForProjects($projects);
+
+        return $projects->map(function (Project $project) use ($teamMembers) {
+            $project->setRelation('team_members', $this->collectTeamMembers($project, $teamMembers));
+            $project->setAttribute('assigned_user_id', optional($project->scheduling)->assigned_to);
+
+            return $project;
+        });
     }
 
     /**
      * Gather unique staff members allocated to a project across stages.
      */
-    private function collectTeamMembers(Project $project)
+    private function collectTeamMembers(Project $project, Collection $users)
     {
-        $userIds = collect([
+        return $this->collectTeamMemberIds($project)
+            ->take(5)
+            ->map(fn ($id) => $users->get($id))
+            ->filter()
+            ->values();
+    }
+
+    private function collectTeamMemberIds(Project $project): Collection
+    {
+        return collect([
             optional($project->scheduling)->assigned_to,
             optional($project->detailedDesign)->designed_by,
             optional($project->development)->lead_developer,
@@ -135,26 +148,27 @@ class HeatMapViewer extends Component
             optional($project->scoping)->assessed_by,
         ])
             ->filter()
-            ->merge(optional($project->scheduling)->cose_it_staff ?? [])
-            ->merge(optional($project->development)->development_team ?? [])
+            ->merge(collect(optional($project->scheduling)->cose_it_staff ?? []))
+            ->merge(collect(optional($project->development)->development_team ?? []))
             ->unique()
             ->values();
+    }
 
-        $userIds = $userIds->take(5);
+    private function teamMembersForProjects(Collection $projects): Collection
+    {
+        $userIds = $projects
+            ->flatMap(fn (Project $project) => $this->collectTeamMemberIds($project))
+            ->unique()
+            ->values();
 
         if ($userIds->isEmpty()) {
             return collect();
         }
 
-        $users = User::query()
+        return User::query()
             ->select('id', 'forenames', 'surname')
             ->whereIn('id', $userIds)
             ->get()
             ->keyBy('id');
-
-        return $userIds
-            ->map(fn ($id) => $users->get($id))
-            ->filter()
-            ->values();
     }
 }
