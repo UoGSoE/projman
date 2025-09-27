@@ -20,7 +20,11 @@
         <flux:table.rows>
             @foreach ($users as $user)
                 <flux:table.row :key="'user-' . $user->id">
-                    <flux:table.cell>{{ $user->surname }}</flux:table.cell>
+                    <flux:table.cell>
+                        <flux:link :href="route('user.show', $user)">
+                            {{ $user->surname }}
+                        </flux:link>
+                    </flux:table.cell>
                     <flux:table.cell>{{ $user->forenames }}</flux:table.cell>
                     <flux:table.cell class="whitespace-nowrap">
                         <a href="mailto:{{ $user->email }}">{{ $user->email }}</a>
