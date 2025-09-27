@@ -28,11 +28,7 @@ class UserViewer extends Component
             ])->latest(),
         ]);
 
-        $roles = $user->roles->sortBy('name')->values();
-        $skills = $user->skills->sortBy('name')->values();
-        $requestedProjects = $user->projects;
-
-        $allAssignments = Project::query()
+        $assignments = Project::query()
             ->with([
                 'user:id,forenames,surname',
                 'scheduling:id,project_id,cose_it_staff',
@@ -44,16 +40,18 @@ class UserViewer extends Component
             ->orderByDesc('created_at')
             ->get();
 
+        if (! $this->showAllAssignments) {
+            $assignments = $assignments->reject(
+                fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
+            );
+        }
+
         return view('livewire.user-viewer', [
             'user' => $user,
-            'roles' => $roles,
-            'skills' => $skills,
-            'requestedProjects' => $requestedProjects,
-            'itAssignments' => $this->showAllAssignments
-                ? $allAssignments
-                : $allAssignments->reject(
-                    fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
-                ),
+            'roles' => $user->roles->sortBy('name'),
+            'skills' => $user->skills->sortBy('name'),
+            'requestedProjects' => $user->projects,
+            'itAssignments' => $assignments,
             'assignmentCountLabel' => $this->showAllAssignments ? 'total' : 'active',
         ]);
     }
