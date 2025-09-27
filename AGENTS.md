@@ -1,5 +1,12 @@
 # Repository Guidelines
 
+## Simplicity First
+- KEEP THE CODE SIMPLE. We value clarity over cleverness every single time.
+- Use Laravel, Eloquent, and Livewire conventions instead of inventing bespoke patterns or temporary plumbing.
+- Show only what is necessary in the UI; if the user didn't ask for it, leave it out.
+- Prefer readable, idiomatic solutions over micro-optimisations or "smart" logic.
+- Remember: elegant, intuitive Laravel code is the goal—lean into the framework and keep things obvious.
+
 ## Project Structure & Module Organization
 - `app/` contains Laravel services, Livewire features, and jobs; share helpers under `App\\Support` when reuse emerges.
 - `routes/web.php` and `routes/api.php` map HTTP entry points; pair new controllers with request classes and policies.
