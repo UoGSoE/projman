@@ -5,24 +5,22 @@ namespace App\Livewire;
 use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class UserViewer extends Component
 {
     public User $user;
 
-    public Collection $requestedProjects;
-
     public bool $showAllAssignments = false;
-
-    public Collection $skills;
-
-    public Collection $roles;
 
     public function mount(User $user): void
     {
-        $this->user = $user->load([
+        $this->user = $user;
+    }
+
+    public function render()
+    {
+        $user = $this->user->load([
             'roles:id,name',
             'skills:id,name',
             'projects' => fn ($query) => $query->with([
@@ -30,13 +28,10 @@ class UserViewer extends Component
             ])->latest(),
         ]);
 
-        $this->roles = $this->user->roles->sortBy('name')->values();
-        $this->skills = $this->user->skills->sortBy('name')->values();
-        $this->requestedProjects = $this->user->projects;
-    }
+        $roles = $user->roles->sortBy('name')->values();
+        $skills = $user->skills->sortBy('name')->values();
+        $requestedProjects = $user->projects;
 
-    public function render()
-    {
         $allAssignments = Project::query()
             ->with([
                 'user:id,forenames,surname',
@@ -44,7 +39,7 @@ class UserViewer extends Component
             ])
             ->whereHas(
                 'scheduling',
-                fn ($query) => $query->whereJsonContains('cose_it_staff', $this->user->id)
+                fn ($query) => $query->whereJsonContains('cose_it_staff', $user->id)
             )
             ->orderByDesc('created_at')
             ->get();
@@ -56,6 +51,10 @@ class UserViewer extends Component
             );
 
         return view('livewire.user-viewer', [
+            'user' => $user,
+            'roles' => $roles,
+            'skills' => $skills,
+            'requestedProjects' => $requestedProjects,
             'itAssignments' => $visibleAssignments,
             'allItAssignments' => $allAssignments,
         ]);
