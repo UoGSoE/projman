@@ -168,18 +168,26 @@
     </div>
 
     @if ($user->skills->isNotEmpty())
+        @php($assignments = $this->displayedItAssignments)
+        @php($allAssignments = $this->allItAssignments)
+
         <flux:card class="space-y-6">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
                     <flux:heading size="lg">IT project assignments</flux:heading>
                     <flux:text variant="subtle" class="mt-1 text-sm">Projects where this user appears in scheduling IT staff.</flux:text>
                 </div>
-                <flux:badge size="sm" variant="outline" icon="users">
-                    {{ $itAssignments->count() }} active
-                </flux:badge>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                    <flux:field variant="inline" class="sm:justify-end">
+                        <flux:switch label="Include completed projects" wire:model.live="showAllAssignments" />
+                    </flux:field>
+                    <flux:badge size="sm" variant="outline" icon="users">
+                        {{ $assignments->count() }} {{ $showAllAssignments ? 'total' : 'active' }}
+                    </flux:badge>
+                </div>
             </div>
 
-            @if ($itAssignments->isNotEmpty())
+            @if ($assignments->isNotEmpty())
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column>Project</flux:table.column>
@@ -188,7 +196,7 @@
                         <flux:table.column class="text-right">Team size</flux:table.column>
                     </flux:table.columns>
                     <flux:table.rows>
-                        @foreach ($itAssignments as $assignment)
+                        @foreach ($assignments as $assignment)
                             <flux:table.row :key="'assignment-' . $assignment->id">
                                 <flux:table.cell>
                                     <a href="{{ route('project.show', $assignment) }}" class="font-medium hover:underline">
@@ -213,8 +221,14 @@
                 </flux:table>
             @else
                 <flux:callout variant="secondary" icon="hand-raised">
-                    <flux:callout.heading>No current IT assignments</flux:callout.heading>
-                    <flux:callout.text>This user has skills but is not assigned to any project scheduling records yet.</flux:callout.text>
+                    <flux:callout.heading>No {{ $showAllAssignments ? 'IT assignments recorded' : 'current IT assignments' }}</flux:callout.heading>
+                    <flux:callout.text>
+                        @if ($allAssignments->isEmpty())
+                            This user has skills but is not assigned to any project scheduling records yet.
+                        @else
+                            All assignments for this user are marked as completed or cancelled.
+                        @endif
+                    </flux:callout.text>
                 </flux:callout>
             @endif
         </flux:card>

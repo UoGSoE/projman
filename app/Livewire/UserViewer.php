@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Enums\ProjectStatus;
 use App\Enums\SkillLevel;
 use App\Models\Project;
 use App\Models\User;
@@ -15,8 +16,7 @@ class UserViewer extends Component
     /** @var Collection<int, \App\Models\Project> */
     public Collection $requestedProjects;
 
-    /** @var Collection<int, \App\Models\Project> */
-    public Collection $itAssignments;
+    public bool $showAllAssignments = false;
 
     public function mount(User $user): void
     {
@@ -29,7 +29,6 @@ class UserViewer extends Component
         ]);
 
         $this->requestedProjects = $this->user->projects;
-        $this->itAssignments = $this->resolveItAssignments();
     }
 
     public function render()
@@ -54,6 +53,24 @@ class UserViewer extends Component
             )
             ->orderByDesc('created_at')
             ->get();
+    }
+
+    public function getDisplayedItAssignmentsProperty(): Collection
+    {
+        $assignments = $this->allItAssignments;
+
+        if ($this->showAllAssignments) {
+            return $assignments;
+        }
+
+        return $assignments->reject(
+            fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
+        );
+    }
+
+    public function getAllItAssignmentsProperty(): Collection
+    {
+        return once(fn () => $this->resolveItAssignments());
     }
 
     public function skillLevelLabel(string $level): string
