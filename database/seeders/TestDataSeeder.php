@@ -168,7 +168,7 @@ class TestDataSeeder extends Seeder
         ];
 
         foreach ($staffMembers as $member) {
-            $projectCount = random_int(4, 6);
+            $projectCount = random_int(1, 6);
             $statuses = collect([ProjectStatus::COMPLETED])
                 ->when(random_int(0, 1), fn ($collection) => $collection->push(ProjectStatus::CANCELLED))
                 ->merge(collect($statusPool)->shuffle()->take($projectCount))
@@ -323,21 +323,18 @@ class TestDataSeeder extends Seeder
 
         $extraTarget = random_int(0, 3);
         $needed = max(0, $extraTarget - $existingExtras->count());
-
         $newExtras = $needed > 0
             ? $this->randomStaffIds($availableStaff, $needed, array_merge([$assigned], $existingExtras->all()))
             : [];
-
         $team = $existingExtras
             ->concat($newExtras)
             ->prepend($assigned)
             ->unique()
             ->values();
 
-        $upperBound = min(5, $team->count());
+        $upperBound = min(1, $team->count());
         $finalSize = max(1, random_int(1, $upperBound));
         $team = $team->take($finalSize);
-
         $payload = [
             'assigned_to' => $assigned,
             'cose_it_staff' => $team->all(),

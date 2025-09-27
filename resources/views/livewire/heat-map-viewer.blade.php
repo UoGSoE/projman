@@ -58,14 +58,14 @@
                             </div>
 
                             <div class="flex items-center gap-3">
-                                @if ($project->deadline)
-                                    <flux:badge size="sm" icon="calendar-days" variant="solid" color="amber">
-                                        Due {{ $project->deadline->format('d M Y') }}
-                                    </flux:badge>
-                                @endif
                                 <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
                                     {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
                                 </flux:badge>
+                                @if ($project->deadline)
+                                    <flux:badge size="sm" icon="calendar-days" variant="solid" color="amber">
+                                        {{ $project->deadline->format('d M Y') }}
+                                    </flux:badge>
+                                @endif
                             </div>
                         </div>
 
