@@ -189,7 +189,7 @@
                 <flux:callout variant="secondary" icon="hand-raised">
                     <flux:callout.heading>No {{ $showAllAssignments ? 'IT assignments recorded' : 'current IT assignments' }}</flux:callout.heading>
                     <flux:callout.text>
-                        @if ($itAssignments->isEmpty() && $assignmentCountLabel === 'total')
+                        @if (! $hadAnyAssignments)
                             This user has skills but is not assigned to any project scheduling records yet.
                         @else
                             All assignments for this user are marked as completed or cancelled.
