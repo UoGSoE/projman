@@ -21,7 +21,7 @@
             @foreach ($users as $user)
                 <flux:table.row :key="'user-' . $user->id">
                     <flux:table.cell>
-                        <flux:link :href="route('user.show', $user)">
+                        <flux:link :href="route('user.show', $user)" class="hover:underline">
                             {{ $user->surname }}
                         </flux:link>
                     </flux:table.cell>

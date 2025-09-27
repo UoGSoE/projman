@@ -22,7 +22,9 @@
 
                 @foreach ($staff as $entry)
                     <div class="px-3 py-2">
-                        <flux:text class="font-medium">{{ $entry['user']->forenames }} {{ $entry['user']->surname }}</flux:text>
+                        <flux:link :href="route('user.show', $entry['user'])" class="font-medium hover:underline">
+                            {{ $entry['user']->forenames }} {{ $entry['user']->surname }}
+                        </flux:link>
                     </div>
 
                     @foreach ($entry['busyness'] as $index => $busyness)
@@ -53,7 +55,14 @@
                             <div>
                                 <flux:text class="font-medium">{{ $project->title }}</flux:text>
                                 <flux:text variant="subtle" class="text-sm">
-                                    Owned by {{ $project->user?->forenames }} {{ $project->user?->surname }}
+                                    @if ($project->user)
+                                        Owned by
+                                        <flux:link :href="route('user.show', $project->user)" class="hover:underline">
+                                            {{ $project->user->forenames }} {{ $project->user->surname }}
+                                        </flux:link>
+                                    @else
+                                        Owner not set
+                                    @endif
                                 </flux:text>
                             </div>
 
@@ -72,15 +81,17 @@
                         @if ($project->team_members->isNotEmpty())
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($project->team_members as $member)
-                                    @if ($project->assigned_user_id === $member->id)
-                                        <flux:badge size="sm" icon="user" variant="subtle" color="sky">
-                                            {{ $member->forenames }} {{ $member->surname }}
-                                        </flux:badge>
-                                    @else
-                                        <flux:badge size="sm" icon="user" variant="subtle">
-                                            {{ $member->forenames }} {{ $member->surname }}
-                                        </flux:badge>
-                                    @endif
+                                    <flux:link :href="route('user.show', $member)" class="inline-flex">
+                                        @if ($project->assigned_user_id === $member->id)
+                                            <flux:badge size="sm" icon="user" variant="subtle" color="sky">
+                                                {{ $member->forenames }} {{ $member->surname }}
+                                            </flux:badge>
+                                        @else
+                                            <flux:badge size="sm" icon="user" variant="subtle">
+                                                {{ $member->forenames }} {{ $member->surname }}
+                                            </flux:badge>
+                                        @endif
+                                    </flux:link>
                                 @endforeach
                             </div>
                         @endif
