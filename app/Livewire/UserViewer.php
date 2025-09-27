@@ -37,17 +37,22 @@ class UserViewer extends Component
 
     public function render()
     {
-        return view('livewire.user-viewer');
+        $allAssignments = $this->loadItAssignments();
+        $visibleAssignments = $this->showAllAssignments
+            ? $allAssignments
+            : $allAssignments->reject(
+                fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
+            );
+
+        return view('livewire.user-viewer', [
+            'itAssignments' => $visibleAssignments,
+            'allItAssignments' => $allAssignments,
+        ]);
     }
 
-    public function getItAssignmentsProperty(): Collection
+    protected function loadItAssignments(): Collection
     {
-        return once(fn () => $this->fetchItAssignments());
-    }
-
-    protected function fetchItAssignments(): Collection
-    {
-        if ($this->user->skills->isEmpty()) {
+        if ($this->skills->isEmpty()) {
             return collect();
         }
 
@@ -62,18 +67,5 @@ class UserViewer extends Component
             )
             ->orderByDesc('created_at')
             ->get();
-    }
-
-    public function getDisplayedItAssignmentsProperty(): Collection
-    {
-        $assignments = $this->itAssignments;
-
-        if ($this->showAllAssignments) {
-            return $assignments;
-        }
-
-        return $assignments->reject(
-            fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
-        );
     }
 }

@@ -131,9 +131,7 @@
         @endif
     </flux:card>
 
-    @if ($user->skills->isNotEmpty())
-        @php($assignments = $this->displayedItAssignments)
-        @php($allAssignments = $this->itAssignments)
+    @if ($skills->isNotEmpty())
 
         <flux:card class="space-y-6">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -146,12 +144,12 @@
                         <flux:switch label="Include completed projects" wire:model.live="showAllAssignments" />
                     </flux:field>
                     <flux:badge size="sm" variant="outline" icon="users">
-                        {{ $assignments->count() }} {{ $showAllAssignments ? 'total' : 'active' }}
+                        {{ $itAssignments->count() }} {{ $showAllAssignments ? 'total' : 'active' }}
                     </flux:badge>
                 </div>
             </div>
 
-            @if ($assignments->isNotEmpty())
+            @if ($itAssignments->isNotEmpty())
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column>Project</flux:table.column>
@@ -160,7 +158,7 @@
                         <flux:table.column align="end">Deadline</flux:table.column>
                     </flux:table.columns>
                     <flux:table.rows>
-                        @foreach ($assignments as $assignment)
+                        @foreach ($itAssignments as $assignment)
                             <flux:table.row :key="'assignment-' . $assignment->id">
                                 <flux:table.cell>
                                     <flux:link :href="route('project.show', $assignment)">
@@ -192,7 +190,7 @@
                 <flux:callout variant="secondary" icon="hand-raised">
                     <flux:callout.heading>No {{ $showAllAssignments ? 'IT assignments recorded' : 'current IT assignments' }}</flux:callout.heading>
                     <flux:callout.text>
-                        @if ($allAssignments->isEmpty())
+                        @if ($allItAssignments->isEmpty())
                             This user has skills but is not assigned to any project scheduling records yet.
                         @else
                             All assignments for this user are marked as completed or cancelled.
