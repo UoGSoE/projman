@@ -26,7 +26,7 @@
 
     <flux:separator variant="subtle" />
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div @class(['grid gap-6', 'lg:grid-cols-2' => $user->skills->isNotEmpty()])>
         <flux:card>
             <div class="space-y-6">
                 <div>
@@ -71,16 +71,13 @@
                 </div>
             </div>
         </flux:card>
-    </div>
+        @if ($user->skills->isNotEmpty())
+            <flux:card class="space-y-6">
+                <div>
+                    <flux:heading size="lg">Skills</flux:heading>
+                    <flux:text variant="subtle" class="mt-1 text-sm">Expertise recorded against this profile.</flux:text>
+                </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-        <flux:card class="space-y-6">
-            <div>
-                <flux:heading size="lg">Skills</flux:heading>
-                <flux:text variant="subtle" class="mt-1 text-sm">Expertise recorded against this profile.</flux:text>
-            </div>
-
-            @if ($user->skills->isNotEmpty())
                 <div class="flex flex-wrap gap-2">
                     @foreach ($user->skills as $skill)
                         <flux:badge size="sm" variant="subtle" class="py-1 px-3" :key="'skill-' . $skill->id">
@@ -88,55 +85,57 @@
                         </flux:badge>
                     @endforeach
                 </div>
-            @else
-                <flux:callout variant="secondary" icon="sparkles">
-                    <flux:callout.heading>No skills recorded</flux:callout.heading>
-                    <flux:callout.text>Add skills from the Skills Manager to start matching this user to projects.</flux:callout.text>
-                </flux:callout>
-            @endif
-        </flux:card>
-
-        <flux:card class="space-y-6">
-            <div>
-                <flux:heading size="lg">Requested projects</flux:heading>
-                <flux:text variant="subtle" class="mt-1 text-sm">Projects submitted by this user.</flux:text>
-            </div>
-
-            @if ($requestedProjects->isNotEmpty())
-                <flux:table>
-                    <flux:table.columns>
-                        <flux:table.column>Project</flux:table.column>
-                        <flux:table.column>Status</flux:table.column>
-                        <flux:table.column class="text-right">Requested</flux:table.column>
-                    </flux:table.columns>
-                    <flux:table.rows>
-                        @foreach ($requestedProjects as $project)
-                            <flux:table.row :key="'requested-' . $project->id">
-                                <flux:table.cell>
-                                    <a href="{{ route('project.show', $project) }}" class="font-medium hover:underline">
-                                        {{ $project->title }}
-                                    </a>
-                                </flux:table.cell>
-                                <flux:table.cell>
-                                    <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
-                                        {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
-                                    </flux:badge>
-                                </flux:table.cell>
-                                <flux:table.cell class="text-right">
-                                    {{ optional($project->created_at)->format('d M Y') ?? '—' }}
-                                </flux:table.cell>
-                            </flux:table.row>
-                        @endforeach
-                    </flux:table.rows>
-                </flux:table>
-            @else
-                <flux:callout variant="secondary" icon="inbox">
-                    <flux:callout.heading>No project requests</flux:callout.heading>
-                    <flux:callout.text>This user has not requested any projects yet.</flux:callout.text>
-                </flux:callout>
-            @endif
-        </flux:card>
+            </flux:card>
+        @endif
     </div>
+
+    @if ($user->skills->isEmpty())
+        <flux:callout variant="secondary" icon="sparkles">
+            <flux:callout.heading>No skills recorded</flux:callout.heading>
+            <flux:callout.text>Add skills from the Skills Manager to start matching this user to projects.</flux:callout.text>
+        </flux:callout>
+    @endif
+
+    <flux:card class="space-y-6">
+        <div>
+            <flux:heading size="lg">Requested projects</flux:heading>
+            <flux:text variant="subtle" class="mt-1 text-sm">Projects submitted by this user.</flux:text>
+        </div>
+
+        @if ($requestedProjects->isNotEmpty())
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>Project</flux:table.column>
+                    <flux:table.column>Status</flux:table.column>
+                    <flux:table.column align="end">Requested</flux:table.column>
+                </flux:table.columns>
+                <flux:table.rows>
+                    @foreach ($requestedProjects as $project)
+                        <flux:table.row :key="'requested-' . $project->id">
+                            <flux:table.cell>
+                                <flux:link :href="route('project.show', $project)">
+                                    {{ $project->title }}
+                                </flux:link>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
+                                    {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
+                                </flux:badge>
+                            </flux:table.cell>
+                            <flux:table.cell class="text-right">
+                                {{ optional($project->created_at)->format('d M Y') ?? '—' }}
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        @else
+            <flux:callout variant="secondary" icon="inbox">
+                <flux:callout.heading>No project requests</flux:callout.heading>
+                <flux:callout.text>This user has not requested any projects yet.</flux:callout.text>
+            </flux:callout>
+        @endif
+    </flux:card>
 
     @if ($user->skills->isNotEmpty())
         @php($assignments = $this->displayedItAssignments)
@@ -164,7 +163,7 @@
                         <flux:table.column>Project</flux:table.column>
                         <flux:table.column>Requested by</flux:table.column>
                         <flux:table.column>Status</flux:table.column>
-                        <flux:table.column class="text-right">Deadline</flux:table.column>
+                        <flux:table.column align="end">Deadline</flux:table.column>
                     </flux:table.columns>
                     <flux:table.rows>
                         @foreach ($assignments as $assignment)

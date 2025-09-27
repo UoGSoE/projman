@@ -34,7 +34,7 @@
 @layer theme {
     .dark {
         --color-accent: var(--color-sky-800);
-        --color-accent-content: var(--color-white);
+        --color-accent-content: var(--color-sky-400);
         --color-accent-foreground: var(--color-white);
     }
 }
