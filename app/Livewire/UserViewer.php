@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Enums\ProjectStatus;
-use App\Enums\SkillLevel;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -25,7 +24,7 @@ class UserViewer extends Component
     {
         $this->user = $user->load([
             'roles:id,name',
-            'skills' => fn ($query) => $query->orderBy('name'),
+            'skills:id,name',
             'projects' => fn ($query) => $query->with([
                 'scheduling:id,project_id,cose_it_staff',
             ])->latest(),
@@ -41,7 +40,12 @@ class UserViewer extends Component
         return view('livewire.user-viewer');
     }
 
-    protected function resolveItAssignments(): Collection
+    public function getItAssignmentsProperty(): Collection
+    {
+        return once(fn () => $this->fetchItAssignments());
+    }
+
+    protected function fetchItAssignments(): Collection
     {
         if ($this->user->skills->isEmpty()) {
             return collect();
@@ -62,7 +66,7 @@ class UserViewer extends Component
 
     public function getDisplayedItAssignmentsProperty(): Collection
     {
-        $assignments = $this->allItAssignments;
+        $assignments = $this->itAssignments;
 
         if ($this->showAllAssignments) {
             return $assignments;
@@ -71,20 +75,5 @@ class UserViewer extends Component
         return $assignments->reject(
             fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
         );
-    }
-
-    public function getAllItAssignmentsProperty(): Collection
-    {
-        return once(fn () => $this->resolveItAssignments());
-    }
-
-    public function skillLevelLabel(string $level): string
-    {
-        return SkillLevel::tryFrom($level)?->getDisplayName() ?? ucfirst($level);
-    }
-
-    public function skillLevelColor(string $level): string
-    {
-        return SkillLevel::tryFrom($level)?->getColor() ?? 'zinc';
     }
 }

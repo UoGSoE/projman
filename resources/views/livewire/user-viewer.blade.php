@@ -133,7 +133,7 @@
 
     @if ($user->skills->isNotEmpty())
         @php($assignments = $this->displayedItAssignments)
-        @php($allAssignments = $this->allItAssignments)
+        @php($allAssignments = $this->itAssignments)
 
         <flux:card class="space-y-6">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
