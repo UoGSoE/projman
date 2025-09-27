@@ -2,6 +2,15 @@
 
 namespace App\Enums;
 
+use App\Models\Deployed;
+use App\Models\DetailedDesign;
+use App\Models\Development;
+use App\Models\Feasibility;
+use App\Models\Ideation;
+use App\Models\Scheduling;
+use App\Models\Scoping;
+use App\Models\Testing;
+
 enum ProjectStatus: string
 {
     case IDEATION = 'ideation';
@@ -59,8 +68,6 @@ enum ProjectStatus: string
         };
     }
 
-
-
     public static function getAll(): array
     {
         return array_column(self::cases(), 'value');
@@ -68,7 +75,7 @@ enum ProjectStatus: string
 
     public static function getAllFormNames(): array
     {
-        return array_map(fn($case) => $case->getFormName(), [self::IDEATION, self::FEASIBILITY, self::SCOPING, self::SCHEDULING, self::DETAILED_DESIGN, self::DEVELOPMENT, self::TESTING, self::DEPLOYED]);
+        return array_map(fn ($case) => $case->getFormName(), [self::IDEATION, self::FEASIBILITY, self::SCOPING, self::SCHEDULING, self::DETAILED_DESIGN, self::DEVELOPMENT, self::TESTING, self::DEPLOYED]);
     }
 
     public function getStageColor(ProjectStatus $currentStage): string
@@ -106,6 +113,44 @@ enum ProjectStatus: string
         $allCases = self::cases();
 
         // Remove CANCELLED as it's not part of the normal progression
-        return array_filter($allCases, fn($case) => $case !== self::CANCELLED);
+        return array_filter($allCases, fn ($case) => $case !== self::CANCELLED);
+    }
+
+    /**
+     * @return array<self>
+     */
+    public static function stageStatuses(): array
+    {
+        return array_filter(self::cases(), fn (self $status) => $status->stageModel() !== null);
+    }
+
+    public function relationName(): ?string
+    {
+        return match ($this) {
+            self::IDEATION => 'ideation',
+            self::FEASIBILITY => 'feasibility',
+            self::SCOPING => 'scoping',
+            self::SCHEDULING => 'scheduling',
+            self::DETAILED_DESIGN => 'detailedDesign',
+            self::DEVELOPMENT => 'development',
+            self::TESTING => 'testing',
+            self::DEPLOYED => 'deployed',
+            default => null,
+        };
+    }
+
+    public function stageModel(): ?string
+    {
+        return match ($this) {
+            self::IDEATION => Ideation::class,
+            self::FEASIBILITY => Feasibility::class,
+            self::SCOPING => Scoping::class,
+            self::SCHEDULING => Scheduling::class,
+            self::DETAILED_DESIGN => DetailedDesign::class,
+            self::DEVELOPMENT => Development::class,
+            self::TESTING => Testing::class,
+            self::DEPLOYED => Deployed::class,
+            default => null,
+        };
     }
 }

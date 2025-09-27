@@ -5,18 +5,11 @@ namespace Database\Seeders;
 use App\Enums\Busyness;
 use App\Enums\ProjectStatus;
 use App\Enums\SkillLevel;
-use App\Models\Deployed;
-use App\Models\DetailedDesign;
-use App\Models\Development;
-use App\Models\Feasibility;
-use App\Models\Ideation;
 use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Models\Role;
 use App\Models\Scheduling;
-use App\Models\Scoping;
 use App\Models\Skill;
-use App\Models\Testing;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -28,10 +21,17 @@ class TestDataSeeder extends Seeder
 {
     use WithoutModelEvents;
 
+    private ?Collection $skillCache = null;
+
+    private ?Collection $skillNameCache = null;
+
     public function run(): void
     {
         $this->seedRoles();
         $this->seedSkills();
+
+        $this->skillCache = null;
+        $this->skillNameCache = null;
 
         $this->seedCoreUsers();
         $this->seedStaffTeam();
@@ -130,48 +130,42 @@ class TestDataSeeder extends Seeder
     private function assignRolesAndSkills(Collection $staffMembers): void
     {
         $allRoles = Role::all();
-        $allSkills = Skill::all();
+        $allSkills = $this->skills();
         $skillLevels = collect(SkillLevel::cases());
 
         foreach ($staffMembers as $member) {
             if ($allRoles->isNotEmpty()) {
-                $roles = $allRoles->shuffle()->take(random_int(1, min(1, $allRoles->count())));
+                $maxRoles = min(3, $allRoles->count());
+                $roleCount = random_int(1, $maxRoles);
+                $roles = $allRoles->shuffle()->take($roleCount);
                 $member->roles()->syncWithoutDetaching($roles->pluck('id')->all());
             }
 
             if ($allSkills->isNotEmpty()) {
-                $skills = $allSkills->shuffle()->take(random_int(14, min(14, $allSkills->count())));
-                foreach ($skills as $skill) {
+                $maxSkills = min(14, $allSkills->count());
+                $minSkills = min(5, $maxSkills);
+                $skills = $allSkills->shuffle()->take(random_int($minSkills, $maxSkills));
+
+                $skills->each(function (Skill $skill) use ($member, $skillLevels) {
                     $member->skills()->syncWithoutDetaching([
                         $skill->id => ['skill_level' => $skillLevels->random()->value],
                     ]);
-                }
+                });
             }
         }
     }
 
     private function seedProjectPortfolio(Collection $staffMembers): void
     {
-        $stageMap = $this->stageModelMap();
         $progression = array_values(ProjectStatus::getProgressStages());
-        $statusPool = [
-            ProjectStatus::IDEATION,
-            ProjectStatus::FEASIBILITY,
-            ProjectStatus::SCOPING,
-            ProjectStatus::SCHEDULING,
-            ProjectStatus::DETAILED_DESIGN,
-            ProjectStatus::DEVELOPMENT,
-            ProjectStatus::TESTING,
-            ProjectStatus::DEPLOYED,
-            ProjectStatus::COMPLETED,
-            ProjectStatus::CANCELLED,
-        ];
+        $statusPool = collect(ProjectStatus::cases())
+            ->reject(fn (ProjectStatus $status) => $status === ProjectStatus::COMPLETED);
 
         foreach ($staffMembers as $member) {
             $projectCount = random_int(1, 6);
             $statuses = collect([ProjectStatus::COMPLETED])
-                ->when(random_int(0, 1), fn ($collection) => $collection->push(ProjectStatus::CANCELLED))
-                ->merge(collect($statusPool)->shuffle()->take($projectCount))
+                ->when(random_int(0, 1), fn (Collection $collection) => $collection->push(ProjectStatus::CANCELLED))
+                ->merge($statusPool->shuffle()->take($projectCount))
                 ->take($projectCount)
                 ->shuffle();
 
@@ -190,15 +184,15 @@ class TestDataSeeder extends Seeder
                     'updated_at' => $timeline['updated_at'],
                 ])->save();
 
-                $this->seedStageData($project, $status, $staffMembers, $progression, $stageMap);
+                $this->seedStageData($project, $status, $staffMembers, $progression);
                 $this->ensureTeamForInFlightProject($project, $status, $staffMembers);
-                $this->ensureStagePlaceholders($project, $stageMap, $staffMembers);
+                $this->ensureStagePlaceholders($project, $staffMembers);
                 $this->seedHistoryEntries($project, $staffMembers, $timeline['created_at'], $timeline['updated_at']);
             }
         }
     }
 
-    private function seedStageData(Project $project, ProjectStatus $status, Collection $staffMembers, array $progression, array $stageMap): void
+    private function seedStageData(Project $project, ProjectStatus $status, Collection $staffMembers, array $progression): void
     {
         if ($status === ProjectStatus::CANCELLED) {
             $targetIndex = random_int(0, max(0, count($progression) - 2));
@@ -216,7 +210,7 @@ class TestDataSeeder extends Seeder
         $faker = fake();
 
         foreach ($stagesToCreate as $stage) {
-            $modelClass = $stageMap[$stage->value] ?? null;
+            $modelClass = $stage->stageModel();
 
             if (! $modelClass) {
                 continue;
@@ -276,7 +270,7 @@ class TestDataSeeder extends Seeder
 
             $record = $modelClass::factory()->create($attributes);
 
-            if ($relation = $this->relationNameForStage($stage)) {
+            if ($relation = $stage->relationName()) {
                 $project->setRelation($relation, $record);
             }
         }
@@ -332,8 +326,8 @@ class TestDataSeeder extends Seeder
             ->unique()
             ->values();
 
-        $upperBound = min(1, $team->count());
-        $finalSize = max(1, random_int(1, $upperBound));
+        $maxTeamMembers = max(1, min(4, $team->count()));
+        $finalSize = random_int(1, $maxTeamMembers);
         $team = $team->take($finalSize);
         $payload = [
             'assigned_to' => $assigned,
@@ -349,23 +343,29 @@ class TestDataSeeder extends Seeder
         }
     }
 
-    private function ensureStagePlaceholders(Project $project, array $stageMap, Collection $staffMembers): void
+    private function ensureStagePlaceholders(Project $project, Collection $staffMembers): void
     {
-        foreach ($stageMap as $modelClass) {
+        foreach (ProjectStatus::stageStatuses() as $status) {
+            $modelClass = $status->stageModel();
+
+            if (! $modelClass) {
+                continue;
+            }
+
             $modelClass::firstOrCreate(
                 ['project_id' => $project->id],
-                $this->stagePlaceholderData($modelClass, $project, $staffMembers)
+                $this->stagePlaceholderData($status, $project, $staffMembers)
             );
         }
     }
 
-    private function stagePlaceholderData(string $modelClass, Project $project, Collection $staffMembers): array
+    private function stagePlaceholderData(ProjectStatus $status, Project $project, Collection $staffMembers): array
     {
         $faker = fake();
         $staffId = $this->pickStaffId($staffMembers, [$project->user_id]);
 
-        switch ($modelClass) {
-            case Ideation::class:
+        $factory = match ($status) {
+            ProjectStatus::IDEATION => function () use ($faker) {
                 return [
                     'school_group' => $faker->randomElement(['Engineering', 'Computing', 'Chemistry', 'Business']),
                     'objective' => $faker->sentence(),
@@ -374,8 +374,8 @@ class TestDataSeeder extends Seeder
                     'deadline' => Carbon::now()->addDays(random_int(45, 120)),
                     'strategic_initiative' => $faker->randomElement(['thing', 'other', 'something']),
                 ];
-
-            case Feasibility::class:
+            },
+            ProjectStatus::FEASIBILITY => function () use ($faker, $staffId, $project) {
                 $assessor = $staffId ?? $project->user_id;
 
                 return [
@@ -387,8 +387,8 @@ class TestDataSeeder extends Seeder
                     'deadlines_achievable' => $faker->boolean(),
                     'alternative_proposal' => $faker->sentence(),
                 ];
-
-            case Scoping::class:
+            },
+            ProjectStatus::SCOPING => function () use ($faker, $staffId, $project) {
                 $assessor = $staffId ?? $project->user_id;
                 $skillIds = $this->sampleSkillIds();
 
@@ -400,12 +400,13 @@ class TestDataSeeder extends Seeder
                     'assumptions' => $faker->paragraph(),
                     'skills_required' => $skillIds->all(),
                 ];
-
-            case Scheduling::class:
+            },
+            ProjectStatus::SCHEDULING => function () use ($faker, $staffMembers, $project) {
                 $assigned = $this->pickStaffId($staffMembers, [$project->user_id]);
                 $start = Carbon::now()->addDays(random_int(10, 40));
                 $completion = $start->copy()->addDays(random_int(20, 60));
                 $existingSkills = collect(optional($project->scoping)->skills_required ?? []);
+
                 if ($existingSkills->isEmpty()) {
                     $existingSkills = $this->sampleSkillIds();
                 }
@@ -422,8 +423,8 @@ class TestDataSeeder extends Seeder
                     'priority' => $faker->randomElement(['low', 'medium', 'high', 'critical']),
                     'team_assignment' => $faker->words(2, true),
                 ];
-
-            case DetailedDesign::class:
+            },
+            ProjectStatus::DETAILED_DESIGN => function () use ($faker, $staffMembers, $project) {
                 $designer = $this->pickStaffId($staffMembers, [$project->user_id]);
 
                 return [
@@ -437,8 +438,8 @@ class TestDataSeeder extends Seeder
                     'approval_resilience' => $faker->randomElement(['pending', 'approved', 'rejected']),
                     'approval_change_board' => $faker->randomElement(['pending', 'approved', 'rejected']),
                 ];
-
-            case Development::class:
+            },
+            ProjectStatus::DEVELOPMENT => function () use ($faker, $staffMembers, $project) {
                 $lead = $this->pickStaffId($staffMembers, [$project->user_id]);
                 $team = collect($this->randomStaffIds($staffMembers, random_int(1, 3), [$lead, $project->user_id]));
                 $start = Carbon::now()->subDays(random_int(30, 90));
@@ -455,8 +456,8 @@ class TestDataSeeder extends Seeder
                     'completion_date' => $completion,
                     'code_review_notes' => $faker->sentence(),
                 ];
-
-            case Testing::class:
+            },
+            ProjectStatus::TESTING => function () use ($faker, $staffMembers, $project) {
                 $lead = $this->pickStaffId($staffMembers, [$project->user_id]);
 
                 return [
@@ -473,8 +474,8 @@ class TestDataSeeder extends Seeder
                     'service_delivery_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
                     'service_resilience_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
                 ];
-
-            case Deployed::class:
+            },
+            ProjectStatus::DEPLOYED => function () use ($faker, $staffMembers, $project) {
                 $deployer = $this->pickStaffId($staffMembers, [$project->user_id]);
 
                 return [
@@ -493,62 +494,49 @@ class TestDataSeeder extends Seeder
                     'service_delivery_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
                     'change_advisory_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
                 ];
-        }
-
-        return [];
-    }
-
-    private function relationNameForStage(ProjectStatus $status): ?string
-    {
-        return match ($status) {
-            ProjectStatus::IDEATION => 'ideation',
-            ProjectStatus::FEASIBILITY => 'feasibility',
-            ProjectStatus::SCOPING => 'scoping',
-            ProjectStatus::SCHEDULING => 'scheduling',
-            ProjectStatus::DETAILED_DESIGN => 'detailedDesign',
-            ProjectStatus::DEVELOPMENT => 'development',
-            ProjectStatus::TESTING => 'testing',
-            ProjectStatus::DEPLOYED => 'deployed',
-            default => null,
+            },
+            default => fn () => [],
         };
+
+        return $factory();
     }
 
     private function sampleSkillIds(int $min = 2, int $max = 4): Collection
     {
-        $totalSkills = Skill::count();
+        $skills = $this->skills();
 
-        if ($totalSkills === 0) {
+        if ($skills->isEmpty()) {
             return collect();
         }
 
-        $upper = max(1, min($max, $totalSkills));
+        $upper = max(1, min($max, $skills->count()));
         $lower = max(1, min($min, $upper));
-        $take = random_int($lower, $upper);
+        $take = $lower === $upper ? $upper : random_int($lower, $upper);
 
-        return Skill::query()
-            ->inRandomOrder()
+        return $skills->shuffle()
             ->take($take)
             ->pluck('id');
     }
 
-    private function skillNamesFor(Collection $skillIds): string
+    private function skillNamesFor(Collection|array $skillIds): string
     {
-        if ($skillIds->isEmpty()) {
+        $ids = $skillIds instanceof Collection ? $skillIds : collect($skillIds);
+
+        if ($ids->isEmpty()) {
             return 'General support';
         }
 
-        $names = Skill::query()
-            ->whereIn('id', $skillIds)
-            ->get(['id', 'name'])
-            ->keyBy('id');
+        $names = $this->skillNames();
 
-        return $skillIds
-            ->map(fn ($id) => $names->get($id)?->name)
+        $label = $ids
+            ->map(fn ($id) => $names->get($id))
             ->filter()
+            ->unique()
             ->take(3)
             ->implode(', ');
-    }
 
+        return $label ?: 'General support';
+    }
 
     private function seedHistoryEntries(Project $project, Collection $staffMembers, Carbon $createdAt, Carbon $updatedAt): void
     {
@@ -674,20 +662,6 @@ class TestDataSeeder extends Seeder
         }
 
         return optional($filtered->shuffle()->first())->id;
-    }
-
-    private function stageModelMap(): array
-    {
-        return [
-            ProjectStatus::IDEATION->value => Ideation::class,
-            ProjectStatus::FEASIBILITY->value => Feasibility::class,
-            ProjectStatus::SCOPING->value => Scoping::class,
-            ProjectStatus::SCHEDULING->value => Scheduling::class,
-            ProjectStatus::DETAILED_DESIGN->value => DetailedDesign::class,
-            ProjectStatus::DEVELOPMENT->value => Development::class,
-            ProjectStatus::TESTING->value => Testing::class,
-            ProjectStatus::DEPLOYED->value => Deployed::class,
-        ];
     }
 
     private function staffProfiles(): array
@@ -827,5 +801,15 @@ class TestDataSeeder extends Seeder
             ['name' => 'Stakeholder Engagement', 'description' => 'Building and maintaining strong relationships with stakeholders.'],
             ['name' => 'Problem Solving & Troubleshooting', 'description' => 'Identifying, analysing, and resolving technical problems effectively.'],
         ];
+    }
+
+    private function skills(): Collection
+    {
+        return $this->skillCache ??= Skill::query()->get(['id', 'name']);
+    }
+
+    private function skillNames(): Collection
+    {
+        return $this->skillNameCache ??= $this->skills()->pluck('name', 'id');
     }
 }
