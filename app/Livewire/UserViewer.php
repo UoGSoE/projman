@@ -13,10 +13,13 @@ class UserViewer extends Component
 {
     public User $user;
 
-    /** @var Collection<int, \App\Models\Project> */
     public Collection $requestedProjects;
 
     public bool $showAllAssignments = false;
+
+    public Collection $skills;
+
+    public Collection $roles;
 
     public function mount(User $user): void
     {
@@ -28,6 +31,8 @@ class UserViewer extends Component
             ])->latest(),
         ]);
 
+        $this->roles = $this->user->roles->sortBy('name')->values();
+        $this->skills = $this->user->skills->sortBy('name')->values();
         $this->requestedProjects = $this->user->projects;
     }
 

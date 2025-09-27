@@ -6,21 +6,21 @@
                 @if ($user->isAdmin())
                     <flux:badge size="sm" variant="solid" color="green" icon="shield-check">Administrator</flux:badge>
                 @endif
-                @foreach ($user->roles as $role)
+                @foreach ($roles as $role)
                     <flux:badge size="sm" inset="top bottom">
                         {{ $role->name }}
                     </flux:badge>
                 @endforeach
             </flux:heading>
-            <div class="mt-2 flex flex-wrap items-center gap-2">
-                <flux:link  variant="subtle" href="mailto:{{ $user->email }}">{{ $user->email }}</flux:link>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                <a href="mailto:{{ $user->email }}" class="hover:underline">{{ $user->email }}</a>
             </div>
         </div>
     </div>
 
     <flux:separator variant="subtle" />
 
-    <div @class(['grid gap-6', 'lg:grid-cols-2' => $user->skills->isNotEmpty()])>
+    <div @class(['grid gap-6', 'lg:grid-cols-2' => $skills->isNotEmpty()])>
         <flux:card>
             <div class="space-y-6">
                 <div>
@@ -55,17 +55,17 @@
 
                     <div class="space-y-1">
                         <flux:text class="text-xs font-medium uppercase tracking-wide text-zinc-500">Roles assigned</flux:text>
-                        <flux:text class="text-base font-medium">{{ $user->roles->count() }}</flux:text>
+                        <flux:text class="text-base font-medium">{{ $roles->count() }}</flux:text>
                     </div>
 
                     <div class="space-y-1">
                         <flux:text class="text-xs font-medium uppercase tracking-wide text-zinc-500">Skills recorded</flux:text>
-                        <flux:text class="text-base font-medium">{{ $user->skills->count() }}</flux:text>
+                        <flux:text class="text-base font-medium">{{ $skills->count() }}</flux:text>
                     </div>
                 </div>
             </div>
         </flux:card>
-        @if ($user->skills->isNotEmpty())
+        @if ($skills->isNotEmpty())
             <flux:card class="space-y-6">
                 <div>
                     <flux:heading size="lg">Skills</flux:heading>
@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                    @foreach ($user->skills as $skill)
+                    @foreach ($skills as $skill)
                         <flux:badge size="sm" variant="subtle" class="py-1 px-3" :key="'skill-' . $skill->id">
                             {{ $skill->name }}
                         </flux:badge>
@@ -83,7 +83,7 @@
         @endif
     </div>
 
-    @if ($user->skills->isEmpty())
+    @if ($skills->isEmpty())
         <flux:callout variant="secondary" icon="sparkles">
             <flux:callout.heading>No skills recorded</flux:callout.heading>
             <flux:callout.text>Add skills from the Skills Manager to start matching this user to projects.</flux:callout.text>
