@@ -7,16 +7,27 @@
                     <flux:badge size="sm" variant="solid" color="green" icon="shield-check">Administrator</flux:badge>
                 @endif
             </flux:heading>
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-                <a href="mailto:{{ $user->email }}" class="hover:underline">{{ $user->email }}</a>
+            <div class="mt-2 space-y-2">
+                <div class="flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                    <a href="mailto:{{ $user->email }}" class="hover:underline">{{ $user->email }}</a>
+                </div>
+                @if ($user->roles->isNotEmpty())
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($user->roles as $role)
+                            <flux:badge size="sm" variant="outline" inset="top bottom">
+                                {{ $role->name }}
+                            </flux:badge>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 
     <flux:separator variant="subtle" />
 
-    <div class="grid gap-6 lg:grid-cols-3">
-        <flux:card class="lg:col-span-2">
+    <div class="grid gap-6 lg:grid-cols-2">
+        <flux:card>
             <div class="space-y-6">
                 <div>
                     <flux:heading size="lg">Basic details</flux:heading>
@@ -58,30 +69,6 @@
                         <flux:text class="text-base font-medium">{{ $user->skills->count() }}</flux:text>
                     </div>
                 </div>
-            </div>
-        </flux:card>
-
-        <flux:card>
-            <div class="space-y-6">
-                <div>
-                    <flux:heading size="lg">Roles</flux:heading>
-                    <flux:text variant="subtle" class="mt-1 text-sm">Current responsibilities within the system.</flux:text>
-                </div>
-
-                @if ($user->roles->isNotEmpty())
-                    <div class="flex flex-wrap gap-2">
-                        @foreach ($user->roles as $role)
-                            <flux:badge size="sm" variant="outline" inset="top bottom">
-                                {{ $role->name }}
-                            </flux:badge>
-                        @endforeach
-                    </div>
-                @else
-                    <flux:callout variant="secondary" icon="information-circle">
-                        <flux:callout.heading>No roles assigned</flux:callout.heading>
-                        <flux:callout.text>This user does not have any roles yet.</flux:callout.text>
-                    </flux:callout>
-                @endif
             </div>
         </flux:card>
     </div>
