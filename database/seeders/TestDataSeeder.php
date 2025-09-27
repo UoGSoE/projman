@@ -135,12 +135,12 @@ class TestDataSeeder extends Seeder
 
         foreach ($staffMembers as $member) {
             if ($allRoles->isNotEmpty()) {
-                $roles = $allRoles->shuffle()->take(random_int(1, min(3, $allRoles->count())));
+                $roles = $allRoles->shuffle()->take(random_int(1, min(1, $allRoles->count())));
                 $member->roles()->syncWithoutDetaching($roles->pluck('id')->all());
             }
 
             if ($allSkills->isNotEmpty()) {
-                $skills = $allSkills->shuffle()->take(random_int(4, min(8, $allSkills->count())));
+                $skills = $allSkills->shuffle()->take(random_int(14, min(14, $allSkills->count())));
                 foreach ($skills as $skill) {
                     $member->skills()->syncWithoutDetaching([
                         $skill->id => ['skill_level' => $skillLevels->random()->value],
