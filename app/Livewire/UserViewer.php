@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class UserViewer extends Component
@@ -13,12 +14,7 @@ class UserViewer extends Component
 
     public bool $showAllAssignments = false;
 
-    public function mount(User $user): void
-    {
-        $this->user = $user;
-    }
-
-    public function render()
+    public function render(): View
     {
         $user = $this->user->load([
             'roles:id,name',
@@ -37,16 +33,12 @@ class UserViewer extends Component
                 'scheduling',
                 fn ($query) => $query->whereJsonContains('cose_it_staff', $user->id)
             )
+            ->when(
+                ! $this->showAllAssignments,
+                fn ($query) => $query->whereNotIn('status', [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED])
+            )
             ->orderByDesc('created_at')
             ->get();
-
-        $hadAnyAssignments = $assignments->isNotEmpty();
-
-        if (! $this->showAllAssignments) {
-            $assignments = $assignments->reject(
-                fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
-            );
-        }
 
         return view('livewire.user-viewer', [
             'user' => $user,
@@ -54,8 +46,6 @@ class UserViewer extends Component
             'skills' => $user->skills->sortBy('name'),
             'requestedProjects' => $user->projects,
             'itAssignments' => $assignments,
-            'hadAnyAssignments' => $hadAnyAssignments,
-            'assignmentCountLabel' => $this->showAllAssignments ? 'total' : 'active',
         ]);
     }
 }

@@ -143,7 +143,7 @@
                         <flux:switch label="Include completed projects" wire:model.live="showAllAssignments" />
                     </flux:field>
                     <flux:badge size="sm" variant="outline" icon="users">
-                        {{ $itAssignments->count() }} {{ $assignmentCountLabel }}
+                        {{ $itAssignments->count() }} assignments
                     </flux:badge>
                 </div>
             </div>
@@ -187,14 +187,8 @@
                 </flux:table>
             @else
                 <flux:callout variant="secondary" icon="hand-raised">
-                    <flux:callout.heading>No {{ $showAllAssignments ? 'IT assignments recorded' : 'current IT assignments' }}</flux:callout.heading>
-                    <flux:callout.text>
-                        @if (! $hadAnyAssignments)
-                            This user has skills but is not assigned to any project scheduling records yet.
-                        @else
-                            All assignments for this user are marked as completed or cancelled.
-                        @endif
-                    </flux:callout.text>
+                    <flux:callout.heading>No IT assignments to show</flux:callout.heading>
+                    <flux:callout.text>This user isn't currently scheduled on any IT projects.</flux:callout.text>
                 </flux:callout>
             @endif
         </flux:card>
