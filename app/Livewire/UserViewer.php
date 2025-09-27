@@ -44,19 +44,17 @@ class UserViewer extends Component
             ->orderByDesc('created_at')
             ->get();
 
-        $visibleAssignments = $this->showAllAssignments
-            ? $allAssignments
-            : $allAssignments->reject(
-                fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
-            );
-
         return view('livewire.user-viewer', [
             'user' => $user,
             'roles' => $roles,
             'skills' => $skills,
             'requestedProjects' => $requestedProjects,
-            'itAssignments' => $visibleAssignments,
-            'allItAssignments' => $allAssignments,
+            'itAssignments' => $this->showAllAssignments
+                ? $allAssignments
+                : $allAssignments->reject(
+                    fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
+                ),
+            'assignmentCountLabel' => $this->showAllAssignments ? 'total' : 'active',
         ]);
     }
 }

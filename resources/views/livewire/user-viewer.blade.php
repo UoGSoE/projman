@@ -132,7 +132,6 @@
     </flux:card>
 
     @if ($skills->isNotEmpty())
-
         <flux:card class="space-y-6">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -144,7 +143,7 @@
                         <flux:switch label="Include completed projects" wire:model.live="showAllAssignments" />
                     </flux:field>
                     <flux:badge size="sm" variant="outline" icon="users">
-                        {{ $itAssignments->count() }} {{ $showAllAssignments ? 'total' : 'active' }}
+                        {{ $itAssignments->count() }} {{ $assignmentCountLabel }}
                     </flux:badge>
                 </div>
             </div>
@@ -190,7 +189,7 @@
                 <flux:callout variant="secondary" icon="hand-raised">
                     <flux:callout.heading>No {{ $showAllAssignments ? 'IT assignments recorded' : 'current IT assignments' }}</flux:callout.heading>
                     <flux:callout.text>
-                        @if ($allItAssignments->isEmpty())
+                        @if ($itAssignments->isEmpty() && $assignmentCountLabel === 'total')
                             This user has skills but is not assigned to any project scheduling records yet.
                         @else
                             All assignments for this user are marked as completed or cancelled.
