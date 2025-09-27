@@ -28,27 +28,7 @@ class UserViewer extends Component
             ])->latest(),
         ]);
 
-        $allAssignments = $this->itAssignments($user);
-        $visibleAssignments = $this->showAllAssignments
-            ? $allAssignments
-            : $allAssignments->reject(
-                fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
-            );
-
-        return view('livewire.user-viewer', [
-            'user' => $user,
-            'roles' => $user->roles->sortBy('name'),
-            'skills' => $user->skills->sortBy('name'),
-            'requestedProjects' => $user->projects,
-            'itAssignments' => $visibleAssignments,
-            'hadAnyAssignments' => $allAssignments->isNotEmpty(),
-            'assignmentCountLabel' => $this->showAllAssignments ? 'total' : 'active',
-        ]);
-    }
-
-    protected function itAssignments(User $user)
-    {
-        return Project::query()
+        $assignments = Project::query()
             ->with([
                 'user:id,forenames,surname',
                 'scheduling:id,project_id,cose_it_staff',
@@ -59,5 +39,23 @@ class UserViewer extends Component
             )
             ->orderByDesc('created_at')
             ->get();
+
+        $hadAnyAssignments = $assignments->isNotEmpty();
+
+        if (! $this->showAllAssignments) {
+            $assignments = $assignments->reject(
+                fn (Project $project) => in_array($project->status, [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED], true)
+            );
+        }
+
+        return view('livewire.user-viewer', [
+            'user' => $user,
+            'roles' => $user->roles->sortBy('name'),
+            'skills' => $user->skills->sortBy('name'),
+            'requestedProjects' => $user->projects,
+            'itAssignments' => $assignments,
+            'hadAnyAssignments' => $hadAnyAssignments,
+            'assignmentCountLabel' => $this->showAllAssignments ? 'total' : 'active',
+        ]);
     }
 }
