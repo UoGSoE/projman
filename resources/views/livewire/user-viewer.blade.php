@@ -94,29 +94,13 @@
             </div>
 
             @if ($user->skills->isNotEmpty())
-                <flux:table>
-                    <flux:table.columns>
-                        <flux:table.column>Skill</flux:table.column>
-                        <flux:table.column class="text-right">Level</flux:table.column>
-                    </flux:table.columns>
-                    <flux:table.rows>
-                        @foreach ($user->skills as $skill)
-                            <flux:table.row :key="'skill-' . $skill->id">
-                                <flux:table.cell>
-                                    <flux:text class="font-medium">{{ $skill->name }}</flux:text>
-                                    @if (! empty($skill->description))
-                                        <flux:text variant="subtle" class="text-sm">{{ $skill->description }}</flux:text>
-                                    @endif
-                                </flux:table.cell>
-                                <flux:table.cell class="text-right">
-                                    <flux:badge size="sm" variant="pill" color="{{ $this->skillLevelColor($skill->pivot->skill_level) }}">
-                                        {{ $this->skillLevelLabel($skill->pivot->skill_level) }}
-                                    </flux:badge>
-                                </flux:table.cell>
-                            </flux:table.row>
-                        @endforeach
-                    </flux:table.rows>
-                </flux:table>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($user->skills as $skill)
+                        <flux:badge size="sm" variant="subtle" class="py-1 px-3" :key="'skill-' . $skill->id">
+                            {{ $skill->name }}
+                        </flux:badge>
+                    @endforeach
+                </div>
             @else
                 <flux:callout variant="secondary" icon="sparkles">
                     <flux:callout.heading>No skills recorded</flux:callout.heading>
@@ -193,19 +177,24 @@
                         <flux:table.column>Project</flux:table.column>
                         <flux:table.column>Requested by</flux:table.column>
                         <flux:table.column>Status</flux:table.column>
-                        <flux:table.column class="text-right">Team size</flux:table.column>
+                        <flux:table.column class="text-right">Deadline</flux:table.column>
                     </flux:table.columns>
                     <flux:table.rows>
                         @foreach ($assignments as $assignment)
                             <flux:table.row :key="'assignment-' . $assignment->id">
                                 <flux:table.cell>
-                                    <a href="{{ route('project.show', $assignment) }}" class="font-medium hover:underline">
+                                    <flux:link :href="route('project.show', $assignment)">
                                         {{ $assignment->title }}
-                                    </a>
+                                    </flux:link>
                                 </flux:table.cell>
                                 <flux:table.cell>
-                                    <flux:text class="font-medium">{{ $assignment->user?->full_name }}</flux:text>
-                                    <flux:text variant="subtle" class="text-sm">{{ $assignment->user?->email }}</flux:text>
+                                    @if ($assignment->user)
+                                        <flux:link :href="route('user.show', $assignment->user)" variant="strong">
+                                            {{ $assignment->user->full_name }}
+                                        </flux:link>
+                                    @else
+                                        <flux:text variant="subtle" class="text-sm">Owner not set</flux:text>
+                                    @endif
                                 </flux:table.cell>
                                 <flux:table.cell>
                                     <flux:badge size="sm" variant="pill" color="{{ $assignment->status->colour() }}">
@@ -213,7 +202,7 @@
                                     </flux:badge>
                                 </flux:table.cell>
                                 <flux:table.cell class="text-right">
-                                    {{ count($assignment->scheduling?->cose_it_staff ?? []) }}
+                                    {{ optional($assignment->deadline)?->format('d/m/Y') ?? '—' }}
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach

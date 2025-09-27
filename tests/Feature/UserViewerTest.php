@@ -78,7 +78,6 @@ it('shows user details, roles, skills, requests, and IT assignments for admins',
     $response->assertSeeText('Alice Example');
     $response->assertSeeText('Project Coordinator');
     $response->assertSeeText('Networking');
-    $response->assertSeeText('Advanced');
     $response->assertSeeText($requestedProject->title);
     $response->assertSeeText($itAssignment->title);
     $response->assertSeeText('IT project assignments');
