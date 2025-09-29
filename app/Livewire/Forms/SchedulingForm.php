@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Forms;
 
-use Flux\Flux;
-use Livewire\Form;
-use Livewire\Attributes\Validate;
 use App\Models\Project;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class SchedulingForm extends Form
 {
@@ -32,8 +31,8 @@ class SchedulingForm extends Form
     #[Validate('required|string|max:1024')]
     public ?string $keySkills;
 
-    #[Validate('string|max:1024')]
-    public ?string $coseItStaff;
+    #[Validate('array')]
+    public ?array $coseItStaff = [];
 
     #[Validate('required|date|after:today')]
     public ?string $estimatedStartDate;
@@ -50,20 +49,21 @@ class SchedulingForm extends Form
     #[Validate('required|integer|exists:users,id')]
     public ?int $assignedTo = null;
 
-    #[Validate('required|string|max:255')]
-    public ?string $teamAssignment;
+    // #[Validate('required|string|max:255')]
+    // public ?string $teamAssignment;
 
     public function setProject(Project $project)
     {
         $this->project = $project;
         $this->keySkills = $project->scheduling->key_skills;
-        $this->coseItStaff = $project->scheduling->cose_it_staff;
-        $this->estimatedStartDate = $project->scheduling->estimated_start_date;
-        $this->estimatedCompletionDate = $project->scheduling->estimated_completion_date;
-        $this->changeBoardDate = $project->scheduling->change_board_date;
+        // dd($project->scheduling->cose_it_staff);
+        $this->coseItStaff = $project->scheduling->cose_it_staff ?? [];
+        $this->estimatedStartDate = $project->scheduling->estimated_start_date->format('Y-m-d');
+        $this->estimatedCompletionDate = $project->scheduling->estimated_completion_date->format('Y-m-d');
+        $this->changeBoardDate = $project->scheduling->change_board_date->format('Y-m-d');
         $this->priority = $project->scheduling->priority;
         $this->assignedTo = $project->scheduling->assigned_to;
-        $this->teamAssignment = $project->scheduling->team_assignment;
+        // $this->teamAssignment = $project->scheduling->team_assignment;
     }
 
     public function save()
@@ -76,7 +76,7 @@ class SchedulingForm extends Form
             'change_board_date' => $this->changeBoardDate,
             'assigned_to' => $this->assignedTo,
             'priority' => $this->priority,
-            'team_assignment' => $this->teamAssignment,
+            // 'team_assignment' => $this->teamAssignment,
         ]);
     }
 }

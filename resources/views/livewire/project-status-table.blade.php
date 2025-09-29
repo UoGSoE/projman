@@ -48,21 +48,34 @@
                             <flux:badge size="sm" class="transition-all duration-300" :color="$project->status->colour()" inset="top bottom">
                                 {{ $project->status }}
                             </flux:badge>
-                            <a href="{{ route('project.show', $project) }}" class="hover:underline cursor-pointer">{{ $project->title }}</a>
+                            <flux:link :href="route('project.show', $project)">{{ $project->title }}</flux:link>
                         </flux:table.cell>
 
                         @if (! $userId)
-                            <flux:table.cell class="whitespace-nowrap">{{ $project->user->full_name }}</flux:table.cell>
+                            <flux:table.cell class="whitespace-nowrap">
+                                <flux:link :href="route('user.show', $project->user)">{{ $project->user->full_name }}</flux:link>
+                            </flux:table.cell>
                         @endif
 
                         <flux:table.cell variant="strong">{{ $project->updated_at->diffForHumans() }}</flux:table.cell>
 
                         <flux:table.cell>
+                            @foreach(App\Enums\ProjectStatus::getProgressStages() as $stage)
+                                <flux:badge
+                                    color="{{ $stage->getStageColor($project->status) }}"
+                                    size="sm"
+                                    title="{{ ucfirst($stage->value) }}"
+                                    icon="check-circle">
+                                </flux:badge>
+                            @endforeach
+
+                            {{--
                             <flux:badge :color="$project->ideation->hasBeenEdited() ? 'green' : 'zinc'" icon="check-circle" title="Ideation"></flux:badge>
                             <flux:badge :color="$project->feasibility->hasBeenEdited() ? 'green' : 'zinc'" icon="check-circle" title="Feasibility"></flux:badge>
                             <flux:badge :color="$project->development->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Development"></flux:badge>
                             <flux:badge :color="$project->testing->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Testing"></flux:badge>
                             <flux:badge :color="$project->deployed->hasBeenEdited() ? 'green' : 'zinc'" icon="pause-circle" title="Deployed"></flux:badge>
+                            --}}
                         </flux:table.cell>
 
                         <flux:table.cell class="text-center">

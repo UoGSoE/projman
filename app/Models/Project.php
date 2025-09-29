@@ -2,27 +2,25 @@
 
 namespace App\Models;
 
-use App\Models\Scoping;
-use App\Models\Testing;
-use App\Models\Deployed;
-use App\Models\Scheduling;
-use App\Models\Development;
 use App\Enums\ProjectStatus;
 use App\Events\ProjectCreated;
-use App\Models\DetailedDesign;
-use App\Models\ProjectHistory;
+use App\Events\ProjectStageChange;
 use App\Models\Traits\CanCheckIfEdited;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class Project extends Model
 {
+    use CanCheckIfEdited;
+
     /** @use HasFactory<\Database\Factories\ProjectFactory> */
     use HasFactory;
-    use CanCheckIfEdited;
 
     protected $dispatchesEvents = [
         'created' => ProjectCreated::class,
@@ -38,7 +36,36 @@ class Project extends Model
 
     protected $casts = [
         'status' => ProjectStatus::class,
+        'deadline' => 'date',
     ];
+
+    /**
+     * Get the validation rules that apply to the model.
+     */
+    public static function rules(): array
+    {
+        return [
+            'title' => 'required|string|max:255',
+            'user_id' => 'required|exists:users,id',
+            'school_group' => 'nullable|string|max:255',
+            'deadline' => 'nullable|date|after:today',
+            'status' => ['required', Rule::enum(ProjectStatus::class)],
+        ];
+    }
+
+    /**
+     * Get custom validation messages.
+     */
+    public static function messages(): array
+    {
+        return [
+            'title.required' => 'Project title is required.',
+            'title.max' => 'Project title cannot exceed 255 characters.',
+            'user_id.exists' => 'Selected user does not exist.',
+            'deadline.after' => 'Deadline must be a future date.',
+            'status.enum' => 'Invalid project status.',
+        ];
+    }
 
     public function user(): BelongsTo
     {
@@ -108,6 +135,19 @@ class Project extends Model
         return $query->where('status', ProjectStatus::CANCELLED->value);
     }
 
+    public function scopeCurrentlyActive(Builder $query): Builder
+    {
+        return $query
+            ->whereNotIn('status', [
+                ProjectStatus::COMPLETED->value,
+                ProjectStatus::CANCELLED->value,
+            ])
+            ->where(function (Builder $query) {
+                $query->whereNull('deadline')
+                    ->orWhereDate('deadline', '>=', Carbon::today());
+            });
+    }
+
     public function cancel()
     {
         $this->update(['status' => ProjectStatus::CANCELLED]);
@@ -124,5 +164,13 @@ class Project extends Model
             'user_id' => $user?->id,
             'description' => $description,
         ]);
+    }
+
+    public function advanceToNextStage(): ProjectStatus
+    {
+        $this->update(['status' => $this->status->getNextStatus()]);
+        ProjectStageChange::dispatch($this);
+
+        return $this->status;
     }
 }

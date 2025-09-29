@@ -2,31 +2,42 @@
 
 namespace App\Livewire;
 
-use Flux\Flux;
-use App\Models\User;
-use App\Models\Project;
-use Livewire\Component;
-use Livewire\Attributes\Url;
-use Livewire\Attributes\Computed;
-use App\Livewire\Forms\ScopingForm;
-use App\Livewire\Forms\TestingForm;
+use App\Enums\ProjectStatus;
+use App\Enums\SkillLevel;
 use App\Livewire\Forms\DeployedForm;
-use App\Livewire\Forms\IdeationForm;
-use Illuminate\Support\Facades\Auth;
-use App\Livewire\Forms\SchedulingForm;
+use App\Livewire\Forms\DetailedDesignForm;
 use App\Livewire\Forms\DevelopmentForm;
 use App\Livewire\Forms\FeasibilityForm;
-use App\Livewire\Forms\DetailedDesignForm;
+use App\Livewire\Forms\IdeationForm;
+use App\Livewire\Forms\SchedulingForm;
+use App\Livewire\Forms\ScopingForm;
+use App\Livewire\Forms\TestingForm;
+use App\Models\Project;
+use App\Models\Skill;
+use App\Models\User;
+use Flux\Flux;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
+use Livewire\Component;
 
 class ProjectEditor extends Component
 {
     public IdeationForm $ideationForm;
+
     public FeasibilityForm $feasibilityForm;
+
     public ScopingForm $scopingForm;
+
     public SchedulingForm $schedulingForm;
+
     public DetailedDesignForm $detailedDesignForm;
+
     public DevelopmentForm $developmentForm;
+
     public TestingForm $testingForm;
+
     public DeployedForm $deployedForm;
 
     public $userSearch = '';
@@ -35,7 +46,9 @@ class ProjectEditor extends Component
     public $tab = 'ideation';
 
     public ?int $projectId = null;
+
     public ?Project $project = null;
+
     public ?string $projectName = null;
 
     public $skills = [
@@ -45,6 +58,8 @@ class ProjectEditor extends Component
     public $users = [
         '1' => 'Jenny',
     ];
+
+    public Collection $availableSkills;
 
     public function mount(Project $project)
     {
@@ -58,23 +73,19 @@ class ProjectEditor extends Component
             'development',
             'testing',
             'deployed',
-            'history'
+            'history',
         ]);
         $this->projectId = $project->id;
         $this->project = $project;
-        $formNames = [
-            'ideationForm',
-            'feasibilityForm',
-            'scopingForm',
-            'schedulingForm',
-            'detailedDesignForm',
-            'developmentForm',
-            'testingForm',
-            'deployedForm',
-        ];
-        foreach ($formNames as $formName) {
+
+        foreach (ProjectStatus::getAllFormNames() as $formName) {
             $this->$formName->setProject($project);
         }
+
+        $this->availableSkills = Skill::orderBy('name')->get();
+
+        // Update the CoSE IT staff field with skill-matched users
+        // $this->updateCoseItStaffField();
     }
 
     public function render()
@@ -84,36 +95,109 @@ class ProjectEditor extends Component
 
     public function save($formType)
     {
-        $formName = match($formType) {
-            'ideation' => 'ideationForm',
-            'feasibility' => 'feasibilityForm',
-            'scoping' => 'scopingForm',
-            'scheduling' => 'schedulingForm',
-            'detailed-design' => 'detailedDesignForm',
-            'development' => 'developmentForm',
-            'testing' => 'testingForm',
-            'deployed' => 'deployedForm',
-        };
+        $formName = ProjectStatus::from($formType)->getFormName();
 
         $this->$formName->validate();
 
         $this->$formName->save();
 
-        $this->project->addHistory(Auth::user(), 'Saved ' . $formType);
+        $this->project->addHistory(Auth::user(), 'Saved '.$formType);
 
         Flux::toast('Project saved', variant: 'success');
+    }
+
+    public function advanceToNextStage()
+    {
+
+        $this->project->advanceToNextStage();
+
+        $this->project->addHistory(Auth::user(), 'Advanced to '.$this->project->status->value);
+
+        Flux::toast('Project saved and advanced to '.ucfirst($this->project->status->value), variant: 'success');
+
     }
 
     #[Computed]
     public function availableUsers()
     {
-        $searchTerm = strtolower(trim($this->userSearch));
+        $searchTerm = $this->userSearch;
+
         return User::query()
             ->when(
-                strlen($this->userSearch) > 1,
-                fn($query) => $query->where('surname', 'like', '%' . $searchTerm . '%')
+                strlen($searchTerm) > 1,
+                fn ($query) => $query->where('surname', 'like', '%'.$searchTerm.'%')
             )
             ->limit(20)
             ->get();
     }
+
+    #[Computed]
+    public function skillMatchedUsers()
+    {
+        $requiredSkillIds = $this->scopingForm->skillsRequired ?? [];
+
+        if (empty($requiredSkillIds)) {
+            return collect();
+        }
+
+        return $this->getUsersMatchedBySkills($requiredSkillIds);
+    }
+
+    public function getUsersMatchedBySkills(array $requiredSkillIds): Collection
+    {
+        if (empty($requiredSkillIds)) {
+            return User::whereRaw('1 = 0')->get(); // Return empty Eloquent Collection
+        }
+
+        return User::with(['skills' => function ($query) use ($requiredSkillIds) {
+            // eager load only skills with ids in the array requiredSkillIds for each user
+            // this helps to not include skills we dont need to match
+            $query->whereIn('skill_id', $requiredSkillIds);
+        }])
+            ->whereHas('skills', function ($query) use ($requiredSkillIds) {
+                // whereHas filters the users to only include those with skills with ids in the array requiredSkillIds
+                $query->whereIn('skill_id', $requiredSkillIds);
+            })
+            ->get()
+            ->map(function ($user) {
+                $totalScore = $user->skills->sum(function ($skill) use ($user) {
+                    $level = SkillLevel::from($user->getSkillLevel($skill));
+
+                    return $level->getNumericValue();
+                });
+                $user->total_skill_score = $totalScore;
+
+                return $user;
+            })
+            ->sortByDesc('total_skill_score')
+            ->values();
+    }
+
+    // public function updatedSkillMatchedUsers()
+    // {
+    //     $this->updateCoseItStaffField();
+    // }
+
+    // private function updateCoseItStaffField()
+    // {
+    //     $skillMatchedUsers = $this->skillMatchedUsers;
+
+    //     if ($skillMatchedUsers->isNotEmpty()) {
+    //         $requiredSkillIds = $this->scopingForm->skillsRequired ?? [];
+    //         $totalRequired = is_array($requiredSkillIds) ? count($requiredSkillIds) : 0;
+
+    //         $staffList = $skillMatchedUsers->map(function ($user) use ($requiredSkillIds, $totalRequired) {
+    //             $userSkillIds = $user->skills->pluck('id')->toArray();
+    //             $matchedCount = is_array($requiredSkillIds)
+    //                 ? count(array_intersect($requiredSkillIds, $userSkillIds))
+    //                 : 0;
+
+    //             return $user->full_name.' - '.' ('.($matchedCount).'/'.($totalRequired).')'.' skills match';
+    //         })->toArray();
+
+    //         $this->schedulingForm->coseItStaff = $staffList;
+    //     } else {
+    //         $this->schedulingForm->coseItStaff = [];
+    //     }
+    // }
 }

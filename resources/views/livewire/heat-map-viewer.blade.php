@@ -1,95 +1,107 @@
-<div>
-    <canvas id="heatmap" width="800" height="400"></canvas>
+<div class="space-y-8">
+    <div>
+        <flux:heading size="xl" level="1">Staff Heatmap</flux:heading>
+        <flux:text class="mt-2 text-sm text-zinc-500">Upcoming ten working days of staff capacity at a glance.</flux:text>
+    </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const users = ['Alice','Bob','Carol','David','Jenny','Servalan','Jim'];
-        const dates = [];
-        {
-            const today = new Date();
-            for(let i = 0; i < 60; i++){
-                const dd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
-                if (dd.getDay() === 0 || dd.getDay() === 6) continue;
-                dates.push(dd.toISOString().slice(0,10));
-            }
-        }
-        const raw = [];
-        // Generate one value per user per date (using names as Y labels)
-        users.forEach((user) => {
-            dates.forEach((dt) => {
-                raw.push({ x: dt, y: user, v: Math.floor(Math.random() * 12) });
-            });
-        });
+    <flux:separator variant="subtle" />
 
-        const ctx = document.getElementById('heatmap').getContext('2d');
-        new Chart(ctx, {
-            type: 'matrix',
-            data: {
-                datasets: [{
-                    label: 'Requests/day',
-                    data: raw,
-                    // Yellow -> Orange -> Red gradient
-                    backgroundColor(ctx) {
-                        const { v } = ctx.dataset.data[ctx.dataIndex];
-                        const pct = Math.min(v / 11, 1); // Adjust '11' if your max value changes
-                        let r, g, b;
-                        if (pct < 0.5) {
-                            // yellow (#ffff00) to orange (#ffa500)
-                            const local = pct / 0.5;
-                            r = 255;
-                            g = 255 - Math.round(85 * local); // 255 -> 170
-                            b = 0;
-                        } else {
-                            // orange (#ffa500) to red (#ff0000)
-                            const local = (pct - 0.5) / 0.5;
-                            r = 255;
-                            g = 170 - Math.round(170 * local); // 170 -> 0
-                            b = 0;
-                        }
-                        return `rgba(${r},${g},${b},0.8)`;
-                    },
-                    width: ({ chart }) => {
-                        const ca = chart.chartArea;
-                        return ca ? (ca.width / dates.length) - 1 : 10;
-                    },
-                    height: ({ chart }) => {
-                        const ca = chart.chartArea;
-                        return ca ? (ca.height / users.length) - 1 : 30;
-                    },
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        type: 'category',
-                        labels: dates,
-                        offset: true,
-                        grid: { display: false },
-                        ticks: { maxRotation: 90, autoSkip: true, maxTicksLimit: 15 }
-                    },
-                    y: {
-                        type: 'category',
-                        labels: users,
-                        offset: true,
-                        grid: { display: false },
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            title: ([{ raw }]) => `${raw.y} on ${raw.x}`,
-                            label: ({ raw }) => `${raw.v} requests`
-                        }
-                    }
-                }
-            }
-        });
-    });
-</script>
-@endpush
+    <div class="overflow-x-auto">
+        <div class="min-w-max">
+            <div class="grid gap-2" style="grid-template-columns: 16rem repeat({{ count($days) }}, minmax(2.75rem, 1fr));">
+                <div class="px-3 py-2">
+                    <flux:text class="uppercase text-xs tracking-wide text-zinc-500">Staff</flux:text>
+                </div>
+
+                @foreach ($days as $day)
+                    <div class="px-3 py-2 text-center">
+                        <flux:text class="text-sm font-medium">{{ $day->format('D') }}</flux:text>
+                        <flux:text variant="subtle" class="text-xs">{{ $day->format('d M') }}</flux:text>
+                    </div>
+                @endforeach
+
+                @foreach ($staff as $entry)
+                    <div class="px-3 py-2">
+                        <flux:link :href="route('user.show', $entry['user'])" class="font-medium hover:underline">
+                            {{ $entry['user']->forenames }} {{ $entry['user']->surname }}
+                        </flux:link>
+                    </div>
+
+                    @foreach ($entry['busyness'] as $index => $busyness)
+                        <div
+                            class="h-10 rounded-md border border-white/10 shadow-sm transition-colors {{ $busyness->color() }}"
+                            title="{{ $entry['user']->forenames }} {{ $entry['user']->surname }} — {{ $days[$index]->format('D j M') }} ({{ $busyness->label() }})"
+                            aria-label="{{ $entry['user']->forenames }} {{ $entry['user']->surname }}: {{ $days[$index]->format('D j M') }} {{ $busyness->label() }}"
+                        ></div>
+                    @endforeach
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <flux:heading size="lg">Active Projects</flux:heading>
+        <flux:separator variant="subtle" class="mt-4" />
+
+        @if ($activeProjects->isEmpty())
+            <flux:callout icon="inbox" variant="secondary" class="mt-4">
+                <flux:callout.heading>No active projects</flux:callout.heading>
+            </flux:callout>
+        @else
+            <flux:card class="mt-4 space-y-4">
+                @foreach ($activeProjects as $project)
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <flux:text class="font-medium">{{ $project->title }}</flux:text>
+                                <flux:text variant="subtle" class="text-sm">
+                                    @if ($project->user)
+                                        Owned by
+                                        <flux:link :href="route('user.show', $project->user)" class="hover:underline">
+                                            {{ $project->user->forenames }} {{ $project->user->surname }}
+                                        </flux:link>
+                                    @else
+                                        Owner not set
+                                    @endif
+                                </flux:text>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
+                                    {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
+                                </flux:badge>
+                                @if ($project->deadline)
+                                    <flux:badge size="sm" icon="calendar-days" variant="solid" color="amber">
+                                        {{ $project->deadline->format('d M Y') }}
+                                    </flux:badge>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if ($project->team_members->isNotEmpty())
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($project->team_members as $member)
+                                    <flux:link :href="route('user.show', $member)" class="inline-flex">
+                                        @if ($project->assigned_user_id === $member->id)
+                                            <flux:badge size="sm" icon="user" variant="subtle" color="sky">
+                                                {{ $member->forenames }} {{ $member->surname }}
+                                            </flux:badge>
+                                        @else
+                                            <flux:badge size="sm" icon="user" variant="subtle">
+                                                {{ $member->forenames }} {{ $member->surname }}
+                                            </flux:badge>
+                                        @endif
+                                    </flux:link>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    @unless($loop->last)
+                        <flux:separator variant="subtle" />
+                    @endunless
+                @endforeach
+            </flux:card>
+        @endif
+    </div>
 </div>
