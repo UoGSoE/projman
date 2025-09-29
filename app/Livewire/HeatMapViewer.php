@@ -125,13 +125,9 @@ class HeatMapViewer extends Component
         });
     }
 
-    /**
-     * Gather unique staff members allocated to a project across stages.
-     */
     private function collectTeamMembers(Project $project, Collection $users)
     {
         return $this->collectTeamMemberIds($project)
-            ->take(5)
             ->map(fn ($id) => $users->get($id))
             ->filter()
             ->values();
@@ -139,6 +135,7 @@ class HeatMapViewer extends Component
 
     private function collectTeamMemberIds(Project $project): Collection
     {
+        // As there are so many people assigned to a project on the forms - this is a bit of a mess.
         return collect([
             optional($project->scheduling)->assigned_to,
             optional($project->detailedDesign)->designed_by,
