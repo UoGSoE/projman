@@ -62,8 +62,8 @@ class DevelopmentForm extends Form
         $this->developmentNotes = $project->development->development_notes;
         $this->repositoryLink = $project->development->repository_link;
         $this->status = $project->development->status;
-        $this->startDate = $project->development->start_date->format('Y-m-d');
-        $this->completionDate = $project->development->completion_date->format('Y-m-d');
+        $this->startDate = $project->development->start_date?->format('Y-m-d');
+        $this->completionDate = $project->development->completion_date?->format('Y-m-d');
         $this->codeReviewNotes = $project->development->code_review_notes;
     }
 

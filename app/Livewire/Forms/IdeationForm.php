@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Forms;
 
-use Flux\Flux;
-use Livewire\Form;
-use Livewire\Attributes\Validate;
 use App\Models\Project;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class IdeationForm extends Form
 {
@@ -43,7 +42,7 @@ class IdeationForm extends Form
         $this->objective = $project->ideation?->objective ?? '';
         $this->businessCase = $project->ideation?->business_case ?? '';
         $this->benefits = $project->ideation?->benefits ?? '';
-        $this->deadline = $project->ideation?->deadline ? (string) $project->ideation->deadline->format('Y-m-d') : '';
+        $this->deadline = $project->ideation?->deadline ? (string) $project->ideation->deadline?->format('Y-m-d') : '';
         $this->initiative = $project->ideation?->strategic_initiative ?? '';
     }
 

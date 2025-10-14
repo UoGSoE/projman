@@ -58,9 +58,9 @@ class SchedulingForm extends Form
         $this->keySkills = $project->scheduling->key_skills;
         // dd($project->scheduling->cose_it_staff);
         $this->coseItStaff = $project->scheduling->cose_it_staff ?? [];
-        $this->estimatedStartDate = $project->scheduling->estimated_start_date->format('Y-m-d');
-        $this->estimatedCompletionDate = $project->scheduling->estimated_completion_date->format('Y-m-d');
-        $this->changeBoardDate = $project->scheduling->change_board_date->format('Y-m-d');
+        $this->estimatedStartDate = $project->scheduling->estimated_start_date?->format('Y-m-d');
+        $this->estimatedCompletionDate = $project->scheduling->estimated_completion_date?->format('Y-m-d');
+        $this->changeBoardDate = $project->scheduling->change_board_date?->format('Y-m-d');
         $this->priority = $project->scheduling->priority;
         $this->assignedTo = $project->scheduling->assigned_to;
         // $this->teamAssignment = $project->scheduling->team_assignment;
