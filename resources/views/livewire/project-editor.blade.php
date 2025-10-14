@@ -50,14 +50,15 @@
                     </div>
                 </div>
 
-                <flux:separator />
-
-                <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
-                    <flux:button type="submit" variant="primary" class="w-full">Save</flux:button>
-                    <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">
-                        Advance To Next Stage
-                    </flux:button>
-                </div>
+                @if ($project->status !== App\Enums\ProjectStatus::CANCELLED)
+                    <flux:separator />
+                    <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
+                        <flux:button type="submit" variant="primary" class="w-full">Save</flux:button>
+                        <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">
+                            Advance To Next Stage
+                        </flux:button>
+                    </div>
+                @endif
             </form>
         </flux:tab.panel>
 

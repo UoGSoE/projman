@@ -382,7 +382,7 @@ class SkillsManager extends Component
     public function createAndAssignSkill(): void
     {
         if (! $this->selectedUser) {
-            Flux::toast('No user selected', variant: 'error');
+            Flux::toast('No user selected', variant: 'danger');
 
             return;
         }
@@ -430,7 +430,7 @@ class SkillsManager extends Component
     {
         if (! $this->selectedUser || ! $this->isValidSkillLevel($level)) {
             if (! $this->isValidSkillLevel($level)) {
-                Flux::toast('Invalid skill level', variant: 'error');
+                Flux::toast('Invalid skill level', variant: 'danger');
             }
 
             return;
