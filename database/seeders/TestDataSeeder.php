@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\Busyness;
 use App\Enums\ProjectStatus;
 use App\Enums\SkillLevel;
+use App\Models\NotificationRule;
 use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Models\Role;
@@ -42,6 +43,7 @@ class TestDataSeeder extends Seeder
         $this->assignRolesAndSkills($staffMembers);
         $this->seedProjectPortfolio($staffMembers);
         $this->updateBusynessFromWorkload();
+        $this->seedNotificationRules();
     }
 
     private function seedRoles(): void
@@ -811,5 +813,10 @@ class TestDataSeeder extends Seeder
     private function skillNames(): Collection
     {
         return $this->skillNameCache ??= $this->skills()->pluck('name', 'id');
+    }
+
+    private function seedNotificationRules(): void
+    {
+        NotificationRule::factory()->count(10)->create();
     }
 }
