@@ -1,8 +1,5 @@
 <?php
 
-use App\Jobs\SendEmailJob;
-use App\Models\NotificationRule;
-use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/sso-auth.php';
@@ -22,10 +19,5 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/skills', \App\Livewire\SkillsManager::class)->name('skills.manage');
         Route::get('/user/{user}', \App\Livewire\UserViewer::class)->name('user.show');
         Route::get('/notification-rules', \App\Livewire\NotificationRules::class)->name('notification.rules');
-    });
-    Route::get('test', function () {
-        dispatch(new SendEmailJob(NotificationRule::first(), Project::first()));
-
-        return 'done';
     });
 });

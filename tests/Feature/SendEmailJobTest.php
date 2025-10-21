@@ -24,13 +24,14 @@ beforeEach(function () {
     $this->projects = Project::factory()->count(6)->create();
     $this->notificationRules = NotificationRule::factory()->count(6)->create();
 
-    $this->users->take(2)->each(fn ($user) => $user->roles()->attach($this->roles->random(1)));
+    $this->users->take(2)->each(fn ($user) => $user->roles()->attach($this->roles->first()));
     $this->notificationRules->each(function ($rule) {
         $rule->recipients = [
             'users' => $this->users->pluck('id')->toArray(),
         ];
         $rule->save();
     });
+
 });
 
 it('sends email to users specified in notification rule', function () {
@@ -77,6 +78,7 @@ it('sends emails to users associated with roles', function () {
     $job->handle();
 
     $roleUsers = $this->users->filter(fn ($u) => $u->roles->contains($targetRole));
+    // dd($roleUsers);
     foreach ($roleUsers as $user) {
         Mail::assertQueued(ProjectCreatedMail::class, fn ($mail) => $mail->hasTo($user->email));
     }

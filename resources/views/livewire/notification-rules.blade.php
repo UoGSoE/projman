@@ -19,7 +19,7 @@
 
     <flux:modal name="create-rule-modal" variant="flyout">
 
-        <form wire:submit="createRule">
+        <form wire:submit="saveRule">
             <div class="space-y-6">
                 <div>
                     <flux:heading size="lg">Create a new notification rule</flux:heading>
@@ -59,26 +59,18 @@
                     </flux:field>
                     @if (!$ruleAppliesToAll)
                         <flux:field>
-                            <flux:select wire:model.live="selectedProjects" label="Projects" required
+                            <flux:pillbox multiple placeholder="Choose projects..." wire:model.live="selectedProjects"
+                                searchable :disabled="true" label="Projects" required
                                 description="Which projects does the notification rule apply to?">
-                                @php
-                                    dd($projects);
-                                @endphp
-                                @foreach ($projects as $project)
-                                    <flux:select.option value="{{ $project['id'] }}">
-                                        {{ $project['title'] }}
-                                    </flux:select.option>
+                                @foreach ($projects as $id => $title)
+                                    <flux:pillbox.option value="{{ $id }}">
+                                        {{ $title }}
+                                    </flux:pillbox.option>
                                 @endforeach
-                            </flux:select>
-                            <flux:error name="selectedProjects" />
+                            </flux:pillbox>
+
                         </flux:field>
                     @endif
-
-                    {{-- <flux:field>
-                        <flux:input wire:model.live="ruleRecipients" label="Recipients" required
-                            description="Who recieves notifications?" />
-                        <flux:error name="ruleRecipients" />
-                    </flux:field> --}}
 
                     <flux:field>
                         <flux:select wire:model.live="recipientTypes" label="Recipient Types" required
@@ -129,7 +121,7 @@
                         </flux:button>
                     </flux:modal.close>
                     @if ($formModified)
-                        <flux:button variant="primary" wire:click="saveRule">
+                        <flux:button variant="primary" type="submit">
                             Save Rule
                         </flux:button>
                     @endif

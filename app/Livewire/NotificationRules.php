@@ -18,26 +18,16 @@ class NotificationRules extends Component
     #[Validate('required|string|max:255')]
     public $ruleDescription = '';
 
-    #[Validate('required|string|max:255')]
-    public $ruleEvent = '';
+    public $ruleEvent = 'project.created';
 
-    #[Validate('required|boolean')]
     public $ruleAppliesToAll = true;
 
-    #[Validate('required|array')]
-    public $selectedProjects = [];
-
-    #[Validate('required|string|max:255')]
-    public $ruleRecipients = '';
-
-    #[Validate('required|string|max:255')]
     public $recipientTypes = 'roles';
 
     public $selectedRoles = [];
 
     public $selectedUsers = [];
 
-    #[Validate('required|boolean')]
     public $ruleStatus = false;
 
     public $formModified = false;
@@ -46,17 +36,34 @@ class NotificationRules extends Component
     {
         return view('livewire.notification-rules', [
             'events' => config('notifiable_events'),
-            'roles' => Role::all()->pluck('name', 'id'),
-            'users' => User::all()->reduce(function ($acc, $user) {
-                $acc[$user->id] = $user->forenames.' '.$user->surname;
-
-                return $acc;
-            }, []),
-            'projects' => Project::all()->pluck('title', 'id'),
+            'roles' => $this->getRoles(),
+            'users' => $this->getUsers(),
+            'projects' => $this->getProjects(),
         ]);
     }
 
     public function createRule() {}
+
+    public function getRoles(): array
+    {
+        return Role::pluck('name', 'id')->toArray();
+    }
+
+    public function getUsers(): array
+    {
+        return User::select('id', 'forenames', 'surname')
+            ->get()
+            ->reduce(function ($acc, $user) {
+                $acc[$user->id] = $user->forenames.' '.$user->surname;
+
+                return $acc;
+            }, []);
+    }
+
+    public function getProjects(): array
+    {
+        return Project::pluck('title', 'id')->toArray();
+    }
 
     public function markFormAsNotModified()
     {
@@ -70,7 +77,7 @@ class NotificationRules extends Component
 
     public function updated($propertyName)
     {
-        if (in_array($propertyName, ['ruleName', 'ruleDescription', 'ruleEvent', 'ruleAppliesTo', 'ruleRecipients', 'ruleStatus', 'recipientTypes', 'selectedRoles', 'selectedUsers'])) {
+        if (in_array($propertyName, ['ruleName', 'ruleDescription', 'ruleEvent', 'ruleAppliesToAll', 'ruleStatus', 'recipientTypes', 'selectedRoles', 'selectedUsers'])) {
             $this->markFormAsModified();
         }
     }
@@ -82,7 +89,6 @@ class NotificationRules extends Component
         $this->ruleEvent = '';
         $this->ruleAppliesToAll = true;
         $this->selectedProjects = [];
-        $this->ruleRecipients = '';
         $this->recipientTypes = 'roles';
         $this->selectedRoles = [];
         $this->selectedUsers = [];
@@ -104,7 +110,10 @@ class NotificationRules extends Component
             'recipients' => $recipients,
             'active' => $this->ruleStatus,
         ]);
-        $this->resetCreateRuleModal();
+
         Flux::modal('create-rule-modal')->close();
+        Flux::toast('Rule created successfully', variant: 'success');
+        $this->resetCreateRuleModal();
+        $this->markFormAsNotModified();
     }
 }
