@@ -11,7 +11,7 @@ class SendProjectCreatedMail
     /**
      * Create the event listener.
      */
-    public function __construct(public Project $project)
+    public function __construct()
     {
         //
     }

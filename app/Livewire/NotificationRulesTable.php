@@ -11,6 +11,12 @@ class NotificationRulesTable extends Component
 
     public $status = 'active';
 
+    public $maxDisplayedProjects = 5;
+
+    public $maxDisplayedRoles = 5;
+
+    public $maxDisplayedUsers = 5;
+
     public function render()
     {
         return view('livewire.notification-rules-table', [

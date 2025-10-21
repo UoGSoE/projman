@@ -1,16 +1,14 @@
 <?php
+
 use App\Livewire\ProjectCreator;
-use App\Livewire\ProjectEditor;
 use App\Mail\ProjectCreatedMail;
 use App\Mail\ProjectStageChangeMail;
 use App\Models\Project;
 use App\Models\User;
-use function Pest\Livewire\livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 
-
-
+use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
@@ -18,7 +16,6 @@ describe('Form stage notifications', function () {
 
     it('sends a notification when a project is created', function () {
         Mail::fake();
-
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -47,9 +44,9 @@ describe('Form stage notifications', function () {
         $newStatus = $project->advanceToNextStage();
 
         Mail::assertQueued(ProjectStageChangeMail::class);
-        Mail::assertQueued(ProjectStageChangeMail::class, count(config('projman.mail.stages.' . $newStatus->value)));
+        Mail::assertQueued(ProjectStageChangeMail::class, count(config('projman.mail.stages.'.$newStatus->value)));
 
-        foreach (config('projman.mail.stages.' . $newStatus->value) as $email) {
+        foreach (config('projman.mail.stages.'.$newStatus->value) as $email) {
             Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($email) {
                 return $mail->hasTo($email);
             });
