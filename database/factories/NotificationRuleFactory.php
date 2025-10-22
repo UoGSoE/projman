@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Project;
+use App\Events\ProjectStageChange;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,17 +19,25 @@ class NotificationRuleFactory extends Factory
      */
     public function definition(): array
     {
-        $applyToAll = fake()->boolean(60);
-        $appliesTo = $applyToAll ? ['all'] : Project::pluck('id')->random(5)->toArray();
         $recipientType = fake()->randomElement(['roles', 'users']);
         $recipients = $recipientType === 'roles' ? ['roles' => Role::pluck('id')->random(5)->toArray()] : ['users' => User::pluck('id')->random(5)->toArray()];
-        $event = fake()->randomElement(array_column(config('notifiable_events'), 'class'));
+        $eventClass = fake()->randomElement(array_column(config('notifiable_events'), 'class'));
+
+        $event = [
+            'class' => $eventClass,
+        ];
+
+        if ($eventClass === ProjectStageChange::class) {
+            $event['project_stage'] = fake()->randomElement([
+                'ideation', 'feasibility', 'scoping', 'scheduling',
+                'detailed-design', 'development', 'testing', 'deployed',
+            ]);
+        }
 
         return [
             'name' => fake()->unique()->words(2, true),
             'description' => fake()->sentence(),
             'event' => $event,
-            'applies_to' => $applyToAll ? ['all'] : Project::pluck('id')->random(5)->toArray(),
             'recipients' => $recipients,
             'active' => fake()->boolean(90),
         ];

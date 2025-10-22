@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Enums\Busyness;
 use App\Enums\ProjectStatus;
 use App\Enums\SkillLevel;
+use App\Events\ProjectCreated;
+use App\Events\ProjectStageChange;
 use App\Models\NotificationRule;
 use App\Models\Project;
 use App\Models\ProjectHistory;
@@ -49,28 +51,27 @@ class TestDataSeeder extends Seeder
     private function seedRoles(): void
     {
         $roles = [
-            [
-                'name' => 'CoSE',
-                'description' => 'College of Science and Engineering team',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Ai Research Role',
-                'description' => 'Ai Research Role team',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Chemistry',
-                'description' => 'Chemistry Department Staff',
-                'is_active' => true,
-            ],
+            ['name' => 'Ideation Manager', 'description' => 'Responsible for managing the ideation phase of projects', 'is_active' => true],
+            ['name' => 'Feasibility Manager', 'description' => 'Oversees technical and business feasibility assessments', 'is_active' => true],
+            ['name' => 'Scoping Manager', 'description' => 'Defines scope, deliverables, and boundaries for projects', 'is_active' => true],
+            ['name' => 'Scheduling Manager', 'description' => 'Handles project timelines and scheduling activities', 'is_active' => true],
+            ['name' => 'Detailed Design Manager', 'description' => 'Supervises detailed design documentation and architecture', 'is_active' => true],
+            ['name' => 'Development Manager', 'description' => 'Leads the overall software or product development process', 'is_active' => true],
+            ['name' => 'Testing Manager', 'description' => 'Ensures end-to-end testing and quality assurance', 'is_active' => true],
+            ['name' => 'Deployment Manager', 'description' => 'Manages releases, deployments, and environment changes', 'is_active' => true],
+            ['name' => 'Admin', 'description' => 'System administration and oversight access', 'is_active' => true],
+            ['name' => 'Project Manager', 'description' => 'Coordinates the project lifecycle and stakeholder communication', 'is_active' => true],
+            ['name' => 'Change Manager', 'description' => 'Manages organisational and technical changes within projects', 'is_active' => true],
+            ['name' => 'Completed Manager', 'description' => 'Manages the completion of projects', 'is_active' => true],
+            ['name' => 'Cancelled Manager', 'description' => 'Manages the cancellation of projects', 'is_active' => true],
         ];
 
         foreach ($roles as $roleData) {
-            Role::create($roleData);
+            Role::updateOrCreate(
+                ['name' => $roleData['name']],
+                $roleData
+            );
         }
-
-        Role::factory(10)->create();
     }
 
     private function seedSkills(): void
@@ -114,6 +115,20 @@ class TestDataSeeder extends Seeder
                 'busyness_week_2' => $profile['week_2'],
             ]);
         });
+
+        User::firstOrCreate([
+            'email' => 'test@mailhog.local',
+        ], [
+            'forenames' => 'Test',
+            'surname' => 'User',
+            'is_staff' => true,
+            'is_admin' => false,
+            'password' => bcrypt('password'),
+            'username' => 'testuser',
+            'busyness_week_1' => Busyness::MEDIUM,
+            'busyness_week_2' => Busyness::MEDIUM,
+        ]
+        );
     }
 
     private function seedAdditionalStaff(int $count): void
@@ -817,6 +832,66 @@ class TestDataSeeder extends Seeder
 
     private function seedNotificationRules(): void
     {
-        NotificationRule::factory()->count(10)->create();
+        $stageToRole = [
+            'ideation' => 'Ideation Manager',
+            'feasibility' => 'Feasibility Manager',
+            'scoping' => 'Scoping Manager',
+            'scheduling' => 'Scheduling Manager',
+            'detailed-design' => 'Detailed Design Manager',
+            'development' => 'Development Manager',
+            'testing' => 'Testing Manager',
+            'deployed' => 'Deployment Manager',
+            'completed' => 'Completed Manager',
+            'cancelled' => 'Cancelled Manager',
+        ];
+
+        $allRoles = Role::pluck('id')->toArray();
+
+        NotificationRule::updateOrCreate(
+            [
+                'event->class' => 'project.created',
+            ],
+            [
+                'name' => 'Project Created',
+                'description' => 'Notification when a new project is created',
+                'event' => [
+                    'class' => ProjectCreated::class,
+                ],
+                'recipients' => ['roles' => $allRoles],
+                'active' => true,
+            ]
+        );
+
+        foreach ($stageToRole as $stage => $roleName) {
+            $roleId = Role::where('name', $roleName)->value('id');
+            if ($roleId) {
+                NotificationRule::updateOrCreate(
+                    [
+                        'event->class' => ProjectStageChange::class,
+                        'event->project_stage' => $stage,
+                    ],
+                    [
+                        'name' => 'Stage Changed: '.ucfirst(str_replace('-', ' ', $stage)),
+                        'description' => "Notifies when project moves to $stage stage.",
+                        'event' => [
+                            'class' => ProjectStageChange::class,
+                            'project_stage' => $stage,
+                        ],
+                        'recipients' => ['roles' => [$roleId]],
+                        'active' => true,
+                    ]
+                );
+            }
+        }
+
+        NotificationRule::create([
+            'name' => 'Test Email Rule',
+            'description' => 'Test rule for sending emails',
+            'event' => ['class' => 'project.created'],
+            'recipients' => [
+                'users' => [User::where('email', 'test@mailhog.local')->value('id')], // Use the test user's ID
+            ],
+            'active' => true,
+        ]);
     }
 }

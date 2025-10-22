@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description');
-            $table->string('event');
-            $table->json('applies_to');
+            $table->json('event');
             $table->json('recipients');
             $table->boolean('active')->default(true);
             $table->timestamps();

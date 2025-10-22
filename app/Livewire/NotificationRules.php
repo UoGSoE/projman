@@ -20,7 +20,7 @@ class NotificationRules extends Component
 
     public $ruleEvent = 'project.created';
 
-    public $ruleAppliesToAll = true;
+    public $selectedProjectStage = 'ideation';
 
     public $recipientTypes = 'roles';
 
@@ -39,6 +39,7 @@ class NotificationRules extends Component
             'roles' => $this->getRoles(),
             'users' => $this->getUsers(),
             'projects' => $this->getProjects(),
+            'projectStages' => $this->getProjectStages(),
         ]);
     }
 
@@ -65,6 +66,22 @@ class NotificationRules extends Component
         return Project::pluck('title', 'id')->toArray();
     }
 
+    public function getProjectStages(): array
+    {
+        return [
+            'ideation' => 'Ideation',
+            'feasibility' => 'Feasibility',
+            'scoping' => 'Scoping',
+            'scheduling' => 'Scheduling',
+            'detailed-design' => 'Detailed Design',
+            'development' => 'Development',
+            'testing' => 'Testing',
+            'deployed' => 'Deployed',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+        ];
+    }
+
     public function markFormAsNotModified()
     {
         $this->formModified = false;
@@ -77,7 +94,7 @@ class NotificationRules extends Component
 
     public function updated($propertyName)
     {
-        if (in_array($propertyName, ['ruleName', 'ruleDescription', 'ruleEvent', 'ruleAppliesToAll', 'ruleStatus', 'recipientTypes', 'selectedRoles', 'selectedUsers'])) {
+        if (in_array($propertyName, ['ruleName', 'ruleDescription', 'ruleEvent', 'selectedProjectStage', 'ruleStatus', 'recipientTypes', 'selectedRoles', 'selectedUsers'])) {
             $this->markFormAsModified();
         }
     }
@@ -87,8 +104,7 @@ class NotificationRules extends Component
         $this->ruleName = '';
         $this->ruleDescription = '';
         $this->ruleEvent = '';
-        $this->ruleAppliesToAll = true;
-        $this->selectedProjects = [];
+        $this->selectedProjectStage = '';
         $this->recipientTypes = 'roles';
         $this->selectedRoles = [];
         $this->selectedUsers = [];
@@ -102,11 +118,18 @@ class NotificationRules extends Component
 
         $recipients = $this->recipientTypes === 'users' ? ['users' => $this->selectedUsers] : ['roles' => $this->selectedRoles];
 
+        $event = [
+            'class' => $this->ruleEvent,
+        ];
+
+        if ($this->ruleEvent === \App\Events\ProjectStageChange::class && $this->selectedProjectStage) {
+            $event['project_stage'] = $this->selectedProjectStage;
+        }
+
         NotificationRule::create([
             'name' => $this->ruleName,
             'description' => $this->ruleDescription,
-            'event' => $this->ruleEvent,
-            'applies_to' => $this->ruleAppliesToAll ? ['all'] : $this->selectedProjects,
+            'event' => $event,
             'recipients' => $recipients,
             'active' => $this->ruleStatus,
         ]);

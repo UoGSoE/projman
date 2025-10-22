@@ -28,18 +28,16 @@ describe('Form stage notifications', function () {
         $this->users->take(2)->each(fn ($user) => $user->roles()->attach($this->roles->first()));
 
         $this->projectCreatedRule = NotificationRule::factory()->create([
-            'event' => ProjectCreated::class,
+            'event' => ['class' => ProjectCreated::class],
             'active' => true,
-            'applies_to' => ['all'],
             'recipients' => [
                 'users' => $this->users->pluck('id')->toArray(),
             ],
         ]);
 
         $this->projectStageChangeRule = NotificationRule::factory()->create([
-            'event' => ProjectStageChange::class,
+            'event' => ['class' => ProjectStageChange::class],
             'active' => true,
-            'applies_to' => ['all'],
             'recipients' => [
                 'users' => $this->users->pluck('id')->toArray(),
             ],
@@ -78,5 +76,159 @@ describe('Form stage notifications', function () {
                 return $mail->hasTo($user->email);
             });
         }
+    });
+
+    it('sends notification only for specific project stage when rule has stage filter', function () {
+        // Create a rule that only triggers for 'development' stage
+        $developmentRule = NotificationRule::factory()->create([
+            'event' => [
+                'class' => ProjectStageChange::class,
+                'project_stage' => 'development',
+            ],
+            'active' => true,
+            'recipients' => [
+                'users' => $this->users->pluck('id')->toArray(),
+            ],
+        ]);
+
+        // Create a project and advance it to development stage
+        $project = Project::factory()->create(['status' => 'development']);
+
+        // Advance to next stage (testing)
+        $project->advanceToNextStage();
+
+        // Should trigger notification because it moved to development stage
+        Mail::assertQueued(ProjectStageChangeMail::class);
+    });
+
+    it('does not send notification when project stage does not match rule filter', function () {
+        // Create a rule that only triggers for 'testing' stage
+        $testingRule = NotificationRule::factory()->create([
+            'event' => [
+                'class' => ProjectStageChange::class,
+                'project_stage' => 'testing',
+            ],
+            'active' => true,
+            'recipients' => [
+                'users' => $this->users->pluck('id')->toArray(),
+            ],
+        ]);
+
+        // Create a project and advance it to development stage (not testing)
+        $project = Project::factory()->create(['status' => 'development']);
+        $project->advanceToNextStage(); // This moves to testing, should trigger
+
+        // Should trigger because it moved to testing stage
+        Mail::assertQueued(ProjectStageChangeMail::class);
+    });
+
+    it('sends notification for all stages when rule has no stage filter', function () {
+        // Create a rule without stage filter (should trigger for any stage change)
+        $generalRule = NotificationRule::factory()->create([
+            'event' => ['class' => ProjectStageChange::class], // No project_stage specified
+            'active' => true,
+            'recipients' => [
+                'users' => $this->users->pluck('id')->toArray(),
+            ],
+        ]);
+
+        // Create a project and advance it to any stage
+        $project = Project::factory()->create(['status' => 'ideation']);
+        $project->advanceToNextStage(); // Move to feasibility
+
+        // Should trigger because rule has no stage filter
+        Mail::assertQueued(ProjectStageChangeMail::class);
+    });
+
+    it('handles multiple rules with different stage filters correctly', function () {
+        // Clear existing rules and mail
+        NotificationRule::query()->delete();
+        Mail::fake();
+
+        // Create rules for different stages
+        $ideationRule = NotificationRule::factory()->create([
+            'event' => [
+                'class' => ProjectStageChange::class,
+                'project_stage' => 'ideation',
+            ],
+            'active' => true,
+            'recipients' => [
+                'users' => [$this->users->first()->id],
+            ],
+        ]);
+
+        $developmentRule = NotificationRule::factory()->create([
+            'event' => [
+                'class' => ProjectStageChange::class,
+                'project_stage' => 'development',
+            ],
+            'active' => true,
+            'recipients' => [
+                'users' => [$this->users->last()->id],
+            ],
+        ]);
+
+        // Create a project and advance it to development stage
+        $project = Project::factory()->create(['status' => 'development']);
+        $project->advanceToNextStage(); // Move to testing
+
+        // Should only trigger the development rule (when moving to development stage)
+        $project2 = Project::factory()->create(['status' => 'detailed-design']);
+        $project2->advanceToNextStage(); // Move to development
+
+        // Should trigger the development rule
+        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) {
+            return $mail->hasTo($this->users->last()->email);
+        });
+
+        // Should not trigger for the ideation rule user
+        Mail::assertNotQueued(ProjectStageChangeMail::class, function ($mail) {
+            return $mail->hasTo($this->users->first()->email);
+        });
+    });
+
+    it('sends notification when project moves to specific stage from any previous stage', function () {
+        // Create a rule for 'testing' stage
+        $testingRule = NotificationRule::factory()->create([
+            'event' => [
+                'class' => ProjectStageChange::class,
+                'project_stage' => 'testing',
+            ],
+            'active' => true,
+            'recipients' => [
+                'users' => $this->users->pluck('id')->toArray(),
+            ],
+        ]);
+
+        // Test moving from development to testing
+        $project = Project::factory()->create(['status' => 'development']);
+        $project->advanceToNextStage(); // Should move to testing
+
+        Mail::assertQueued(ProjectStageChangeMail::class);
+    });
+
+    it('does not send notification for inactive rules with stage filters', function () {
+        // Clear existing rules and mail
+        NotificationRule::query()->delete();
+        Mail::fake();
+
+        // Create an inactive rule for 'development' stage
+        $inactiveRule = NotificationRule::factory()->create([
+            'event' => [
+                'class' => ProjectStageChange::class,
+                'project_stage' => 'development',
+            ],
+            'active' => false, // Inactive rule
+            'recipients' => [
+                'users' => $this->users->pluck('id')->toArray(),
+            ],
+        ]);
+
+        // Create a project and advance it to development stage
+        $project = Project::factory()->create(['status' => 'development']);
+        $project->advanceToNextStage();
+
+        // Should not trigger because rule is inactive
+        Mail::assertNothingQueued();
     });
 });

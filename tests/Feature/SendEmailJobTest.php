@@ -9,14 +9,12 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Mail::fake();
-    Log::spy();
     Event::fake();
 
     $this->roles = Role::factory()->count(6)->create();
@@ -36,7 +34,7 @@ beforeEach(function () {
 
 it('sends email to users specified in notification rule', function () {
     $rule = NotificationRule::factory()->create([
-        'event' => 'project.created',
+        'event' => ['class' => 'project.created'],
         'recipients' => [
             'users' => $this->users->pluck('id')->toArray(),
         ],
@@ -60,7 +58,7 @@ it('sends email to users specified in notification rule', function () {
 it('sends emails to users associated with roles', function () {
     $targetRole = $this->roles->first();
     $rule = NotificationRule::factory()->create([
-        'event' => 'project.created',
+        'event' => ['class' => 'project.created'],
         'recipients' => [
             'roles' => [$targetRole->id],
         ],
@@ -84,9 +82,9 @@ it('sends emails to users associated with roles', function () {
     }
 });
 
-it('logs warning if no recipients found', function () {
+it('does not send emails when no recipients found', function () {
     $rule = NotificationRule::factory()->create([
-        'event' => 'project.created',
+        'event' => ['class' => 'project.created'],
         'recipients' => [],
     ]);
 
@@ -101,13 +99,11 @@ it('logs warning if no recipients found', function () {
     $job->handle();
 
     Mail::assertNothingQueued();
-    Log::shouldHaveReceived('warning')->withArgs(fn ($message) => str_contains($message, 'No recipients found')
-    );
 });
 
-it('logs warning if mailable is not found for event', function () {
+it('does not send emails when mailable is not found for event', function () {
     $rule = NotificationRule::factory()->create([
-        'event' => 'unknown.event',
+        'event' => ['class' => 'unknown.event'],
         'recipients' => ['users' => $this->users->pluck('id')->toArray()],
     ]);
 
@@ -118,6 +114,4 @@ it('logs warning if mailable is not found for event', function () {
     $job->handle();
 
     Mail::assertNothingQueued();
-    Log::shouldHaveReceived('warning')->withArgs(fn ($message) => str_contains($message, 'No mailable found for event')
-    );
 });

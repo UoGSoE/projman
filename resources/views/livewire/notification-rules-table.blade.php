@@ -19,7 +19,6 @@
             <flux:table.column>Name</flux:table.column>
             <flux:table.column>Description</flux:table.column>
             <flux:table.column>Event</flux:table.column>
-            <flux:table.column>Applies To</flux:table.column>
             <flux:table.column>Recipients</flux:table.column>
             <flux:table.column>Status</flux:table.column>
             <flux:table.column>Actions</flux:table.column>
@@ -31,37 +30,15 @@
 
                     <flux:table.cell>{{ $rule->name }}</flux:table.cell>
                     <flux:table.cell>{{ $rule->description }}</flux:table.cell>
-                    <flux:table.cell>{{ class_basename($rule->event) }}</flux:table.cell>
-
                     <flux:table.cell>
-                        @if (is_array($rule->applies_to) && in_array('all', $rule->applies_to))
-                            <flux:badge color="green">All Projects</flux:badge>
-                        @elseif (is_array($rule->applies_to))
-                            @foreach ($rule->applies_to as $projectId)
-                                @if ($loop->index < $maxDisplayedProjects && isset($projects[$projectId]))
-                                    <flux:badge color="blue">{{ $projects[$projectId] }}</flux:badge>
-                                @endif
-                            @endforeach
-                            @if (count($rule->applies_to) > $maxDisplayedProjects)
-                                <flux:tooltip>
-                                    <flux:badge color="gray" variant="outline" size="sm">
-                                        +{{ count($rule->applies_to) - $maxDisplayedProjects }} more
-                                    </flux:badge>
-                                    <flux:tooltip.content>
-                                        <div class="space-y-1 flex flex-wrap gap-1 flex-col">
-                                            @foreach ($rule->applies_to as $projectId)
-                                                @if (isset($projects[$projectId]))
-                                                    <flux:badge color="blue">{{ $projects[$projectId] }}</flux:badge>
-                                                @endif
-                                            @endforeach
-                                        </div>
-                                    </flux:tooltip.content>
-                                </flux:tooltip>
-                            @endif
-                        @else
-                            <flux:badge color="gray">—</flux:badge>
+                        {{ class_basename($rule->event['class']) }}
+                        @if (isset($rule->event['project_stage']))
+                            <flux:badge color="blue" size="sm" class="ml-2">
+                                {{ ucfirst(str_replace('-', ' ', $rule->event['project_stage'])) }}
+                            </flux:badge>
                         @endif
                     </flux:table.cell>
+
 
                     <flux:table.cell>
 
@@ -181,25 +158,18 @@
                         </flux:select>
                         <flux:error name="editRuleEvent" />
                     </flux:field>
-                    <flux:field>
-                        <flux:switch wire:model.live="editRuleAppliesToAll" label="Applies to all projects"
-                            description="Applies the notification rule to all projects" />
-                        <flux:error name="editRuleAppliesToAll" />
-                    </flux:field>
-                    @if (!$editRuleAppliesToAll)
+
+                    @if ($editRuleEvent === \App\Events\ProjectStageChange::class)
                         <flux:field>
-                            <flux:pillbox multiple placeholder="Choose projects..."
-                                wire:model.live="editSelectedProjects" searchable :disabled="true"
-                                label="Projects" required
-                                description="Which projects does the notification rule apply to?">
-                                {{-- @dd($projects) --}}
-                                @foreach ($projects as $id => $title)
-                                    <flux:pillbox.option value="{{ $id }}">
-                                        {{ $title }}
-                                    </flux:pillbox.option>
+                            <flux:select wire:model.live="editSelectedProjectStage" label="Project Stage" required
+                                description="Which project stage should trigger this notification?">
+                                @foreach ($projectStages as $value => $label)
+                                    <flux:select.option value="{{ $value }}">
+                                        {{ $label }}
+                                    </flux:select.option>
                                 @endforeach
-                            </flux:pillbox>
-                            <flux:error name="editSelectedProjects" />
+                            </flux:select>
+                            <flux:error name="editSelectedProjectStage" />
                         </flux:field>
                     @endif
 

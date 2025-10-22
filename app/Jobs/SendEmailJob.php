@@ -36,16 +36,16 @@ class SendEmailJob implements ShouldQueue
         Log::info('Hello from Send email job', ['rule' => $this->rule, 'event' => $this->event]);
 
         $recipients = $this->getRecipients();
-        $mailable = $this->getMailableForEvent($this->rule->event, $this->event);
+        $mailable = $this->getMailableForEvent($this->rule->event['class'], $this->event);
 
         if (! $mailable instanceof Mailable) {
-            Log::warning('No mailable found for event: '.$this->rule->event);
+            Log::warning('No mailable found for event: '.$this->rule->event['class']);
 
             return;
         }
 
         if ($recipients->isEmpty()) {
-            Log::warning('No recipients found for event: '.$this->rule->event);
+            Log::warning('No recipients found for event: '.$this->rule->event['class']);
 
             return;
         }

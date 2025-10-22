@@ -13,13 +13,12 @@ class NotificationRule extends Model
         'name',
         'description',
         'event',
-        'applies_to',
         'recipients',
         'active',
     ];
 
     protected $casts = [
-        'applies_to' => 'array',
+        'event' => 'array',
         'recipients' => 'array',
         'active' => 'boolean',
     ];

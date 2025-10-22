@@ -6,7 +6,6 @@ use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Jobs\SendEmailJob;
 use App\Models\NotificationRule;
-use Illuminate\Support\Facades\Log;
 
 class ProjectEventsListener
 {
@@ -23,21 +22,27 @@ class ProjectEventsListener
      */
     public function handle(ProjectCreated|ProjectStageChange $event): void
     {
-        // logger('Hello from ProjectEventsListener');
-        // logger($event);
-        Log::info('Hello from ProjectEventsListener', ['event' => $event]);
         $eventClass = get_class($event);
-        Log::info('Event class', ['eventClass' => $eventClass]);
-        $rules = NotificationRule::where('event', $eventClass)->where('active', true)->get();
-        Log::info('Rules', ['rules' => $rules]);
+        $rules = NotificationRule::where('event->class', $eventClass)->where('active', true)->get();
+
+        if ($event instanceof ProjectStageChange) {
+            $currentStage = $event->project->status->value;
+            $rules = $rules->filter(function ($rule) use ($currentStage) {
+                $eventData = $rule->event;
+                if (! isset($eventData['project_stage'])) {
+                    return true;
+                }
+
+                return $eventData['project_stage'] === $currentStage;
+            });
+        }
+
         if ($rules->isEmpty()) {
-            Log::info('No rules found for event', ['event' => $event]);
 
             return;
         }
 
         foreach ($rules as $rule) {
-            Log::info('Dispatching email job', ['rule' => $rule, 'event' => $event]);
             SendEmailJob::dispatch($rule, $event);
         }
     }

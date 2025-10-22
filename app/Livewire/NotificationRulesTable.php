@@ -32,9 +32,7 @@ class NotificationRulesTable extends Component
 
     public $editRuleEvent = '';
 
-    public $editRuleAppliesToAll = true;
-
-    public $editSelectedProjects = [];
+    public $editSelectedProjectStage = '';
 
     public $editRecipientTypes = 'roles';
 
@@ -56,6 +54,7 @@ class NotificationRulesTable extends Component
             'roles' => $this->getRoles(),
             'users' => $this->getUsers(),
             'projects' => $this->getProjects(),
+            'projectStages' => $this->getProjectStages(),
         ]);
     }
 
@@ -97,15 +96,28 @@ class NotificationRulesTable extends Component
         return Project::pluck('title', 'id')->toArray();
     }
 
+    public function getProjectStages(): array
+    {
+        return [
+            'ideation' => 'Ideation',
+            'feasibility' => 'Feasibility',
+            'scoping' => 'Scoping',
+            'scheduling' => 'Scheduling',
+            'detailed-design' => 'Detailed Design',
+            'development' => 'Development',
+            'testing' => 'Testing',
+            'deployed' => 'Deployed',
+        ];
+    }
+
     public function openEditNotificationRuleModal($ruleId)
     {
         $this->editingRule = NotificationRule::findOrFail($ruleId);
 
         $this->editRuleName = $this->editingRule->name;
         $this->editRuleDescription = $this->editingRule->description;
-        $this->editRuleEvent = $this->editingRule->event;
-        $this->editRuleAppliesToAll = in_array('all', $this->editingRule->applies_to ?? []);
-        $this->editSelectedProjects = $this->editRuleAppliesToAll ? [] : ($this->editingRule->applies_to ?? []);
+        $this->editRuleEvent = $this->editingRule->event['class'];
+        $this->editSelectedProjectStage = $this->editingRule->event['project_stage'] ?? '';
         // dd($this->editSelectedProjects);
 
         if (isset($this->editingRule->recipients['roles']) && ! empty($this->editingRule->recipients['roles'])) {
@@ -150,11 +162,18 @@ class NotificationRulesTable extends Component
             ? ['users' => $this->editSelectedUsers]
             : ['roles' => $this->editSelectedRoles];
 
+        $event = [
+            'class' => $this->editRuleEvent,
+        ];
+
+        if ($this->editRuleEvent === \App\Events\ProjectStageChange::class && $this->editSelectedProjectStage) {
+            $event['project_stage'] = $this->editSelectedProjectStage;
+        }
+
         $this->editingRule->update([
             'name' => $this->editRuleName,
             'description' => $this->editRuleDescription,
-            'event' => $this->editRuleEvent,
-            'applies_to' => $this->editRuleAppliesToAll ? ['all'] : $this->editSelectedProjects,
+            'event' => $event,
             'recipients' => $recipients,
             'active' => $this->editRuleStatus,
         ]);
@@ -179,8 +198,7 @@ class NotificationRulesTable extends Component
         $this->editRuleName = '';
         $this->editRuleDescription = '';
         $this->editRuleEvent = '';
-        $this->editRuleAppliesToAll = true;
-        $this->editSelectedProjects = [];
+        $this->editSelectedProjectStage = '';
         $this->editRecipientTypes = 'roles';
         $this->editSelectedRoles = [];
         $this->editSelectedUsers = [];

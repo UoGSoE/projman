@@ -52,28 +52,23 @@
                         </flux:select>
                         <flux:error name="ruleEvent" />
                     </flux:field>
-                    <flux:field>
-                        <flux:switch wire:model.live="ruleAppliesToAll" label="Applies to all projects"
-                            description="Applies the notification rule to all projects" />
-                        <flux:error name="ruleAppliesToAll" />
-                    </flux:field>
-                    @if (!$ruleAppliesToAll)
-                        <flux:field>
-                            <flux:pillbox multiple placeholder="Choose projects..." wire:model.live="selectedProjects"
-                                searchable :disabled="true" label="Projects" required
-                                description="Which projects does the notification rule apply to?">
-                                @foreach ($projects as $id => $title)
-                                    <flux:pillbox.option value="{{ $id }}">
-                                        {{ $title }}
-                                    </flux:pillbox.option>
-                                @endforeach
-                            </flux:pillbox>
 
+                    @if ($ruleEvent === \App\Events\ProjectStageChange::class)
+                        <flux:field>
+                            <flux:select wire:model.live="selectedProjectStage" label="Project Stage" required
+                                description="Which project stage should trigger this notification?">
+                                @foreach ($projectStages as $value => $label)
+                                    <flux:select.option value="{{ $value }}">
+                                        {{ $label }}
+                                    </flux:select.option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="selectedProjectStage" />
                         </flux:field>
                     @endif
 
                     <flux:field>
-                        <flux:select wire:model.live="recipientTypes" label="Recipient Types" required
+                        <flux:select wire:model.live="recipientTypes" label="Recipient" required
                             description="Who recieves notifications?">
                             <flux:select.option value="roles">Roles</flux:select.option>
                             <flux:select.option value="users">Users</flux:select.option>
