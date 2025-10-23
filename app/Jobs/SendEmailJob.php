@@ -33,8 +33,6 @@ class SendEmailJob implements ShouldQueue
     public function handle(): void
     {
 
-        Log::info('Hello from Send email job', ['rule' => $this->rule, 'event' => $this->event]);
-
         $recipients = $this->getRecipients();
         $mailable = $this->getMailableForEvent($this->rule->event['class'], $this->event);
 
@@ -45,15 +43,12 @@ class SendEmailJob implements ShouldQueue
         }
 
         if ($recipients->isEmpty()) {
-            Log::warning('No recipients found for event: '.$this->rule->event['class']);
 
             return;
         }
 
-        foreach ($recipients as $recipient) {
+        Mail::to($recipients->pluck('email'))->queue($mailable);
 
-            Mail::to($recipient->email)->queue($mailable);
-        }
     }
 
     public function getRecipients()
