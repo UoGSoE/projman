@@ -2,20 +2,19 @@
 
 use App\Jobs\SendEmailJob;
 use App\Mail\ProjectCreatedMail;
+use App\Mail\ProjectStageChangeMail;
 use App\Models\NotificationRule;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Mail::fake();
-    Event::fake();
 
     $this->roles = Role::factory()->count(6)->create();
     $this->users = User::factory()->count(6)->create();
@@ -46,9 +45,7 @@ it('sends email to users specified in notification rule', function () {
     ]);
 
     $event = (object) ['project' => $project];
-    $job = new SendEmailJob($rule, $event);
-
-    $job->handle();
+    SendEmailJob::dispatch($rule, $event);
 
     foreach ($this->users as $user) {
         Mail::assertQueued(ProjectCreatedMail::class, fn ($mail) => $mail->hasTo($user->email));
@@ -71,34 +68,33 @@ it('sends emails to users associated with roles', function () {
     ]);
 
     $event = (object) ['project' => $project];
-    $job = new SendEmailJob($rule, $event);
 
-    $job->handle();
+    SendEmailJob::dispatch($rule, $event);
 
     $roleUsers = $this->users->filter(fn ($u) => $u->roles->contains($targetRole));
-    // dd($roleUsers);
+
     foreach ($roleUsers as $user) {
         Mail::assertQueued(ProjectCreatedMail::class, fn ($mail) => $mail->hasTo($user->email));
     }
 });
 
 it('does not send emails when no recipients found', function () {
+    Mail::fake();
     $rule = NotificationRule::factory()->create([
-        'event' => ['class' => 'project.created'],
+        'event' => ['class' => 'project.stage.changed', 'project_stage' => 'development'],
         'recipients' => [],
     ]);
 
     $project = Project::factory()->create();
 
     Config::set('notifiable_events', [
-        ['class' => 'project.created', 'mailable' => ProjectCreatedMail::class],
+        ['class' => 'project.stage.changed', 'mailable' => ProjectStageChangeMail::class],
     ]);
 
     $event = (object) ['project' => $project];
-    $job = new SendEmailJob($rule, $event);
-    $job->handle();
+    SendEmailJob::dispatch($rule, $event);
 
-    Mail::assertNothingQueued();
+    Mail::assertNotQueued(ProjectStageChangeMail::class);
 });
 
 it('does not send emails when mailable is not found for event', function () {
@@ -110,8 +106,7 @@ it('does not send emails when mailable is not found for event', function () {
     $event = (object) ['data' => 'sample'];
     Config::set('notifiable_events', []);
 
-    $job = new SendEmailJob($rule, $event);
-    $job->handle();
+    SendEmailJob::dispatch($rule, $event);
 
     Mail::assertNothingQueued();
 });
