@@ -2,32 +2,37 @@
 
 namespace App\Livewire;
 
-use Flux\Flux;
-use App\Models\User;
 use App\Models\Role;
+use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Str;
 
 class RolesList extends Component
 {
     use WithPagination;
 
     public $sortOn = 'name';
+
     public $sortDirection = 'asc';
+
     public $search = '';
+
     public $selectedRole = null;
 
-    // Form field properties
+    public $isCreating = false;
+
     public $roleName = '';
+
     public $roleDescription = '';
+
     public $roleIsActive = false;
+
     public $formModified = false;
 
     public function render()
     {
         return view('livewire.roles-list', [
-            'roles' => $this->getRoles()
+            'roles' => $this->getRoles(),
         ]);
     }
 
@@ -38,14 +43,13 @@ class RolesList extends Component
         return Role::with('users')->withCount('users')->orderBy($this->sortOn, $this->sortDirection)
             ->when(
                 strlen($search) >= 2,
-                fn($query) => $query->where(function ($query) use ($search) {
-                    $query->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%');
+                fn ($query) => $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('description', 'like', '%'.$search.'%');
                 })
             )
             ->paginate(10);
     }
-
 
     public function sort($column)
     {
@@ -60,8 +64,20 @@ class RolesList extends Component
         $this->resetPage();
     }
 
+    public function openCreateRoleModal()
+    {
+        $this->selectedRole = null;
+        $this->isCreating = true;
+        $this->roleName = '';
+        $this->roleDescription = '';
+        $this->roleIsActive = false;
+        $this->markFormAsNotModified();
+        Flux::modal('edit-role')->show();
+    }
+
     public function openEditRoleModal(Role $role)
     {
+        $this->isCreating = false;
         $this->selectedRole = $role;
         // Ensure the selectedRole is properly loaded with fresh data
         $this->selectedRole = $role->fresh();
@@ -81,13 +97,14 @@ class RolesList extends Component
 
     public function deleteRole()
     {
-        if (!$this->selectedRole) {
+        if (! $this->selectedRole) {
             return;
         }
 
         // Check if role is assigned to any users before deletion
         if ($this->selectedRole->users_count > 0) {
             Flux::toast('Cannot delete role that is assigned to users', variant: 'error');
+
             return;
         }
 
@@ -103,30 +120,47 @@ class RolesList extends Component
 
     public function saveEditRole()
     {
-        // Validate the form data
-        $this->validate([
-            'roleName' => 'required|string|max:255|unique:roles,name,' . $this->selectedRole->id,
+        // Determine validation rules based on create vs edit
+        $validationRules = [
             'roleDescription' => 'required|string|min:3|max:1000',
-            'roleIsActive' => 'boolean'
-        ]);
+            'roleIsActive' => 'boolean',
+        ];
 
-        // Update the role with form data
-        $this->selectedRole->name = $this->roleName;
-        $this->selectedRole->description = $this->roleDescription;
-        $this->selectedRole->is_active = $this->roleIsActive;
-        $this->selectedRole->save();
+        if ($this->isCreating) {
+            $validationRules['roleName'] = 'required|string|max:255|unique:roles,name';
+        } else {
+            $validationRules['roleName'] = 'required|string|max:255|unique:roles,name,'.$this->selectedRole->id;
+        }
 
-        // Show success message
-        Flux::toast('Role updated successfully', variant: 'success');
+        $this->validate($validationRules);
+
+        if ($this->isCreating) {
+            // Create new role
+            $role = Role::create([
+                'name' => $this->roleName,
+                'description' => $this->roleDescription,
+                'is_active' => $this->roleIsActive,
+            ]);
+
+            Flux::toast('Role created successfully', variant: 'success');
+        } else {
+            // Update existing role
+            $this->selectedRole->name = $this->roleName;
+            $this->selectedRole->description = $this->roleDescription;
+            $this->selectedRole->is_active = $this->roleIsActive;
+            $this->selectedRole->save();
+
+            Flux::toast('Role updated successfully', variant: 'success');
+        }
+
         Flux::modal('edit-role')->close();
-
-        // Reset form fields and close modal
         $this->resetEditRoleModal();
     }
 
     public function resetEditRoleModal()
     {
         $this->selectedRole = null;
+        $this->isCreating = false;
         $this->roleName = '';
         $this->roleDescription = '';
         $this->roleIsActive = false;

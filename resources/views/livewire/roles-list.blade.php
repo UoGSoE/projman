@@ -1,9 +1,17 @@
 <div>
-    <flux:heading size="xl" level="1">Roles</flux:heading>
+    <div class="flex justify-between items-center">
+        <flux:heading size="xl" level="1">Roles</flux:heading>
+        <flux:modal.trigger wire:click="openCreateRoleModal">
+            <flux:button>Create Role</flux:button>
+        </flux:modal.trigger>
+    </div>
 
     <flux:separator variant="subtle" class="mt-6" />
 
-    <flux:input type="text" wire:model.live="search" placeholder="Search" class="mt-6 w-full" />
+    <div class="flex items-center gap-4 mt-6">
+        <flux:input type="text" wire:model.live="search" placeholder="Search" class="flex-1" />
+
+    </div>
 
     <flux:separator variant="subtle" class="mt-6" />
 
@@ -60,8 +68,8 @@
         <form wire:submit="saveEditRole">
             <div class="space-y-6">
                 <div>
-                    <flux:heading size="lg">Edit Role</flux:heading>
-                    <flux:text class="mt-2">Edit the role details.
+                    <flux:heading size="lg">{{ $isCreating ? 'Create Role' : 'Edit Role' }}</flux:heading>
+                    <flux:text class="mt-2">{{ $isCreating ? 'Create a new role.' : 'Edit the role details.' }}
                     </flux:text>
                 </div>
 
@@ -73,7 +81,7 @@
                     </flux:field>
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model.live="roleDescription" wire:change="markFormAsModified"/>
+                        <flux:textarea wire:model.live="roleDescription" wire:change="markFormAsModified" />
                         <flux:error name="roleDescription" />
                     </flux:field>
                     <flux:field>
@@ -81,7 +89,7 @@
                         <flux:description>
                             Active roles will be shown to users.
                         </flux:description>
-                        <flux:switch value wire:model.live="roleIsActive" wire:change="markFormAsModified"/>
+                        <flux:switch value wire:model.live="roleIsActive" wire:change="markFormAsModified" />
                         <flux:error name="roleIsActive" />
                     </flux:field>
                 </div>
@@ -92,10 +100,10 @@
                         <flux:button type="button" variant="ghost" wire:click="resetEditRoleModal">Cancel
                         </flux:button>
                     </flux:modal.close>
-                    @if ($formModified)
-                    <flux:button type="submit" variant="primary">
-                        Save Changes
-                    </flux:button>
+                    @if ($formModified || $isCreating)
+                        <flux:button type="submit" variant="primary">
+                            {{ $isCreating ? 'Create Role' : 'Save Changes' }}
+                        </flux:button>
                     @endif
                 </div>
             </div>
