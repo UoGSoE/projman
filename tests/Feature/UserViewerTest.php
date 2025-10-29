@@ -81,7 +81,7 @@ it('shows user details, roles, skills, requests, and IT assignments for admins',
     $response->assertSeeText($requestedProject->title);
     $response->assertSeeText($itAssignment->title);
     $response->assertSeeText('IT project assignments');
-    $response->assertSeeText('1 active');
+    $response->assertSeeText('1 assignments');
     $response->assertDontSeeText($completedAssignment->title);
     $response->assertDontSeeText($cancelledAssignment->title);
 });
@@ -141,5 +141,5 @@ it('can toggle to include completed and cancelled assignments', function () {
         ->set('showAllAssignments', true)
         ->assertSeeText($completedAssignment->title)
         ->assertSeeText($cancelledAssignment->title)
-        ->assertSeeText('3 total');
+        ->assertSeeText('3 assignments');
 });

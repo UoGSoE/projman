@@ -90,6 +90,8 @@ class UserList extends Component
     public function saveUserRoles()
     {
         if (! $this->selectedUser) {
+            Flux::toast('No user selected', variant: 'danger');
+
             return;
         }
 
@@ -97,7 +99,8 @@ class UserList extends Component
         $userRoles = is_array($this->userRoles) ? $this->userRoles : [];
 
         // Validate that all selected roles exist and are active
-        $validRoles = Role::whereIn('name', $userRoles)
+        $validRoles = Role::query()
+            ->whereIn('name', $userRoles)
             ->where('is_active', true)
             ->pluck('id')
             ->toArray();
@@ -124,12 +127,8 @@ class UserList extends Component
 
     public function resetChangeUserRoleModal()
     {
-        if ($this->selectedUser) {
-            $freshUser = $this->selectedUser->fresh(['roles']);
-            $this->userRoles = $freshUser->roles->pluck('name')->toArray();
-        } else {
-            $this->userRoles = [];
-        }
+
+        $this->userRoles = [];
         $this->selectedUser = null;
         $this->markFormAsNotModified();
     }
@@ -148,5 +147,12 @@ class UserList extends Component
     {
         // Reset pagination when search changes
         $this->resetPage();
+    }
+
+    public function updated($propertyName)
+    {
+        if (in_array($propertyName, ['userRoles'])) {
+            $this->markFormAsModified();
+        }
     }
 }

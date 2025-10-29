@@ -101,14 +101,16 @@ class RolesList extends Component
             return;
         }
 
+        $role = $this->selectedRole->fresh(['users']);
+
         // Check if role is assigned to any users before deletion
-        if ($this->selectedRole->users_count > 0) {
+        if ($role->users->count() > 0) {
             Flux::toast('Cannot delete role that is assigned to users', variant: 'error');
 
             return;
         }
 
-        $this->selectedRole->delete();
+        $role->delete();
 
         // Close modal and show success message
         Flux::modal('delete-role')->close();

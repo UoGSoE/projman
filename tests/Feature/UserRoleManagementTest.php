@@ -1,10 +1,11 @@
 <?php
 
 use App\Livewire\UserList;
-use App\Models\User;
 use App\Models\Role;
-use function Pest\Livewire\livewire;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
+use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
@@ -117,10 +118,10 @@ describe('User Role Management', function () {
 
             $component->call('openChangeUserRoleModal', $this->regularUser);
 
-            expect($component->availableRoles)->toContain('Administrator');
-            expect($component->availableRoles)->toContain('User');
-            expect($component->availableRoles)->toContain('Manager');
-            expect($component->availableRoles)->not->toContain('Inactive Role');
+            expect($component->availableRoles->pluck('name')->toArray())->toContain('Administrator');
+            expect($component->availableRoles->pluck('name')->toArray())->toContain('User');
+            expect($component->availableRoles->pluck('name')->toArray())->toContain('Manager');
+            expect($component->availableRoles->pluck('name')->toArray())->not->toContain('Inactive Role');
         });
 
         it('excludes inactive roles from available options', function () {
@@ -148,7 +149,7 @@ describe('User Role Management', function () {
             expect($component->userRoles)->toHaveCount(0);
 
             // Add a role
-            $component->call('toggleRole', 'User');
+            $component->set('userRoles', ['User']);
             expect($component->userRoles)->toContain('User');
             expect($component->formModified)->toBe(true);
         });
@@ -161,7 +162,7 @@ describe('User Role Management', function () {
             expect($component->userRoles)->toHaveCount(2);
 
             // Remove a role
-            $component->call('toggleRole', 'User');
+            $component->set('userRoles', ['Manager']);
             expect($component->userRoles)->not->toContain('User');
             expect($component->userRoles)->toContain('Manager');
             expect($component->formModified)->toBe(true);
@@ -172,14 +173,13 @@ describe('User Role Management', function () {
             $component->call('openChangeUserRoleModal', $this->regularUser);
 
             // Add multiple roles
-            $component->call('toggleRole', 'User');
-            $component->call('toggleRole', 'Manager');
+            $component->set('userRoles', ['User', 'Manager']);
             expect($component->userRoles)->toHaveCount(2);
             expect($component->userRoles)->toContain('User');
             expect($component->userRoles)->toContain('Manager');
 
             // Remove one role
-            $component->call('toggleRole', 'User');
+            $component->set('userRoles', ['Manager']);
             expect($component->userRoles)->toHaveCount(1);
             expect($component->userRoles)->toContain('Manager');
             expect($component->userRoles)->not->toContain('User');
@@ -193,11 +193,11 @@ describe('User Role Management', function () {
             expect($component->userRoles)->toHaveCount(0);
 
             // Add a role
-            $component->call('toggleRole', 'User');
+            $component->set('userRoles', ['User']);
             expect($component->userRoles)->toHaveCount(1);
 
             // Add another role
-            $component->call('toggleRole', 'Manager');
+            $component->set('userRoles', ['User', 'Manager']);
             expect($component->userRoles)->toHaveCount(2);
         });
 
@@ -220,8 +220,8 @@ describe('User Role Management', function () {
             $component->call('openChangeUserRoleModal', $this->regularUser);
 
             // Add some roles
-            $component->call('toggleRole', 'User');
-            $component->call('toggleRole', 'Manager');
+            $component->set('userRoles', ['User']);
+            $component->set('userRoles', ['User', 'Manager']);
 
             $component->call('saveUserRoles');
 
@@ -239,7 +239,7 @@ describe('User Role Management', function () {
             $component->call('openChangeUserRoleModal', $this->userWithRoles);
 
             // Remove one role
-            $component->call('toggleRole', 'User');
+            $component->set('userRoles', ['Manager']);
 
             $component->call('saveUserRoles');
 
@@ -256,8 +256,8 @@ describe('User Role Management', function () {
             $component->call('openChangeUserRoleModal', $this->regularUser);
 
             // Add roles
-            $component->call('toggleRole', 'User');
-            $component->call('toggleRole', 'Manager');
+            $component->set('userRoles', ['User']);
+            $component->set('userRoles', ['User', 'Manager']);
 
             $component->call('saveUserRoles');
 
@@ -287,7 +287,7 @@ describe('User Role Management', function () {
             $component->call('openChangeUserRoleModal', $this->regularUser);
 
             // Add a role
-            $component->call('toggleRole', 'User');
+            $component->set('userRoles', ['User']);
             $component->call('saveUserRoles');
 
             // Check that the role was saved in the database
@@ -302,7 +302,7 @@ describe('User Role Management', function () {
             $component = livewire(UserList::class);
 
             $component->call('openChangeUserRoleModal', $this->regularUser);
-            $component->call('toggleRole', 'User');
+            $component->set('userRoles', ['User']);
 
             $component->call('resetChangeUserRoleModal');
 
@@ -317,6 +317,7 @@ describe('User Role Management', function () {
             expect(count($component->userRoles))->toBe(2);
 
             $component->call('resetChangeUserRoleModal');
+
             expect($component->userRoles)->toHaveCount(0);
         });
     });
@@ -466,7 +467,7 @@ describe('User Role Management', function () {
             $component->call('openChangeUserRoleModal', $this->userWithRoles);
 
             // Should show updated role name in available roles
-            expect($component->availableRoles)->toContain('Updated Admin Role');
+            expect($component->availableRoles->fresh()->pluck('name')->toArray())->toContain('Updated Admin Role');
         });
 
         it('handles role deletion gracefully', function () {
