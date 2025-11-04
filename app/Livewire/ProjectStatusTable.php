@@ -2,10 +2,10 @@
 
 namespace App\Livewire;
 
-use Flux\Flux;
-use App\Models\Project;
-use Livewire\Component;
 use App\Enums\ProjectStatus;
+use App\Models\Project;
+use Flux\Flux;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 class ProjectStatusTable extends Component
@@ -13,16 +13,20 @@ class ProjectStatusTable extends Component
     use WithPagination;
 
     public $sortBy = 'updated_at';
+
     public $sortDirection = 'desc';
 
     public ?int $userId = null;
 
     public $projectStatuses = [];
-    public $projectStatus = null;
-    public $schoolGroup = null;
-    public $search = '';
-    public $status = null;
 
+    public $projectStatus = null;
+
+    public $schoolGroup = null;
+
+    public $search = '';
+
+    public $status = null;
 
     public function mount(?int $userId = null)
     {
@@ -47,11 +51,20 @@ class ProjectStatusTable extends Component
             ->paginate(20);
     }
 
-    public function sort($column) {
-        if ($this->sortBy === $column) {
+    public function sort($column)
+    {
+        // Map frontend column names to database columns
+        $columnMap = [
+            'user' => 'user_id',
+            // Add other mappings as needed
+        ];
+
+        $dbColumn = $columnMap[$column] ?? $column;
+
+        if ($this->sortBy === $dbColumn) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            $this->sortBy = $column;
+            $this->sortBy = $dbColumn;
             $this->sortDirection = 'asc';
         }
     }
@@ -62,5 +75,4 @@ class ProjectStatusTable extends Component
         $project->cancel();
         Flux::toast('Project cancelled', variant: 'success');
     }
-
 }
