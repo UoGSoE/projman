@@ -11,6 +11,7 @@ This application is developed and tested entirely inside [Lando](https://lando.d
    ```bash
    composer install
    npm install
+   npm run build
    ```
    (You can run these commands either on your host or via `lando composer install` / `lando npm install`.)
 2. **Copy the environment file**  
@@ -33,14 +34,6 @@ This application is developed and tested entirely inside [Lando](https://lando.d
    - Default admin: `admin2x / secret`
    - Default staff sample: `staff2x / secret`
    These credentials are only present locally via the `TestDataSeeder`.
-
-## Daily Workflow
-```bash
-lando start        # ensures the containers are up
-lando npm run dev  # optional: Tailwind/Vite watcher inside the node service
-lando artisan serve # if you prefer tinker-friendly artisan run (else hit Herd @ http://projman.test)
-```
-The Laravel Herd URL `http://projman.test` should resolve automatically if you're using Herd; otherwise hit the Lando-provided URL shown in the CLI output.
 
 ### Testing & QA
 - Run the Pest suite inside Lando: `lando test`
