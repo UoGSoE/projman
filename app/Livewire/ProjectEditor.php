@@ -108,6 +108,11 @@ class ProjectEditor extends Component
 
     public function advanceToNextStage()
     {
+        if ($this->project->status === ProjectStatus::CANCELLED || $this->project->status === ProjectStatus::COMPLETED) {
+            Flux::toast('Project is '.ucfirst($this->project->status->value).', cannot advance to next stage', variant: 'warning');
+
+            return;
+        }
 
         $this->project->advanceToNextStage();
 

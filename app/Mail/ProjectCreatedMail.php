@@ -2,14 +2,13 @@
 
 namespace App\Mail;
 
+use App\Models\Project;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Project;
-
+use Illuminate\Support\Facades\Log;
 
 class ProjectCreatedMail extends Mailable
 {
@@ -18,8 +17,11 @@ class ProjectCreatedMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public Project $project)
+    public function __construct(protected Project $project)
     {
+        Log::info('ProjectCreatedMail constructor', ['project' => $this->project]);
+        Log::info('Project title', ['title' => $this->project->title]);
+        Log::info('Project user', ['content' => $this->content()]);
     }
 
     /**

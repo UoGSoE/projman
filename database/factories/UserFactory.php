@@ -31,21 +31,23 @@ class UserFactory extends Factory
             'is_admin' => false,
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => function () {
+                return static::$password ??= Hash::make('password');
+            },
             'remember_token' => Str::random(10),
         ];
     }
 
     public function admin(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_admin' => true,
         ]);
     }
 
     public function staff(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_staff' => true,
             'is_admin' => false,
         ]);

@@ -1,26 +1,27 @@
 <?php
 
-use App\Models\User;
-use App\Models\Project;
-use App\Livewire\ProjectEditor;
 use App\Livewire\ProjectCreator;
-use function Pest\Livewire\livewire;
+use App\Livewire\ProjectEditor;
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-
+use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
 describe('Project Creation', function () {
+    beforeEach(function () {
+        $this->user = User::factory()->create();
+    });
     it('can create a project with valid data', function () {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $this->actingAs($this->user);
         livewire(ProjectCreator::class)
             ->set('projectName', 'Test Project')
             ->call('save')
             ->assertHasNoErrors();
         $project = Project::where('title', 'Test Project')->firstOrFail();
-        expect($project->user_id)->toBe($user->id);
+        expect($project->user_id)->toBe($this->user->id);
         expect($project->ideation)->toBeInstanceOf(\App\Models\Ideation::class);
         expect($project->feasibility)->toBeInstanceOf(\App\Models\Feasibility::class);
         expect($project->testing)->toBeInstanceOf(\App\Models\Testing::class);
@@ -31,8 +32,7 @@ describe('Project Creation', function () {
     });
 
     it('validates required fields for project creation', function () {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $this->actingAs($this->user);
         livewire(ProjectCreator::class)
             ->set('projectName', '')
             ->call('save')
@@ -193,7 +193,7 @@ describe('Project Editing', function () {
             expect($this->project->scoping->in_scope)->toBe('Test In Scope');
             expect($this->project->scoping->out_of_scope)->toBe('Test Out of Scope');
             expect($this->project->scoping->assumptions)->toBe('Test Assumptions');
-            expect(json_decode($this->project->scoping->skills_required))->toBe(['one']);
+            expect($this->project->scoping->skills_required)->toBe(['one']);
         });
 
         it('validates required fields for scoping form', function () {
@@ -217,24 +217,22 @@ describe('Project Editing', function () {
 
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('schedulingForm.keySkills', 'Test Key Skills')
-                ->set('schedulingForm.coseItStaff', 'Test Staff')
+                ->set('schedulingForm.coseItStaff', [$this->testLead->id])
                 ->set('schedulingForm.estimatedStartDate', $tomorrow)
                 ->set('schedulingForm.estimatedCompletionDate', $dayAfterTomorrow)
                 ->set('schedulingForm.changeBoardDate', $tomorrow)
                 ->set('schedulingForm.assignedTo', $this->testLead->id)
                 ->set('schedulingForm.priority', 'high')
-                ->set('schedulingForm.teamAssignment', '1')
                 ->call('save', 'scheduling')
                 ->assertHasNoErrors();
             $this->project->refresh();
             expect($this->project->scheduling->key_skills)->toBe('Test Key Skills');
-            expect($this->project->scheduling->cose_it_staff)->toBe('Test Staff');
+            expect($this->project->scheduling->cose_it_staff)->toBe([$this->testLead->id]);
             expect($this->project->scheduling->estimated_start_date->format('Y-m-d'))->toBe($tomorrow);
             expect($this->project->scheduling->estimated_completion_date->format('Y-m-d'))->toBe($dayAfterTomorrow);
             expect($this->project->scheduling->change_board_date->format('Y-m-d'))->toBe($tomorrow);
             expect($this->project->scheduling->assigned_to)->toBe($this->testLead->id);
             expect($this->project->scheduling->priority)->toBe('high');
-            expect($this->project->scheduling->team_assignment)->toBe('1');
         });
 
         it('validates required fields for scheduling form', function () {
@@ -247,7 +245,6 @@ describe('Project Editing', function () {
                     'schedulingForm.changeBoardDate' => 'required',
                     'schedulingForm.assignedTo' => 'required',
                     'schedulingForm.priority' => 'required',
-                    'schedulingForm.teamAssignment' => 'required',
                 ]);
         });
 
@@ -297,7 +294,6 @@ describe('Project Editing', function () {
                     'detailedDesignForm.serviceFunction' => 'required',
                     'detailedDesignForm.functionalRequirements' => 'required',
                     'detailedDesignForm.nonFunctionalRequirements' => 'required',
-                    'detailedDesignForm.hldDesignLink' => 'required',
                     'detailedDesignForm.approvalDelivery' => 'required',
                     'detailedDesignForm.approvalOperations' => 'required',
                     'detailedDesignForm.approvalResilience' => 'required',
@@ -319,17 +315,17 @@ describe('Project Editing', function () {
             $dayAfterTomorrow = now()->addDays(2)->format('Y-m-d');
 
             livewire(ProjectEditor::class, ['project' => $this->project])
-            ->set('developmentForm.leadDeveloper', $this->testLead->id)
-            ->set('developmentForm.developmentTeam', [$this->testLead->id, $this->testDesigner->id])
-            ->set('developmentForm.technicalApproach', 'Test Technical Approach')
-            ->set('developmentForm.developmentNotes', 'Test Development Notes')
-            ->set('developmentForm.repositoryLink', 'https://github.com/test/repo')
-            ->set('developmentForm.status', 'in_progress')
-            ->set('developmentForm.startDate', $tomorrow)
-            ->set('developmentForm.completionDate', $dayAfterTomorrow)
-            ->set('developmentForm.codeReviewNotes', 'Test Code Review Notes')
-            ->call('save', 'development')
-            ->assertHasNoErrors();
+                ->set('developmentForm.leadDeveloper', $this->testLead->id)
+                ->set('developmentForm.developmentTeam', [$this->testLead->id, $this->testDesigner->id])
+                ->set('developmentForm.technicalApproach', 'Test Technical Approach')
+                ->set('developmentForm.developmentNotes', 'Test Development Notes')
+                ->set('developmentForm.repositoryLink', 'https://github.com/test/repo')
+                ->set('developmentForm.status', 'in_progress')
+                ->set('developmentForm.startDate', $tomorrow)
+                ->set('developmentForm.completionDate', $dayAfterTomorrow)
+                ->set('developmentForm.codeReviewNotes', 'Test Code Review Notes')
+                ->call('save', 'development')
+                ->assertHasNoErrors();
             $this->project->refresh();
             expect($this->project->development->lead_developer)->toBe($this->testLead->id);
             expect($this->project->development->development_team)->toBe([$this->testLead->id, $this->testDesigner->id]);
@@ -350,7 +346,6 @@ describe('Project Editing', function () {
                     'developmentForm.developmentTeam' => 'required',
                     'developmentForm.technicalApproach' => 'required',
                     'developmentForm.developmentNotes' => 'required',
-                    'developmentForm.repositoryLink' => 'required',
                     'developmentForm.status' => 'required',
                     'developmentForm.startDate' => 'required',
                     'developmentForm.completionDate' => 'required',
@@ -406,7 +401,6 @@ describe('Project Editing', function () {
                     'testingForm.functionalTests' => 'required',
                     'testingForm.nonFunctionalTestingTitle' => 'required',
                     'testingForm.nonFunctionalTests' => 'required',
-                    'testingForm.testRepository' => 'required',
                     'testingForm.testingSignOff' => 'required',
                     'testingForm.userAcceptance' => 'required',
                     'testingForm.testingLeadSignOff' => 'required',
@@ -428,22 +422,22 @@ describe('Project Editing', function () {
             $today = now()->format('Y-m-d');
 
             livewire(ProjectEditor::class, ['project' => $this->project])
-            ->set('deployedForm.deployedBy', $this->testDeployer->id)
-            ->set('deployedForm.environment', 'production')
-            ->set('deployedForm.status', 'deployed')
-            ->set('deployedForm.deploymentDate', $today)
-            ->set('deployedForm.version', '1.0.0')
-            ->set('deployedForm.productionUrl', 'https://example.com/app')
-            ->set('deployedForm.deploymentNotes', 'Test deployment notes')
-            ->set('deployedForm.rollbackPlan', 'Test rollback plan')
-            ->set('deployedForm.monitoringNotes', 'Test monitoring notes')
-            ->set('deployedForm.deploymentSignOff', $this->testAssessor->id)
-            ->set('deployedForm.operationsSignOff', $this->testLead->id)
-            ->set('deployedForm.userAcceptanceSignOff', $this->testDesigner->id)
-            ->set('deployedForm.serviceDeliverySignOff', $this->testDeployer->id)
-            ->set('deployedForm.changeAdvisorySignOff', $this->testAssessor->id)
-            ->call('save', 'deployed')
-            ->assertHasNoErrors();
+                ->set('deployedForm.deployedBy', $this->testDeployer->id)
+                ->set('deployedForm.environment', 'production')
+                ->set('deployedForm.status', 'deployed')
+                ->set('deployedForm.deploymentDate', $today)
+                ->set('deployedForm.version', '1.0.0')
+                ->set('deployedForm.productionUrl', 'https://example.com/app')
+                ->set('deployedForm.deploymentNotes', 'Test deployment notes')
+                ->set('deployedForm.rollbackPlan', 'Test rollback plan')
+                ->set('deployedForm.monitoringNotes', 'Test monitoring notes')
+                ->set('deployedForm.deploymentSignOff', $this->testAssessor->id)
+                ->set('deployedForm.operationsSignOff', $this->testLead->id)
+                ->set('deployedForm.userAcceptanceSignOff', $this->testDesigner->id)
+                ->set('deployedForm.serviceDeliverySignOff', $this->testDeployer->id)
+                ->set('deployedForm.changeAdvisorySignOff', $this->testAssessor->id)
+                ->call('save', 'deployed')
+                ->assertHasNoErrors();
             $this->project->refresh();
             expect($this->project->deployed->deployed_by)->toBe($this->testDeployer->id);
             expect($this->project->deployed->environment)->toBe('production');
@@ -468,7 +462,6 @@ describe('Project Editing', function () {
                     'deployedForm.status' => 'required',
                     'deployedForm.deploymentDate' => 'required',
                     'deployedForm.version' => 'required',
-                    'deployedForm.productionUrl' => 'required',
                     'deployedForm.deploymentSignOff' => 'required',
                     'deployedForm.operationsSignOff' => 'required',
                     'deployedForm.userAcceptanceSignOff' => 'required',

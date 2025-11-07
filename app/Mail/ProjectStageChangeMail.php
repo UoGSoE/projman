@@ -2,13 +2,12 @@
 
 namespace App\Mail;
 
+use App\Models\Project;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Project;
 
 class ProjectStageChangeMail extends Mailable
 {
@@ -28,7 +27,7 @@ class ProjectStageChangeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Project Stage Mail',
+            subject: 'ProjMan - Project Stage changed',
         );
     }
 
@@ -37,8 +36,15 @@ class ProjectStageChangeMail extends Mailable
      */
     public function content(): Content
     {
+
+        $url = $this->project->id ? route('project.show', $this->project) : '#';
+
         return new Content(
             markdown: 'emails.project_stage',
+            with: [
+                'project' => $this->project,
+                'url' => $url,
+            ],
         );
     }
 

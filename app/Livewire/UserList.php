@@ -2,29 +2,34 @@
 
 namespace App\Livewire;
 
-use Flux\Flux;
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
+use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Str;
 
 class UserList extends Component
 {
     use WithPagination;
 
     public $sortOn = 'surname';
+
     public $sortDirection = 'asc';
+
     public $search = '';
+
     public $selectedUser = null;
+
     public $userRoles = [];
+
     public $availableRoles = [];
+
     public $formModified = false;
 
     public function render()
     {
         return view('livewire.user-list', [
-            'users' => $this->getUsers()
+            'users' => $this->getUsers(),
         ]);
     }
 
@@ -35,9 +40,9 @@ class UserList extends Component
         return User::with('roles')->withCount('roles')->orderBy($this->sortOn, $this->sortDirection)
             ->when(
                 strlen($search) >= 2,
-                fn($query) => $query->where(
-                    fn($query) => $query->where('surname', 'like', '%' . $search . '%')
-                        ->orWhere('forenames', 'like', '%' . $search . '%')
+                fn ($query) => $query->where(
+                    fn ($query) => $query->where('surname', 'like', '%'.$search.'%')
+                        ->orWhere('forenames', 'like', '%'.$search.'%')
                 )
             )
             ->paginate(10);
@@ -58,11 +63,11 @@ class UserList extends Component
     public function toggleAdmin(User $user)
     {
         // Additional validation to ensure only admins can modify admin status
-        if (!auth()->user()?->isAdmin()) {
+        if (! auth()->user()?->isAdmin()) {
             abort(403, 'Unauthorized action.');
         }
 
-        $user->is_admin = !$user->is_admin;
+        $user->is_admin = ! $user->is_admin;
         $user->save();
 
         Flux::toast('Admin status updated', variant: 'success');
@@ -84,7 +89,9 @@ class UserList extends Component
 
     public function saveUserRoles()
     {
-        if (!$this->selectedUser) {
+        if (! $this->selectedUser) {
+            Flux::toast('No user selected', variant: 'danger');
+
             return;
         }
 
@@ -92,13 +99,15 @@ class UserList extends Component
         $userRoles = is_array($this->userRoles) ? $this->userRoles : [];
 
         // Validate that all selected roles exist and are active
-        $validRoles = Role::whereIn('name', $userRoles)
+        $validRoles = Role::query()
+            ->whereIn('name', $userRoles)
             ->where('is_active', true)
             ->pluck('id')
             ->toArray();
 
         if (count($validRoles) !== count($userRoles)) {
-            Flux::toast('Some selected roles are invalid', variant: 'error');
+            Flux::toast('Some selected roles are invalid', variant: 'danger');
+
             return;
         }
 
@@ -118,12 +127,8 @@ class UserList extends Component
 
     public function resetChangeUserRoleModal()
     {
-        if ($this->selectedUser) {
-            $freshUser = $this->selectedUser->fresh(['roles']);
-            $this->userRoles = $freshUser->roles->pluck('name')->toArray();
-        } else {
-            $this->userRoles = [];
-        }
+
+        $this->userRoles = [];
         $this->selectedUser = null;
         $this->markFormAsNotModified();
     }
@@ -142,5 +147,12 @@ class UserList extends Component
     {
         // Reset pagination when search changes
         $this->resetPage();
+    }
+
+    public function updated($propertyName)
+    {
+        if (in_array($propertyName, ['userRoles'])) {
+            $this->markFormAsModified();
+        }
     }
 }

@@ -15,34 +15,42 @@
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
     @auth
-        <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700 print:hidden">
+        <flux:sidebar sticky collapsible
+            class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700 print:hidden">
             <flux:sidebar.header>
-                <flux:sidebar.brand
-                    href="#"                l
-                    logo="https://fluxui.dev/img/demo/logo.png"
-                    logo:dark="https://fluxui.dev/img/demo/dark-mode-logo.png"
-                    name="{{  config('app.name') }}"
-                />
-                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+                <flux:sidebar.brand href="#" l logo="https://fluxui.dev/img/demo/logo.png"
+                    logo:dark="https://fluxui.dev/img/demo/dark-mode-logo.png" name="{{ config('app.name') }}" />
+                <flux:sidebar.collapse
+                    class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
             </flux:sidebar.header>
             <flux:sidebar.nav>
-                <flux:sidebar.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home</flux:sidebar.item>
+                <flux:sidebar.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home
+                </flux:sidebar.item>
                 <flux:sidebar.item icon="plus-circle" href="{{ route('project.create') }}"
                     :current="request()->routeIs('project.create')" wire:navigate>New work package</flux:sidebar.item>
                 <flux:separator class="my-2" />
-                <flux:sidebar.item badge="3" icon="list-bullet" href="/projects" :current="request()->routeIs('projects')" wire:navigate>
-                        All work packages
+                <flux:sidebar.item badge="3" icon="list-bullet" href="/projects"
+                    :current="request()->routeIs('projects')" wire:navigate>
+                    All work packages
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')" wire:navigate>Staff heatmap</flux:sidebar.item>
-                @if(auth()->user()->is_admin)
-                    <flux:sidebar.item icon="users" href="/staff" :current="request()->routeIs('users.list')" wire:navigate>Staff</flux:sidebar.item>
-                    <flux:sidebar.item icon="user-group" href="/roles" :current="request()->routeIs('roles.list')" wire:navigate>Roles</flux:sidebar.item>
-                    <flux:sidebar.item icon="academic-cap" href="/skills" :current="request()->routeIs('skills.manage')" wire:navigate>Skills</flux:sidebar.item>
+                <flux:sidebar.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')"
+                    wire:navigate>Staff heatmap</flux:sidebar.item>
+                @if (auth()->user()->is_admin)
+                    <flux:sidebar.item icon="users" href="/staff" :current="request()->routeIs('users.list')"
+                        wire:navigate>Staff</flux:sidebar.item>
+                    <flux:sidebar.item icon="user-group" href="/roles" :current="request()->routeIs('roles.list')"
+                        wire:navigate>Roles</flux:sidebar.item>
+                    <flux:sidebar.item icon="academic-cap" href="/skills" :current="request()->routeIs('skills.manage')"
+                        wire:navigate>Skills</flux:sidebar.item>
+                    <flux:sidebar.item icon="bell" href="/notification-rules"
+                        :current="request()->routeIs('notification.rules')" wire:navigate>Notification Rules
+                    </flux:sidebar.item>
                 @endif
             </flux:sidebar.nav>
             <flux:sidebar.spacer />
             <flux:sidebar.nav>
-                <flux:sidebar.item icon="user" href="{{ route('profile') }}" :current="request()->routeIs('profile')" wire:navigate>Profile</flux:sidebar.item>
+                <flux:sidebar.item icon="user" href="{{ route('profile') }}" :current="request()->routeIs('profile')"
+                    wire:navigate>Profile</flux:sidebar.item>
                 <flux:sidebar.item icon="cog-6-tooth" href="#">Settings</flux:sidebar.item>
                 <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
             </flux:sidebar.nav>
