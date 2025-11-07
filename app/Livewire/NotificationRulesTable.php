@@ -150,8 +150,6 @@ class NotificationRulesTable extends Component
             'editRuleName' => 'required|string|max:255',
             'editRuleDescription' => 'required|string|max:255',
             'editRuleEvent' => 'required|string|max:255',
-            'editRuleAppliesToAll' => 'required|boolean',
-            'editSelectedProjects' => 'array',
             'editRecipientTypes' => 'required|string|max:255',
             'editSelectedRoles' => 'array',
             'editSelectedUsers' => 'array',
