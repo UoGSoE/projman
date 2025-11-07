@@ -68,7 +68,7 @@
                 </div>
             </form>
         </flux:tab.panel>
-
+        @admin
         {{-- Feasibility panel --}}
         <flux:tab.panel name="feasibility" class="mt-6 space-y-6">
             <form wire:submit="save('feasibility')" class="space-y-6">
@@ -567,6 +567,6 @@
                 </div>
             </form>
         </flux:tab.panel>
-
+        @endadmin
     </flux:tab.group>
 </div>
