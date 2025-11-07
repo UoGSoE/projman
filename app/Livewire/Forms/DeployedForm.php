@@ -77,7 +77,7 @@ class DeployedForm extends Form
         $this->deployedBy = $project->deployed->deployed_by;
         $this->environment = $project->deployed->environment;
         $this->status = $project->deployed->status;
-        $this->deploymentDate = $project->deployed->deployment_date->format('Y-m-d');
+        $this->deploymentDate = $project->deployed->deployment_date?->format('Y-m-d');
         $this->version = $project->deployed->version;
         $this->productionUrl = $project->deployed->production_url;
         $this->deploymentNotes = $project->deployed->deployment_notes;

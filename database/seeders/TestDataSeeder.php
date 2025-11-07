@@ -62,6 +62,11 @@ class TestDataSeeder extends Seeder
                 'description' => 'Chemistry Department Staff',
                 'is_active' => true,
             ],
+            [
+                'name' => 'Work Package Assessor',
+                'description' => 'Work Package Assessor',
+                'is_active' => true,
+            ]
         ];
 
         foreach ($roles as $roleData) {

@@ -41,9 +41,9 @@
                             wire:model="ideationForm.deadline" />
 
                         <flux:select label="Strategic Initiative" wire:model="ideationForm.initiative">
-                            @foreach ($ideationForm->availableStrategicInitiatives as $id => $label)
-                                <flux:select.option value="{{ $id }}">
-                                    {{ $label }}
+                            @foreach ($ideationForm->availableStrategicInitiatives as $key => $label)
+                                <flux:select.option value="{{ $key }}">
+                                    {{ $key }} - {{ $label }}
                                 </flux:select.option>
                             @endforeach
                         </flux:select>
@@ -53,9 +53,15 @@
                 <flux:separator />
 
                 <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
-                    <flux:button type="submit" variant="primary" class="w-full">Save</flux:button>
+                    <flux:button type="submit" variant="primary" class="w-full">
+                        @if ($project->status === \App\Enums\ProjectStatus::IDEATION)
+                            Save
+                        @else
+                            Update
+                        @endif
+                    </flux:button>
                     <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">
-                        Advance To Next Stage
+                        Submit
                     </flux:button>
                 </div>
             </form>

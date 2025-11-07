@@ -4,17 +4,19 @@ namespace App\Livewire\Forms;
 
 use Flux\Flux;
 use Livewire\Form;
-use Livewire\Attributes\Validate;
 use App\Models\Project;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Validate;
 
 class IdeationForm extends Form
 {
     public ?Project $project = null;
 
     public array $availableStrategicInitiatives = [
-        'thing' => 'description',
-        'other' => 'Other',
-        'something' => 'Something',
+        "Inspire" => "We will create self-sustaining peer support networks and communities of practice to further grow our innovation community, including an “Innovation 101” programme, the Women Researchers Enterprise Network (WREN), the RISE Founders Club, Investor Days, and the University’s KE & Innovation Awards to recognise our top innovators.",
+        "Create" => "We will pump-prime our pipeline via targeted strategic funding sources, including the MedTech Innovation Fund, the Creative Launch Fund, the Social Innovation Fund, and a range of College-specific initiatives, including innovation audits.",
+        "Thrive" => "We will support our developing ventures and de-risk our innovations via structured accelerator style support, including the UofG Founders Fund, ICURe, the Infinity G Venture Builder programme (open to externals) and beLAB1407.",
+        "Invest" => "We will sustain our spinouts to the next stage of their commercialisation journey through targeted strategic investment in companies directly and growth in the operational capabilities of our holdings company, GUHL.",
     ];
 
     #[Validate('required|string|max:255')]
