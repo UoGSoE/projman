@@ -55,7 +55,7 @@ describe('Skill Matching', function () {
             ->sortByDesc('total_skill_score')
             ->values();
 
-        dd($users);
+        // dd($users);
         expect($users)->toHaveCount(2);
         expect($users->pluck('id')->toArray())->toBe([$user5->id, $user2->id]);
         expect($users->pluck('total_skill_score')->toArray())->toBe([4, 2]);
