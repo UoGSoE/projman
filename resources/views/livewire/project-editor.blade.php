@@ -8,13 +8,15 @@
     <flux:tab.group class="mt-6">
         <flux:tabs variant="segmented" wire:model="tab">
             <flux:tab name="ideation">Ideation</flux:tab>
-            <flux:tab name="feasibility">Feasibility</flux:tab>
-            <flux:tab name="scoping">Scoping</flux:tab>
-            <flux:tab name="scheduling">Scheduling</flux:tab>
-            <flux:tab name="detailed-design">Detailed Design</flux:tab>
-            <flux:tab name="development">Development</flux:tab>
-            <flux:tab name="testing">Testing</flux:tab>
-            <flux:tab name="deployed">Deployed</flux:tab>
+            @admin
+                <flux:tab name="feasibility">Feasibility</flux:tab>
+                <flux:tab name="scoping">Scoping</flux:tab>
+                <flux:tab name="scheduling">Scheduling</flux:tab>
+                <flux:tab name="detailed-design">Detailed Design</flux:tab>
+                <flux:tab name="development">Development</flux:tab>
+                <flux:tab name="testing">Testing</flux:tab>
+                <flux:tab name="deployed">Deployed</flux:tab>
+            @endadmin
         </flux:tabs>
 
         {{-- Ideation panel --}}
@@ -33,7 +35,7 @@
                 </div>
 
                 {{-- Benefits & Deadline/Initiative --}}
-                <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
+                <div class="grid md:grid-cols-2 gap-4">
                     <flux:textarea label="Benefits Expected" rows="4" wire:model="ideationForm.benefits" />
 
                     <div class="space-y-4">
@@ -52,15 +54,15 @@
 
                 <flux:separator />
 
-                <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
-                    <flux:button type="submit" variant="primary" class="w-full">
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <flux:button type="submit" variant="primary" class="w-1/4">
                         @if ($project->status === \App\Enums\ProjectStatus::IDEATION)
                             Save
                         @else
                             Update
                         @endif
                     </flux:button>
-                    <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">
+                    <flux:button class="w-1/4" icon:trailing="arrow-right" wire:click="advanceToNextStage()">
                         Submit
                     </flux:button>
                 </div>
