@@ -52,6 +52,7 @@ class TestDataSeeder extends Seeder
     {
         $roles = [
             ['name' => 'Work Package Assessor', 'description' => 'Assesses work packages and provides feedback', 'is_active' => true],
+            ['name' => 'Service Lead', 'description' => 'Leads service delivery and acceptance processes', 'is_active' => true],
             ['name' => 'Ideation Manager', 'description' => 'Responsible for managing the ideation phase of projects', 'is_active' => true],
             ['name' => 'Feasibility Manager', 'description' => 'Oversees technical and business feasibility assessments', 'is_active' => true],
             ['name' => 'Scoping Manager', 'description' => 'Defines scope, deliverables, and boundaries for projects', 'is_active' => true],
