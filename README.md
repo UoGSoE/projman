@@ -1,59 +1,129 @@
 # Projman
 
-> Demand tracking, skill-aware staffing, and delivery governance for a small IT team.
+Projman is a demand tracking and delivery governance tool designed for small IT teams. If you've ever struggled to figure out where work requests go, who has the skills to handle them, or whether people are getting overloaded, this tool is for you.
 
-Projman keeps incoming work visible from the first idea through deployment. It couples multi-stage project forms with skill tracking, staff heatmaps, and configurable notifications so managers can see demand, route requests, and keep everyone in the loop.
+At its core, Projman helps you visualize work from ideation all the way through to deployment. It tracks projects through a structured lifecycle, matches required skills with available staff, and ensures nobody misses critical deadlines through configurable notifications. Everything is audited, so you always have a history of who did what and when. It's particularly useful for teams that need to balance incoming requests against limited resources and make sure the right people are assigned to the right work.
 
 ## Features
-- **Work package intake to deployment** – Livewire forms capture ideation, feasibility, scoping, scheduling, detailed design, development, testing, and deployment data in one place, complete with history and stage progression.
-- **Skill-aware staffing** – Skill inventories, proficiency levels, and per-project skill requirements feed the project editor so you can shortlist the best-fit people before committing.
-- **Staff heatmap & busyness tracking** – A ten-day working calendar uses `Busyness` enums plus current assignments to highlight overloaded teammates and at-risk deadlines.
-- **Role & access administration** – Dedicated screens let admins search, sort, and edit users, their roles, and admin flag status with guardrails enforced via middleware and policies.
-- **Notification rules engine** – Business users can describe who should be emailed for each event or stage change; rules feed an event-driven queue job so alerts scale with demand.
-- **Audit-ready history** – Every save or status transition records who made the change and when, so project reviews and RCA work never start from scratch.
-- **Keycloak-friendly authentication** – Optional SSO login with fallbacks to local credentials for development, plus feature flags to restrict student access or admin-only modes.
 
-## Stack
-- **Laravel 12** with Livewire v3 and Flux UI Pro for server-driven, reactive interfaces.
-- **MySQL + Redis** via `lando` for persistence, queueing, and cache.
-- **Queued mail** powered by Laravel Horizon-ready jobs and Markdown mailables.
-- **Tailwind CSS & Vite** for styling and asset bundling.
-- **Pest** for feature-focused test coverage.
+- **Project lifecycle management** - Track projects through multiple stages: ideation, feasibility, scoping, scheduling, detailed design, development, testing, deployment, and completion
+- **Skills-based staffing** - Match project requirements with staff members' skills and expertise levels
+- **Team workload visualization** - Heat map view showing team busyness across upcoming weeks
+- **Role-based assignments** - Assign stage-specific managers (Feasibility Manager, Development Manager, etc.)
+- **Configurable notifications** - Rule-based email notifications for project creation and stage transitions
+- **Audit trail** - Complete project history tracking all changes and transitions
+- **Staff management** - Admin interface for managing users, roles, skills, and team capabilities
+- **SSO integration** - Single sign-on support via Shibboleth/SAML
 
-## Core Screens & Flows
-- **Home** – Personal greeting with a filtered Project Status Table and shortcut to start a new work package.
-- **Project lifecycle** – `ProjectCreator`, `ProjectEditor`, and `ProjectViewer` manage creation, per-stage editing, advancing workflow states, and reviewing the audit log.
-- **Portfolio view** – `/projects` lists every work package with progress badges, action menus, and filters.
-- **Staff heatmap** – `/staff/heatmap` combines busyness enums with active project assignments and links straight to user profiles.
-- **Skills & roles management** – Admin-only Flux-powered tables provide search, pagination, modal edit flows, and validations for both skills and roles.
-- **Notification rules** – Configurable recipient lists (users or roles), optional per-stage filters, and modal CRUD actions feed the notification job.
-- **Profile** – Each teammate can self-report skills, toggle proficiency levels, and update their two-week busyness forecast.
+## Tech Stack
 
-## Architecture Highlights
-- **Enums everywhere** – `ProjectStatus`, `Busyness`, and `SkillLevel` keep UI badges and validation consistent between PHP and Blade.
-- **Stage models per project** – Each lifecycle phase owns its table/model and Livewire `Form`, allowing focused validation, eager loading, and clean auditing.
-- **Event-driven alerts** – `ProjectCreated` and `ProjectStageChange` raise events consumed by listeners that hydrate `NotificationRule` recipients before dispatching `SendEmailJob`.
-- **Skill matching helper** – The project editor queries users by required skills, scores proficiency numerically, and sorts candidates for scheduling.
-- **Seed data for demos** – `TestDataSeeder` provisions roles, skills, staff, projects, and sample notification rules so `lando mfs` yields a realistic sandbox with `admin2x / secret`.
+- **Laravel 12** - PHP framework
+- **Livewire 3** - Dynamic interfaces
+- **Flux UI Pro** - Component library (Tailwind CSS 4 + Vite)
+- **Lando** - Local development environment
+- **Pest** - Testing framework
+- **Laravel Horizon** - Queue management
 
-## Testing
-- Feature coverage is implemented with Pest (`tests/Feature/*`). To run the suite inside Lando use:
+## Getting Started
 
+### Prerequisites
+
+- [Lando](https://lando.dev/) installed on your machine
+- Git
+
+### Installation
+
+1. Clone the repository:
 ```bash
-lando test
-# or outside Lando
-php artisan test
+git clone git@github.com:UoGSoE/projman.git
+cd projman
 ```
 
-The queue-driven notifications, Livewire components, and mailables all have dedicated tests. Add or update tests alongside any new behavior.
+2. Set up environment and dependencies:
+```bash
+cp .env.example .env
+lando composer install
+lando npm install
+lando npm run build
+```
 
-## Local Development
-- We rely on [Lando](https://lando.dev) for the full stack (PHP, MySQL, Redis, Mailhog, Node). A detailed quick-start lives in `DEVELOPMENT.md`, but the short version is:
-  1. Copy `.env.example` to `.env`.
-  2. `lando start` to boot the containers.
-  3. `lando mfs` to drop/migrate/seed with rich demo data.
-  4. Sign in with `admin2x / secret` or toggle SSO via `SSO_ENABLED`.
+3. Start Lando and set up the database:
+```bash
+lando start
+# If this is your first run, lando start may error due to missing DB tables
+lando mfs  # Migrate and seed the database
+```
 
-## Project Links
-- GitHub: <https://github.com/UoGSoE/projman>
-- Default Herd URL: <http://projman.test> (served via Laravel Herd on macOS).
+4. Access the application at the URL shown by `lando info` (typically https://projman.lndo.site)
+- Default admin login: `admin2x` / `secret`
+- Default staff login: `staff2x` / `secret`
+- Test user (for email testing): `testuser` / `password` (test@mailhog.local)
+
+### Development
+
+- **Start Lando**: `lando start`
+- **Run migrations**: `lando artisan migrate`
+- **Seed database**: `lando mfs`
+- **Install dependencies**: `lando composer install` / `lando npm install`
+- **Build assets**: `lando npm run dev` (for development) or `lando npm run build` (for production)
+- **Run tests**: `lando artisan test`
+- **Format code**: `lando vendor/bin/pint`
+- **Queue worker**: `lando artisan horizon` (for processing notification emails)
+
+### Common Lando Commands
+
+- `lando artisan [command]` - Run Laravel artisan commands
+- `lando composer [command]` - Run Composer commands
+- `lando npm [command]` - Run npm commands
+- `lando mysql` - Access MySQL shell
+- `lando ssh` - SSH into the application container
+- `lando mfs` - Custom command to migrate fresh and seed
+
+## Project Structure
+
+- `app/` - Application code
+  - `Enums/` - Project status, skill levels, and busyness enums
+  - `Events/` - Project lifecycle events
+  - `Http/Middleware/` - Custom middleware (admin, staff, dev-only)
+  - `Jobs/` - Queue jobs for email notifications
+  - `Livewire/` - Livewire components for all UI interactions
+  - `Mail/` - Email templates and mailables
+  - `Models/` - Eloquent models for projects, users, skills, roles, and stage data
+- `resources/views/` - Blade templates and Livewire views
+- `routes/` - Application routes (web.php and sso-auth.php)
+- `database/` - Migrations, factories, and seeders
+- `tests/Feature/` - Feature tests covering project creation, editing, notifications, skills, roles, and user management
+
+## Key Concepts
+
+### Project Stages
+
+Projects move through a defined lifecycle with stage-specific data collection:
+
+1. **Ideation** - Initial project concept and business case
+2. **Feasibility** - Technical and cost-benefit assessment
+3. **Scoping** - Define scope, requirements, and skills needed
+4. **Scheduling** - Timeline planning and team assignment
+5. **Detailed Design** - Architecture and requirements documentation
+6. **Development** - Implementation with team tracking
+7. **Testing** - Quality assurance and sign-offs
+8. **Deployed** - Production deployment and monitoring
+9. **Completed** - Project closure
+
+Projects can also be marked as **Cancelled** at any stage.
+
+### Skills Management
+
+Skills are tracked at three levels (beginner, intermediate, expert) and can be assigned to staff members. Projects specify required skills during the scoping stage, which helps identify the right team members during scheduling.
+
+### Roles
+
+Role-based notifications ensure the right people are alerted when projects enter their area of responsibility (e.g., Development Manager notified when a project reaches development stage).
+
+### Busyness Tracking
+
+Staff members have a two-week busyness indicator (low/medium/high/unknown) that helps visualize team capacity in the heat map view.
+
+## License
+
+This project is licensed under the MIT License.
