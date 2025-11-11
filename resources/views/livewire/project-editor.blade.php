@@ -66,12 +66,8 @@
                 <flux:separator />
 
                 <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-                    <flux:button type="submit" variant="primary" class="w-1/4">
-                        @if ($project->status === \App\Enums\ProjectStatus::IDEATION)
-                            Save
-                        @else
-                            Update
-                        @endif
+                    <flux:button type="submit" variant="primary">
+                        Update
                     </flux:button>
                     <flux:button class="w-1/4" icon:trailing="arrow-right" wire:click="advanceToNextStage()">
                         Submit
