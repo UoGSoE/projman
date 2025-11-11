@@ -137,17 +137,18 @@
                     <flux:button type="submit" variant="primary">Update</flux:button>
 
                     <div class="flex flex-col md:flex-row justify-end gap-4">
-                        @if($feasibilityForm->approvalStatus === 'pending')
+                        @if($feasibilityForm->approvalStatus === 'pending' && $project->feasibility->isReadyForApproval())
                             <flux:button
                                 wire:click="approveFeasibility"
                                 type="button"
                                 variant="primary"
                                 color="emerald"
-                                :disabled="!empty($feasibilityForm->existingSolution)">
+                                :disabled="!empty($feasibilityForm->existingSolution)"
+                                data-test="approve-feasibility-button">
                                 Approve
                             </flux:button>
                             <flux:modal.trigger name="reject-feasibility-modal">
-                                <flux:button type="button" variant="danger">Reject</flux:button>
+                                <flux:button type="button" variant="danger" data-test="reject-feasibility-button">Reject</flux:button>
                             </flux:modal.trigger>
                         @endif
 

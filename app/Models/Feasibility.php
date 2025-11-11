@@ -53,4 +53,14 @@ class Feasibility extends Model
     {
         return $this->belongsTo(User::class, 'actioned_by');
     }
+
+    public function isReadyForApproval(): bool
+    {
+        return filled($this->assessed_by)
+            && filled($this->date_assessed)
+            && filled($this->technical_credence)
+            && filled($this->cost_benefit_case)
+            && filled($this->dependencies_prerequisites)
+            && filled($this->alternative_proposal);
+    }
 }

@@ -212,6 +212,26 @@ By following this plan we satisfy the most visible leadership asks first, unbloc
 - Integrated with project history tracking
 - Works with existing notification rules for flexible email routing
 - Email subjects include project title for easy identification
+- Added `isReadyForApproval()` helper method to gate approve/reject buttons until form is complete
+
+**Testing Best Practices Learned:**
+- **Use `data-test` attributes for UI testing**: Added `data-test="approve-feasibility-button"` and `data-test="reject-feasibility-button"` to make tests resilient to UI changes. Testing with `assertSeeHtml('data-test="..."')` is more reliable than `assertSee('Button Text')` because:
+  - Button text might appear elsewhere in the page (e.g., in status badges like "Approved")
+  - Data attributes are specifically for testing and won't accidentally match other content
+  - They're less likely to change when developers modify the UI styling or wording
+- **Use pre-assertions to show state transitions**: In tests that verify a state change, assert the initial state first, then perform the action, then assert the final state. Example:
+  ```php
+  // Assert - initially not ready
+  expect($project->feasibility->isReadyForApproval())->toBeFalse();
+
+  // Act - fill all required fields
+  $project->feasibility->update([...]);
+  $project->feasibility->refresh();
+
+  // Assert - now ready
+  expect($project->feasibility->isReadyForApproval())->toBeTrue();
+  ```
+  This makes it crystal clear what the test is verifying and that the action is what triggers the change.
 
 **Next Steps:**
 - Feature 2: Scoping Effort Scale & DCGG Workflow

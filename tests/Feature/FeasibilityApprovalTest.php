@@ -293,4 +293,91 @@ describe('Feasibility Approval Workflow', function () {
         expect($project->feasibility->existing_solution)->toBe('Legacy System ABC')
             ->and($project->feasibility->off_the_shelf_solution)->toBe('Product XYZ is available');
     });
+
+    it('does not show approve/reject buttons when form is incomplete', function () {
+        // Arrange
+        $user = User::factory()->create(['is_admin' => true]);
+        $project = Project::factory()->create();
+        $this->actingAs($user);
+
+        // Ensure the feasibility is incomplete (default state from factory)
+        $project->feasibility->update([
+            'assessed_by' => null,
+            'date_assessed' => null,
+            'technical_credence' => null,
+        ]);
+
+        // Refresh to ensure changes are reflected
+        $project->refresh();
+
+        // Assert that isReadyForApproval is false
+        expect($project->feasibility->isReadyForApproval())->toBeFalse();
+
+        // Act & Assert - buttons should not exist
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->assertDontSeeHtml('data-test="approve-feasibility-button"')
+            ->assertDontSeeHtml('data-test="reject-feasibility-button"');
+    });
+
+    it('shows approve/reject buttons when form is complete', function () {
+        // Arrange
+        $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
+        $project = Project::factory()->create();
+        $this->actingAs($user);
+
+        // Fill in all required fields
+        $project->feasibility->update([
+            'assessed_by' => $assessor->id,
+            'date_assessed' => now()->addDay(),
+            'technical_credence' => 'Technically sound',
+            'cost_benefit_case' => 'Good ROI',
+            'dependencies_prerequisites' => 'None',
+            'alternative_proposal' => 'No alternatives',
+        ]);
+
+        // Act & Assert - buttons should exist
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->assertSeeHtml('data-test="approve-feasibility-button"')
+            ->assertSeeHtml('data-test="reject-feasibility-button"');
+    });
+
+    it('isReadyForApproval returns false when required fields are missing', function () {
+        // Arrange
+        $project = Project::factory()->create();
+
+        // Clear required fields
+        $project->feasibility->update([
+            'assessed_by' => null,
+            'technical_credence' => null,
+        ]);
+
+        // Assert
+        expect($project->feasibility->isReadyForApproval())->toBeFalse();
+    });
+
+    it('isReadyForApproval returns true when all required fields are filled', function () {
+        // Arrange
+        $assessor = User::factory()->create();
+        $project = Project::factory()->create();
+
+        // Assert - initially not ready
+        expect($project->feasibility->isReadyForApproval())->toBeFalse();
+
+        // Act - fill all required fields
+        $project->feasibility->update([
+            'assessed_by' => $assessor->id,
+            'date_assessed' => now()->addDay(),
+            'technical_credence' => 'Technically sound',
+            'cost_benefit_case' => 'Good ROI',
+            'dependencies_prerequisites' => 'None',
+            'alternative_proposal' => 'No alternatives',
+        ]);
+
+        // Refresh to get updated data from database
+        $project->feasibility->refresh();
+
+        // Assert - now ready
+        expect($project->feasibility->isReadyForApproval())->toBeTrue();
+    });
 });
