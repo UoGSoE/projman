@@ -21,10 +21,10 @@ class ScopingFactory extends Factory
         return [
             'project_id' => Project::factory(),
             'assessed_by' => User::factory(),
-            'estimated_effort' => fake()->paragraph(),
-            'in_scope' => fake()->paragraph(),
-            'out_of_scope' => fake()->paragraph(),
-            'assumptions' => fake()->paragraph(),
+            'estimated_effort' => substr(fake()->paragraph(), 0, 250),
+            'in_scope' => substr(fake()->paragraph(), 0, 250),
+            'out_of_scope' => substr(fake()->paragraph(), 0, 250),
+            'assumptions' => substr(fake()->paragraph(), 0, 250),
             'skills_required' => null,
         ];
     }
