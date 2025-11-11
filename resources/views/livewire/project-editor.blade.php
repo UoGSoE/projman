@@ -1,6 +1,17 @@
 <div>
     <flux:heading size="xl" level="1">Edit Work Package</flux:heading>
-    <flux:subheading class="flex items-center gap-2"><b>Title:</b> {{ $project->title }}</flux:subheading>
+    <flux:subheading class="flex items-center gap-2">
+        <span><b>Title:</b> {{ $project->title }}</span>
+        @if($feasibilityForm->approvalStatus !== 'pending')
+            <div>
+                <flux:badge
+                    size="sm"
+                    :color="$feasibilityForm->approvalStatus === 'approved' ? 'green' : 'red'">
+                    {{ ucfirst($feasibilityForm->approvalStatus) }}
+                </flux:badge>
+            </div>
+        @endif
+    </flux:subheading>
     <flux:subheading class="flex items-center gap-2"><b>Requested By:</b> {{ $project->user->full_name }}
     </flux:subheading>
     <flux:separator variant="subtle" class="mt-6" />
@@ -76,6 +87,7 @@
                 {{-- Assessed By / Date Assessed --}}
                 <div class="grid grid-cols-2 gap-4">
                     <flux:select label="Assessed By" wire:model="feasibilityForm.assessedBy">
+                        <flux:select.option value="">Select</flux:select.option>
                         @foreach ($this->availableUsers as $user)
                             <flux:select.option value="{{ $user->id }}">
                                 {{ $user->full_name }}
@@ -112,49 +124,42 @@
 
                 {{-- Existing & Off-the-Shelf Solutions --}}
                 <div class="grid grid-cols-2 gap-4">
-                    <flux:textarea label="Is there an existing solution that meets the need?" rows="4"
+                    <flux:textarea label="Is there an existing UoG solution that meets the need?" rows="4"
                         wire:model="feasibilityForm.existingSolution" />
                     <flux:textarea label="Is there an off-the-shelf solution available?" rows="4"
                         wire:model="feasibilityForm.offTheShelfSolution" />
                 </div>
 
-                {{-- Approval Status Badge --}}
-                @if($feasibilityForm->approvalStatus !== 'pending')
-                    <div>
-                        <flux:badge
-                            :variant="$feasibilityForm->approvalStatus === 'approved' ? 'success' : 'danger'">
-                            {{ ucfirst($feasibilityForm->approvalStatus) }}
-                        </flux:badge>
-                    </div>
-                @endif
-
                 <flux:separator />
 
                 {{-- Action Buttons --}}
-                <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
                     <flux:button type="submit" variant="primary">Update</flux:button>
 
-                    @if($feasibilityForm->approvalStatus === 'pending')
-                        <flux:button
-                            wire:click="approveFeasibility"
-                            type="button"
-                            variant="primary"
-                            :disabled="!empty($feasibilityForm->existingSolution)">
-                            Approve
-                        </flux:button>
-                        <flux:modal.trigger name="reject-feasibility-modal">
-                            <flux:button type="button" variant="danger">Reject</flux:button>
-                        </flux:modal.trigger>
-                    @endif
+                    <div class="flex flex-col md:flex-row justify-end gap-4">
+                        @if($feasibilityForm->approvalStatus === 'pending')
+                            <flux:button
+                                wire:click="approveFeasibility"
+                                type="button"
+                                variant="primary"
+                                color="emerald"
+                                :disabled="!empty($feasibilityForm->existingSolution)">
+                                Approve
+                            </flux:button>
+                            <flux:modal.trigger name="reject-feasibility-modal">
+                                <flux:button type="button" variant="danger">Reject</flux:button>
+                            </flux:modal.trigger>
+                        @endif
 
-                    <flux:button icon:trailing="arrow-right" type="button" wire:click="advanceToNextStage()">
-                        Advance To Next Stage
-                    </flux:button>
+                        <flux:button icon:trailing="arrow-right" type="button" wire:click="advanceToNextStage()">
+                            Advance To Next Stage
+                        </flux:button>
+                    </div>
                 </div>
             </form>
 
             {{-- Reject Modal --}}
-            <flux:modal name="reject-feasibility-modal" class="md:w-96">
+            <flux:modal name="reject-feasibility-modal" variant="flyout" class="md:w-96">
                 <form wire:submit="rejectFeasibility" class="space-y-6">
                     <div>
                         <flux:heading size="lg">Reject Feasibility</flux:heading>
