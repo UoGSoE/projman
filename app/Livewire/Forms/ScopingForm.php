@@ -2,14 +2,12 @@
 
 namespace App\Livewire\Forms;
 
-use Flux\Flux;
-use Livewire\Form;
-use Livewire\Attributes\Validate;
 use App\Models\Project;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class ScopingForm extends Form
 {
-
     public ?Project $project = null;
 
     public array $availableSkills = [

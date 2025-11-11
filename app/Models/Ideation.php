@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use App\Models\Traits\CanCheckIfEdited;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Ideation extends Model
 {
+    use CanCheckIfEdited;
+
     /** @use HasFactory<\Database\Factories\IdeationFactory> */
     use HasFactory;
-    use CanCheckIfEdited;
 
     protected $fillable = [
         'project_id',

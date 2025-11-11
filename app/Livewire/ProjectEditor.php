@@ -122,6 +122,52 @@ class ProjectEditor extends Component
 
     }
 
+    public function approveFeasibility(): void
+    {
+        if (! empty($this->feasibilityForm->existingSolution)) {
+            Flux::toast('Cannot approve when an existing solution is identified. Please reject instead.', variant: 'danger');
+
+            return;
+        }
+
+        $this->project->feasibility->update([
+            'approval_status' => 'approved',
+            'approved_at' => now(),
+            'actioned_by' => Auth::id(),
+        ]);
+
+        $this->feasibilityForm->approvalStatus = 'approved';
+
+        $this->project->addHistory(Auth::user(), 'Approved feasibility');
+
+        event(new \App\Events\FeasibilityApproved($this->project));
+
+        Flux::toast('Feasibility approved successfully', variant: 'success');
+    }
+
+    public function rejectFeasibility(): void
+    {
+        $this->validate([
+            'feasibilityForm.rejectReason' => 'required|string|max:5000',
+        ]);
+
+        $this->project->feasibility->update([
+            'approval_status' => 'rejected',
+            'reject_reason' => $this->feasibilityForm->rejectReason,
+            'actioned_by' => Auth::id(),
+        ]);
+
+        $this->feasibilityForm->approvalStatus = 'rejected';
+
+        $this->project->addHistory(Auth::user(), 'Rejected feasibility');
+
+        event(new \App\Events\FeasibilityRejected($this->project));
+
+        $this->modal('reject-feasibility-modal')->close();
+
+        Flux::toast('Feasibility rejected', variant: 'warning');
+    }
+
     #[Computed]
     public function availableUsers()
     {

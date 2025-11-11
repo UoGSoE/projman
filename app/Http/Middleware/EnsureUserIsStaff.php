@@ -15,7 +15,7 @@ class EnsureUserIsStaff
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || !auth()->user()->is_staff) {
+        if (! auth()->check() || ! auth()->user()->is_staff) {
             abort(403, 'Access denied. Staff only.');
         }
 

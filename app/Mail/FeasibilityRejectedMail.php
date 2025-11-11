@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Project;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class FeasibilityRejectedMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(protected Project $project) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Feasibility Rejected: '.$this->project->title,
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            markdown: 'emails.feasibility_rejected',
+        );
+    }
+
+    public function attachments(): array
+    {
+        return [];
+    }
+}

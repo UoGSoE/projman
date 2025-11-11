@@ -82,11 +82,11 @@ class SSOController extends Controller
             abort(403, 'Only admins can login');
         }
 
-        if (!$user && $this->shouldCreateNewUsers()) {
+        if (! $user && $this->shouldCreateNewUsers()) {
             $user = $this->createUser($ssoDetails);
         }
 
-        if (!$user) {
+        if (! $user) {
             Log::warning('Denying login attempt for unknown user', ['email' => $ssoDetails['email']]);
             abort(403, 'Authentication failed');
         }
@@ -114,12 +114,12 @@ class SSOController extends Controller
 
     private function forbidsStudentsFromLoggingIn(\Laravel\Socialite\Contracts\User $ssoUser): bool
     {
-        return $this->isStudent($ssoUser) && !config('sso.allow_students', true);
+        return $this->isStudent($ssoUser) && ! config('sso.allow_students', true);
     }
 
     private function onlyAdminsCanLogin(?User $user): bool
     {
-        return config('sso.admins_only', false) && (!$user || !$user->is_admin);
+        return config('sso.admins_only', false) && (! $user || ! $user->is_admin);
     }
 
     private function shouldCreateNewUsers(): bool
@@ -157,7 +157,7 @@ class SSOController extends Controller
 
     private function isStaff(\Laravel\Socialite\Contracts\User $ssoUser): bool
     {
-        return !$this->looksLikeMatric($ssoUser->nickname);
+        return ! $this->looksLikeMatric($ssoUser->nickname);
     }
 
     private function looksLikeMatric(string $username): bool

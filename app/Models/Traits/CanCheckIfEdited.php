@@ -7,8 +7,6 @@ trait CanCheckIfEdited
     /**
      * Check if the model has been edited.
      * (was it updated after it was created?)
-     *
-     * @return bool
      */
     public function hasBeenEdited(): bool
     {

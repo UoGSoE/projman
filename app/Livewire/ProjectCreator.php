@@ -2,17 +2,15 @@
 
 namespace App\Livewire;
 
-use App\Models\User;
 use App\Models\Project;
-use Livewire\Component;
-use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Validate;
+use Livewire\Component;
 
 class ProjectCreator extends Component
 {
     #[Validate('required|string|max:255')]
     public ?string $projectName;
-
 
     public function render()
     {

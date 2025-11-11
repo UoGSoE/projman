@@ -11,4 +11,14 @@ return [
         'class' => \App\Events\ProjectStageChange::class,
         'mailable' => \App\Mail\ProjectStageChangeMail::class,
     ],
+    [
+        'label' => 'Feasibility Approved',
+        'class' => \App\Events\FeasibilityApproved::class,
+        'mailable' => \App\Mail\FeasibilityApprovedMail::class,
+    ],
+    [
+        'label' => 'Feasibility Rejected',
+        'class' => \App\Events\FeasibilityRejected::class,
+        'mailable' => \App\Mail\FeasibilityRejectedMail::class,
+    ],
 ];

@@ -2,17 +2,19 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Livewire\Forms\IdeationForm;
 use App\Livewire\Forms\FeasibilityForm;
+use App\Livewire\Forms\IdeationForm;
 use App\Models\User;
+use Livewire\Component;
 
 class HomePage extends Component
 {
     public IdeationForm $ideationForm;
+
     public FeasibilityForm $feasibilityForm;
 
     public $tab = 'ideation';
+
     public ?int $formId = null;
 
     public $skills = [
@@ -33,12 +35,13 @@ class HomePage extends Component
 
     public function save(string $tabName)
     {
-        $this->{$tabName . 'Form'}->save();
+        $this->{$tabName.'Form'}->save();
     }
 
     public function partOfDay()
     {
         $hour = now()->hour;
+
         return match (true) {
             $hour < 12 => 'morning',
             $hour < 18 => 'afternoon',

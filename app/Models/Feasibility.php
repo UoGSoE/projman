@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use App\Models\Traits\CanCheckIfEdited;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Feasibility extends Model
 {
+    use CanCheckIfEdited;
+
     /** @use HasFactory<\Database\Factories\FeasibilityFactory> */
     use HasFactory;
-    use CanCheckIfEdited;
 
     protected $touches = ['project'];
 
@@ -24,11 +25,18 @@ class Feasibility extends Model
         'dependencies_prerequisites',
         'deadlines_achievable',
         'alternative_proposal',
+        'existing_solution',
+        'off_the_shelf_solution',
+        'reject_reason',
+        'approval_status',
+        'approved_at',
+        'actioned_by',
     ];
 
     protected $casts = [
         'date_assessed' => 'date',
         'deadlines_achievable' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function project(): BelongsTo
@@ -39,5 +47,10 @@ class Feasibility extends Model
     public function assessor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assessed_by');
+    }
+
+    public function actionedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actioned_by');
     }
 }

@@ -133,8 +133,88 @@ By following this plan we satisfy the most visible leadership asks first, unbloc
 - All migrations have proper `down()` methods with `dropConstrainedForeignId()` for foreign keys
 - `actioned_by` field added to feasibility for better audit trail of who approved/rejected
 
+---
+
+### Completed: Feature 1 - Feasibility Approvals & Rejection Workflow ✓
+
+**Date Completed:** 2025-11-11
+
+**Models & Database:**
+- ✅ Updated `app/Models/Feasibility.php` with new fillable fields and casts
+- ✅ Added `actionedBy()` relationship to track who approved/rejected
+
+**Forms & Validation:**
+- ✅ Extended `app/Livewire/Forms/FeasibilityForm.php` with:
+  - `existingSolution`, `offTheShelfSolution`, `rejectReason` properties
+  - `approvalStatus` property (pending/approved/rejected)
+  - Validation rules for new fields (nullable text fields up to 10,000 chars)
+  - Sanitization for all new text inputs
+
+**Livewire Component Actions:**
+- ✅ Added `approveFeasibility()` method to `app/Livewire/ProjectEditor.php`
+  - Blocks approval if existing solution is identified
+  - Updates approval status and timestamps
+  - Records actioned_by for audit trail
+  - Dispatches FeasibilityApproved event
+- ✅ Added `rejectFeasibility()` method to `app/Livewire/ProjectEditor.php`
+  - Requires rejection reason (validated)
+  - Updates rejection status and reason
+  - Closes modal after successful rejection
+  - Dispatches FeasibilityRejected event
+
+**Events & Notifications:**
+- ✅ Created `app/Events/FeasibilityApproved.php`
+- ✅ Created `app/Events/FeasibilityRejected.php`
+- ✅ Created `app/Mail/FeasibilityApprovedMail.php` with email template
+- ✅ Created `app/Mail/FeasibilityRejectedMail.php` with email template
+- ✅ Registered both events in `config/notifiable_events.php`
+- ✅ Updated `app/Listeners/ProjectEventsListener.php` with handler methods
+- ✅ Integrated with existing NotificationRule system for flexible recipient targeting
+
+**UI Updates:**
+- ✅ Updated `resources/views/livewire/project-editor.blade.php` feasibility panel:
+  - Added "Existing Solution" textarea field
+  - Added "Off-the-Shelf Solution" textarea field
+  - Added approval status badge (shows "Approved" or "Rejected" when not pending)
+  - Changed "Save" button to "Update" button
+  - Added "Approve" button (disabled when existing solution identified)
+  - Added "Reject" button that triggers modal
+- ✅ Created rejection modal using Flux components:
+  - Clean modal with heading and description
+  - Textarea for rejection reason (required)
+  - Cancel and Confirm buttons
+
+**Testing:**
+- ✅ Created `tests/Feature/FeasibilityApprovalTest.php` with 14 comprehensive tests:
+  - Approval workflow (happy path)
+  - Prevention when existing solution exists
+  - Rejection validation (requires reason)
+  - Successful rejection with reason
+  - Event dispatching for both actions
+  - Email notifications to correct roles
+  - History recording for both actions
+  - Project isolation (no cross-project effects)
+  - UI badge visibility for approved/rejected states
+  - Field persistence through save action
+- ✅ All 14 tests passing (31 assertions)
+
+**Code Quality:**
+- ✅ Ran Laravel Pint for code formatting compliance
+- ✅ Followed existing codebase conventions
+- ✅ Used Flux UI components correctly (no invalid variants)
+- ✅ Proper modal handling with `$this->modal()->close()`
+
+**Key Implementation Notes:**
+- Approval status defaults to 'pending' for all records
+- Business rule enforced: cannot approve if existing solution is identified
+- Rejection requires a reason to be provided
+- Both actions record who performed them via `actioned_by` field
+- Integrated with project history tracking
+- Works with existing notification rules for flexible email routing
+- Email subjects include project title for easy identification
+
 **Next Steps:**
-- Feature 1: Feasibility Approvals & Rejection Workflow
+- Feature 2: Scoping Effort Scale & DCGG Workflow
 
 ---
 

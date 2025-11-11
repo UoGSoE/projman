@@ -3,8 +3,9 @@
 use App\Livewire\RolesList;
 use App\Models\Role;
 use App\Models\User;
-use function Pest\Livewire\livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
+use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 

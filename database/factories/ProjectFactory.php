@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
 use App\Enums\ProjectStatus;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -29,7 +29,7 @@ class ProjectFactory extends Factory
 
     public function completed(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => ProjectStatus::COMPLETED,
         ]);
     }

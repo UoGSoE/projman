@@ -3,9 +3,9 @@
 use App\Livewire\UserList;
 use App\Models\Role;
 use App\Models\User;
-use function Pest\Livewire\livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
+use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
@@ -306,8 +306,7 @@ describe('User Role Management', function () {
             ->assertSet('selectedUser.id', $this->regularUser->id)
             ->assertSet(
                 'availableRoles',
-                fn($roles) =>
-                $roles instanceof \Illuminate\Support\Collection &&
+                fn ($roles) => $roles instanceof \Illuminate\Support\Collection &&
                 collect([$this->adminRole->name, $this->userRole->name, $this->managerRole->name])->diff($roles->pluck('name'))->isEmpty()
             )
             ->assertSet('userRoles', []);
@@ -338,7 +337,7 @@ describe('User Role Management', function () {
             ->assertSet('userRoles', []);
     });
 
-    it("discards changes when modal is closed", function () {
+    it('discards changes when modal is closed', function () {
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $this->regularUser)
             ->set('userRoles', ['Administrator', 'Manager'])

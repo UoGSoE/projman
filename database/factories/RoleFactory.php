@@ -28,7 +28,7 @@ class RoleFactory extends Factory
      */
     public function inactive(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_active' => false,
         ]);
     }
@@ -38,7 +38,7 @@ class RoleFactory extends Factory
      */
     public function withName(string $name): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'name' => $name,
         ]);
     }

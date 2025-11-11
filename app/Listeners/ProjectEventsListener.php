@@ -2,6 +2,8 @@
 
 namespace App\Listeners;
 
+use App\Events\FeasibilityApproved;
+use App\Events\FeasibilityRejected;
 use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Jobs\SendEmailJob;
@@ -39,6 +41,34 @@ class ProjectEventsListener
 
         if ($rules->isEmpty()) {
 
+            return;
+        }
+
+        foreach ($rules as $rule) {
+            SendEmailJob::dispatch($rule, $event);
+        }
+    }
+
+    public function handleFeasibilityApproved(FeasibilityApproved $event): void
+    {
+        $eventClass = get_class($event);
+        $rules = NotificationRule::where('event->class', $eventClass)->where('active', true)->get();
+
+        if ($rules->isEmpty()) {
+            return;
+        }
+
+        foreach ($rules as $rule) {
+            SendEmailJob::dispatch($rule, $event);
+        }
+    }
+
+    public function handleFeasibilityRejected(FeasibilityRejected $event): void
+    {
+        $eventClass = get_class($event);
+        $rules = NotificationRule::where('event->class', $eventClass)->where('active', true)->get();
+
+        if ($rules->isEmpty()) {
             return;
         }
 

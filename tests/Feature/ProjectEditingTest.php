@@ -1,14 +1,12 @@
 <?php
+
 use App\Enums\ProjectStatus;
-use App\Livewire\ProjectCreator;
 use App\Livewire\ProjectEditor;
-use App\Mail\ProjectCreatedMail;
 use App\Models\Project;
 use App\Models\User;
-use function Pest\Livewire\livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
 
+use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
@@ -39,7 +37,7 @@ describe('Project Editing', function () {
 
     });
 
-    it("livewire can advance the project to next stage", function () {
+    it('livewire can advance the project to next stage', function () {
         $user = User::factory()->create();
         $this->actingAs($user);
 
