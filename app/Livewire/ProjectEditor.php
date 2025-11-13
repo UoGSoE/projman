@@ -168,6 +168,42 @@ class ProjectEditor extends Component
         Flux::toast('Feasibility rejected', variant: 'warning');
     }
 
+    public function submitToDCGG(): void
+    {
+        $this->scopingForm->validate();
+
+        $this->project->scoping->update([
+            'dcgg_status' => 'submitted',
+            'submitted_to_dcgg_at' => now(),
+        ]);
+
+        $this->scopingForm->dcggStatus = 'submitted';
+        $this->scopingForm->submittedToDcggAt = now();
+
+        $this->project->addHistory(Auth::user(), 'Submitted to DCGG for approval');
+
+        event(new \App\Events\ScopingSubmittedToDCGG($this->project));
+
+        Flux::toast('Submitted to Digital Change Governance Group', variant: 'success');
+    }
+
+    public function scheduleScoping(): void
+    {
+        $this->project->scoping->update([
+            'dcgg_status' => 'approved',
+            'scheduled_at' => now(),
+        ]);
+
+        $this->scopingForm->dcggStatus = 'approved';
+        $this->scopingForm->scheduledAt = now();
+
+        $this->project->addHistory(Auth::user(), 'Scoping approved and scheduled');
+
+        event(new \App\Events\ScopingScheduled($this->project));
+
+        Flux::toast('Scoping approved and scheduled', variant: 'success');
+    }
+
     #[Computed]
     public function availableUsers()
     {

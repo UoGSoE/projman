@@ -1,12 +1,13 @@
 <?php
 
-use App\Livewire\ProjectCreator;
-use App\Livewire\ProjectEditor;
-use App\Models\Project;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Project;
+use App\Enums\EffortScale;
+use App\Livewire\ProjectEditor;
+use App\Livewire\ProjectCreator;
 
 use function Pest\Livewire\livewire;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -180,7 +181,7 @@ describe('Project Editing', function () {
         it('can create a scoping form with valid data', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('scopingForm.assessedBy', $this->testAssessor->id)
-                ->set('scopingForm.estimatedEffort', 'Test Effort')
+                ->set('scopingForm.estimatedEffort', EffortScale::MEDIUM)
                 ->set('scopingForm.inScope', 'Test In Scope')
                 ->set('scopingForm.outOfScope', 'Test Out of Scope')
                 ->set('scopingForm.assumptions', 'Test Assumptions')
@@ -189,7 +190,7 @@ describe('Project Editing', function () {
                 ->assertHasNoErrors();
             $this->project->refresh();
             expect($this->project->scoping->assessed_by)->toBe($this->testAssessor->id);
-            expect($this->project->scoping->estimated_effort)->toBe('Test Effort');
+            expect($this->project->scoping->estimated_effort)->toBe(EffortScale::MEDIUM);
             expect($this->project->scoping->in_scope)->toBe('Test In Scope');
             expect($this->project->scoping->out_of_scope)->toBe('Test Out of Scope');
             expect($this->project->scoping->assumptions)->toBe('Test Assumptions');

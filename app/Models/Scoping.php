@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EffortScale;
 use App\Models\Traits\CanCheckIfEdited;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,9 @@ class Scoping extends Model
         'out_of_scope',
         'assumptions',
         'skills_required',
+        'dcgg_status',
+        'submitted_to_dcgg_at',
+        'scheduled_at',
     ];
 
     public function project(): BelongsTo
@@ -34,6 +38,9 @@ class Scoping extends Model
     {
         return [
             'skills_required' => 'array',
+            'estimated_effort' => EffortScale::class,
+            'submitted_to_dcgg_at' => 'datetime',
+            'scheduled_at' => 'datetime',
         ];
     }
 }

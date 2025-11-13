@@ -443,8 +443,14 @@
 
                 {{-- Effort, In-Scope, Out-of-Scope --}}
                 <div class="grid grid-cols-3 gap-4">
-                    <flux:textarea label="Estimated Effort Involved" rows="4"
-                        wire:model="scopingForm.estimatedEffort" />
+                    <flux:select label="Estimated Effort Involved" wire:model="scopingForm.estimatedEffort">
+                        <flux:select.option value="">– Select Effort Scale –</flux:select.option>
+                        @foreach (\App\Enums\EffortScale::cases() as $scale)
+                            <flux:select.option value="{{ $scale->value }}">
+                                {{ $scale->label() }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
 
                     <flux:textarea label="In-Scope" rows="4" wire:model="scopingForm.inScope" />
 
@@ -465,10 +471,33 @@
 
                 <flux:separator />
 
-                <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
-                    <flux:button type="submit" variant="primary" class="w-full">Save</flux:button>
-                    <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">Advance
-                        To Next Stage
+                {{-- Status Badge --}}
+                @if ($scopingForm->dcggStatus !== 'pending')
+                    <flux:badge
+                        size="sm"
+                        :color="$scopingForm->dcggStatus === 'approved' ? 'green' : 'blue'">
+                        DCGG Status: {{ ucfirst($scopingForm->dcggStatus) }}
+                    </flux:badge>
+                @endif
+
+                {{-- Action Buttons --}}
+                <div class="flex flex-wrap gap-2">
+                    <flux:button type="submit" variant="primary">Update</flux:button>
+
+                    @if ($scopingForm->dcggStatus === 'pending')
+                        <flux:button wire:click="submitToDCGG" variant="filled" data-test="submit-to-dcgg-button">
+                            Submit to DCGG
+                        </flux:button>
+                    @endif
+
+                    @if ($scopingForm->dcggStatus === 'submitted')
+                        <flux:button wire:click="scheduleScoping" variant="primary" data-test="schedule-scoping-button">
+                            Schedule
+                        </flux:button>
+                    @endif
+
+                    <flux:button icon:trailing="arrow-right" wire:click="advanceToNextStage()">
+                        Advance To Next Stage
                     </flux:button>
                 </div>
             </form>
