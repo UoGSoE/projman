@@ -2,8 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Project;
 use App\Models\User;
+use App\Models\Project;
+use App\Enums\EffortScale;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,7 +22,7 @@ class ScopingFactory extends Factory
         return [
             'project_id' => Project::factory(),
             'assessed_by' => User::factory(),
-            'estimated_effort' => substr(fake()->paragraph(), 0, 250),
+            'estimated_effort' => EffortScale::MEDIUM,
             'in_scope' => substr(fake()->paragraph(), 0, 250),
             'out_of_scope' => substr(fake()->paragraph(), 0, 250),
             'assumptions' => substr(fake()->paragraph(), 0, 250),

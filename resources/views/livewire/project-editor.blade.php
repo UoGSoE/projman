@@ -420,13 +420,34 @@
 
                 <flux:separator />
 
-                <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
-                    <flux:button type="submit" variant="primary" class="w-full">Save</flux:button>
+                <div class="flex flex-col md:grid md:grid-cols-3 gap-4">
+                    <flux:button type="submit" variant="primary" class="w-full">Update</flux:button>
+                    <flux:button
+                        wire:click="toggleHeatmap"
+                        variant="filled"
+                        class="w-full"
+                        data-test="model-heatmap-button">
+                        {{ $showHeatmap ? 'Hide Heatmap' : 'Model' }}
+                    </flux:button>
                     <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">Advance
                         To Next Stage
                     </flux:button>
                 </div>
             </form>
+
+            @if($showHeatmap)
+                <div class="mt-8">
+                    <flux:heading size="lg">Staff Heatmap</flux:heading>
+                    <flux:text class="mt-2 mb-4">
+                        @if($this->heatmapData['hasAssignedStaff'])
+                            Assigned staff are shown first, followed by all other staff members.
+                        @else
+                            All staff members are shown alphabetically.
+                        @endif
+                    </flux:text>
+                    @include('components.heatmap-table', $this->heatmapData)
+                </div>
+            @endif
         </flux:tab.panel>
 
 

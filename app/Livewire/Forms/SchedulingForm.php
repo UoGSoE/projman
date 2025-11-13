@@ -49,6 +49,12 @@ class SchedulingForm extends Form
     #[Validate('required|integer|exists:users,id')]
     public ?int $assignedTo = null;
 
+    #[Validate('nullable|integer|exists:users,id')]
+    public ?int $technicalLeadId = null;
+
+    #[Validate('nullable|integer|exists:users,id')]
+    public ?int $changeChampionId = null;
+
     // #[Validate('required|string|max:255')]
     // public ?string $teamAssignment;
 
@@ -63,6 +69,8 @@ class SchedulingForm extends Form
         $this->changeBoardDate = $project->scheduling->change_board_date?->format('Y-m-d');
         $this->priority = $project->scheduling->priority;
         $this->assignedTo = $project->scheduling->assigned_to;
+        $this->technicalLeadId = $project->scheduling->technical_lead_id;
+        $this->changeChampionId = $project->scheduling->change_champion_id;
         // $this->teamAssignment = $project->scheduling->team_assignment;
     }
 
@@ -75,6 +83,8 @@ class SchedulingForm extends Form
             'estimated_completion_date' => $this->estimatedCompletionDate,
             'change_board_date' => $this->changeBoardDate,
             'assigned_to' => $this->assignedTo,
+            'technical_lead_id' => $this->technicalLeadId,
+            'change_champion_id' => $this->changeChampionId,
             'priority' => $this->priority,
             // 'team_assignment' => $this->teamAssignment,
         ]);

@@ -2,23 +2,24 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Busyness;
-use App\Enums\ProjectStatus;
-use App\Enums\SkillLevel;
-use App\Events\ProjectCreated;
-use App\Events\ProjectStageChange;
-use App\Models\NotificationRule;
-use App\Models\Project;
-use App\Models\ProjectHistory;
 use App\Models\Role;
-use App\Models\Scheduling;
-use App\Models\Skill;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
+use App\Models\Skill;
+use App\Enums\Busyness;
+use App\Models\Project;
+use App\Enums\SkillLevel;
+use App\Enums\EffortScale;
+use App\Models\Scheduling;
 use Illuminate\Support\Str;
+use App\Enums\ProjectStatus;
+use App\Events\ProjectCreated;
+use App\Models\ProjectHistory;
+use Illuminate\Support\Carbon;
+use Illuminate\Database\Seeder;
+use App\Models\NotificationRule;
+use App\Events\ProjectStageChange;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class TestDataSeeder extends Seeder
 {
@@ -413,7 +414,7 @@ class TestDataSeeder extends Seeder
 
                 return [
                     'assessed_by' => $assessor,
-                    'estimated_effort' => $faker->sentence(),
+                    'estimated_effort' => EffortScale::MEDIUM,
                     'in_scope' => $faker->paragraph(),
                     'out_of_scope' => $faker->paragraph(),
                     'assumptions' => $faker->paragraph(),

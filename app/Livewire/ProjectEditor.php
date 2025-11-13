@@ -15,6 +15,7 @@ use App\Livewire\Forms\TestingForm;
 use App\Models\Project;
 use App\Models\Skill;
 use App\Models\User;
+use App\Traits\HasHeatmapData;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,8 @@ use Livewire\Component;
 
 class ProjectEditor extends Component
 {
+    use HasHeatmapData;
+
     public IdeationForm $ideationForm;
 
     public FeasibilityForm $feasibilityForm;
@@ -60,6 +63,8 @@ class ProjectEditor extends Component
     ];
 
     public Collection $availableSkills;
+
+    public bool $showHeatmap = false;
 
     public function mount(Project $project)
     {
@@ -202,6 +207,45 @@ class ProjectEditor extends Component
         event(new \App\Events\ScopingScheduled($this->project));
 
         Flux::toast('Scoping approved and scheduled', variant: 'success');
+    }
+
+    public function toggleHeatmap(): void
+    {
+        $this->showHeatmap = ! $this->showHeatmap;
+    }
+
+    #[Computed]
+    public function heatmapData(): array
+    {
+        $days = $this->upcomingWorkingDays(10);
+
+        // Collect assigned user IDs from scheduling form
+        $assignedUserIds = $this->getAssignedStaffIds();
+
+        $staff = $this->staffWithBusyness($days, $assignedUserIds);
+        $projects = $this->activeProjects();
+
+        return [
+            'days' => $days,
+            'staff' => $staff,
+            'projects' => $projects,
+            'component' => $this,
+            'hasAssignedStaff' => ! empty($assignedUserIds),
+        ];
+    }
+
+    protected function getAssignedStaffIds(): array
+    {
+        return collect([
+            $this->schedulingForm->assignedTo,
+            $this->schedulingForm->technicalLeadId,
+            $this->schedulingForm->changeChampionId,
+        ])
+            ->merge($this->schedulingForm->coseItStaff ?? [])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     #[Computed]
