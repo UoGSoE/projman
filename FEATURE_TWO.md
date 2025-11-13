@@ -86,25 +86,36 @@ When "Model" is clicked on Scheduling form:
 - [ ] Run feature tests for Scheduling heatmap (Phase B/C work)
 - [ ] Full test suite after all phases complete
 
-### Phase B: Heatmap Extraction & Trait Creation
-- [ ] Create `app/Traits/HasHeatmapData.php`:
-  - [ ] Move `upcomingWorkingDays()` from HeatMapViewer (make protected)
-  - [ ] Move `staffWithBusyness()` from HeatMapViewer (make protected)
-  - [ ] Move `busynessSeries()` from HeatMapViewer (make protected)
-  - [ ] Move `busynessForDay()` from HeatMapViewer (make public - used by view)
-  - [ ] Move `activeProjects()`, `teamMembersForProjects()`, `collectTeamMembers()`, `collectTeamMemberIds()` from HeatMapViewer
-  - [ ] Add new method: `sortStaffByAssignment(Collection $staff, array $assignedUserIds)` for smart sorting
-- [ ] Update `app/Livewire/HeatMapViewer.php`:
-  - [ ] Add `use HasHeatmapData;` trait
-  - [ ] Remove methods now in trait
-  - [ ] Verify `render()` still works with trait methods
-- [ ] Create Blade partial `resources/views/components/heatmap-table.blade.php`:
-  - [ ] Extract heatmap table HTML from `resources/views/livewire/heat-map-viewer.blade.php`
-  - [ ] Accept parameters: `$days`, `$staff`, `$activeProjects`
-  - [ ] Keep busyness color logic intact
-- [ ] Update `resources/views/livewire/heat-map-viewer.blade.php`:
-  - [ ] Replace extracted HTML with `@include('components.heatmap-table', [...])`
-  - [ ] Verify standalone page still works
+### Phase B: Heatmap Extraction & Trait Creation ✅ **COMPLETED**
+- [x] Create `app/Traits/HasHeatmapData.php`:
+  - [x] Move `upcomingWorkingDays()` from HeatMapViewer (make protected)
+  - [x] Move `staffWithBusyness()` from HeatMapViewer (make protected)
+  - [x] Move `busynessSeries()` from HeatMapViewer (make protected)
+  - [x] Move `busynessForDay()` from HeatMapViewer (make public - used by view)
+  - [x] Move `activeProjects()`, `teamMembersForProjects()`, `collectTeamMembers()`, `collectTeamMemberIds()` from HeatMapViewer
+  - [x] Add new method: `sortStaffByAssignment(Collection $staff, array $assignedUserIds)` for smart sorting
+  - [x] Removed all `select()` calls per team convention (validation hook caught this!)
+- [x] Update `app/Livewire/HeatMapViewer.php`:
+  - [x] Add `use HasHeatmapData;` trait
+  - [x] Remove methods now in trait
+  - [x] Verify `render()` still works with trait methods
+  - [x] Component now only 24 lines (from 171!)
+- [x] Create Blade partial `resources/views/components/heatmap-table.blade.php`:
+  - [x] Extract heatmap table HTML from `resources/views/livewire/heat-map-viewer.blade.php`
+  - [x] Accept parameters: `$days`, `$staff`, `$component`
+  - [x] Keep busyness color logic intact
+  - [x] Added `data-test="heatmap-grid"` attribute for testing
+- [x] Update `resources/views/livewire/heat-map-viewer.blade.php`:
+  - [x] Replace extracted HTML with `@include('components.heatmap-table', [...])`
+  - [x] Verify standalone page still works
+- [x] Create `tests/Feature/HeatMapViewerTest.php`:
+  - [x] Test standalone heatmap page loads
+  - [x] Test staff sorted alphabetically
+  - [x] Test active vs cancelled projects
+  - [x] Test 10 working days generated
+  - [x] Test busyness data included
+  - [x] **Result:** 5 tests, all passing (22 assertions) 🎉
+- [x] Run Pint: `vendor/bin/pint --dirty` ✅
 
 ### Phase C: Scheduling Stage Integration
 - [ ] Update `app/Livewire/ProjectEditor.php`:
@@ -130,24 +141,28 @@ When "Model" is clicked on Scheduling form:
     ```
 
 ### Phase D: Testing
-- [ ] Create `tests/Feature/ScopingWorkflowTest.php`:
-  - [ ] Test effort scale dropdown saves correctly
-  - [ ] Test submitToDCGG updates status and timestamps
-  - [ ] Test scheduleScoping requires change board date
-  - [ ] Test events are dispatched correctly
-  - [ ] Test email notifications sent to Work Package Assessors
-  - [ ] Test project isolation (no cross-project effects)
-- [ ] Create `tests/Feature/SchedulingHeatmapTest.php`:
+- [x] Create `tests/Feature/ScopingWorkflowTest.php`: ✅ (Phase A)
+  - [x] Test effort scale dropdown saves correctly
+  - [x] Test submitToDCGG updates status and timestamps
+  - [x] Test scheduleScoping requires change board date
+  - [x] Test events are dispatched correctly
+  - [x] Test email notifications sent to Work Package Assessors
+  - [x] Test project isolation (no cross-project effects)
+- [x] Create `tests/Feature/HeatMapViewerTest.php`: ✅ (Phase B)
+  - [x] Verify standalone page still works after trait extraction
+  - [x] Test staff sorted alphabetically
+  - [x] Test active projects display, cancelled projects don't
+  - [x] Test 10 working days generated
+  - [x] Test busyness data included
+- [ ] Create `tests/Feature/SchedulingHeatmapTest.php`: (Phase C)
   - [ ] Test heatmap displays when Model button clicked
   - [ ] Test assigned staff appear at top of heatmap
   - [ ] Test heatmap shows all staff when none assigned
   - [ ] Test heatmap data computed property returns correct structure
   - [ ] Test UI shows heatmap partial correctly with `assertSeeHtml('data-test="heatmap-grid"')`
-- [ ] Update `tests/Feature/HeatMapViewerTest.php` (if exists):
-  - [ ] Verify standalone page still works after trait extraction
-  - [ ] Test no regressions in existing heatmap functionality
-- [ ] Run Pint: `vendor/bin/pint --dirty` (use local, not lando)
-- [ ] Run feature tests: `lando artisan test --filter=Scoping` (use lando for DB access)
+- [x] Run Pint: `vendor/bin/pint --dirty` ✅
+- [x] Run feature tests: `lando artisan test --filter=Scoping` ✅
+- [x] Run feature tests: `lando artisan test --filter=HeatMapViewer` ✅
 - [ ] Run feature tests: `lando artisan test --filter=SchedulingHeatmap`
 - [ ] Full test suite: `lando artisan test`
 
@@ -240,6 +255,17 @@ When "Model" is clicked on Scheduling form:
   - Flux badge attributes: Changed `variant=` → `color=` and used color names (green, blue) instead of semantic names
   - Enum validation: Adjusted test to avoid Livewire enum hydration issues with null values
 
+### Testing Results for Phase B ✅
+- Created `tests/Feature/HeatMapViewerTest.php` with 5 comprehensive tests
+- **All 5 tests passing** (22 assertions)
+- **Testing Lessons Learned:**
+  - **Test in layers**: First test that the component appears on the page (`assertSeeLivewire`), then test the component logic directly using `Livewire::test(ComponentName::class)`
+  - **Test the component, not just the output**: Use `$component->viewData('staff')` to inspect what data the component is providing to the view
+  - **Use dd() or dump() liberally when debugging**: When a test fails, add a selective `dd($staff)` or `dump($staff->pluck('user.surname'))` to see exactly what data structure you're working with. This is **super helpful** and will save you tons of time versus guessing
+  - **Be careful with factory-generated data**: Random data (like surnames from factories) can make tests non-deterministic. Fix critical test data to known values (e.g., admin user with surname 'AdminUser') to make assertions reliable
+  - **assertSeeInOrder is your friend**: Great for verifying display order without needing to know exact indices
+  - **Keep test data simple**: Don't over-complicate - if you need 4 users, accept that you have 4 users and assert based on reality
+
 ---
 
 ## Current Status & What's Next
@@ -251,58 +277,38 @@ When "Model" is clicked on Scheduling form:
 - 17 comprehensive tests, all passing
 - Code formatted with Pint
 
-### 🎯 Phase B: Next Up - Heatmap Extraction & Trait Creation
+### ✅ Phase B: Complete (2025-11-13)
+- Created reusable `HasHeatmapData` trait with all heatmap logic
+- Extracted heatmap table to Blade partial for reuse
+- Refactored `HeatMapViewer` from 171 lines to 24 lines
+- Added `sortStaffByAssignment()` method for smart staff ordering
+- Comprehensive tests ensuring standalone heatmap still works
+- 5 tests passing (22 assertions)
+- Code formatted with Pint
 
-**Goal:** Extract the heatmap logic from `HeatMapViewer` into a reusable trait so both the standalone heatmap page and the embedded Scheduling view can use the same code.
+### 🎯 Phase C: Next Up - Scheduling Stage Integration
 
-**Why this approach:**
-- Team convention: No service classes, prefer traits for shared logic
-- Keep both components (HeatMapViewer & ProjectEditor) independent
-- DRY principle: Define the heatmap logic once, use in multiple places
+**Goal:** Add the heatmap display to the Scheduling tab of ProjectEditor so users can see staff availability while assigning team members.
 
 **Key Tasks:**
-1. **Create `app/Traits/HasHeatmapData.php`**
-   - Extract all the heatmap calculation methods from `HeatMapViewer.php`
-   - Make most methods `protected` (only used internally)
-   - Keep `busynessForDay()` as `public` (called from Blade views)
-   - Add new `sortStaffByAssignment()` method for the "selected staff first" feature
-
-2. **Extract heatmap HTML to Blade partial**
-   - Create `resources/views/components/heatmap-table.blade.php`
-   - Move the table markup out of `heat-map-viewer.blade.php`
-   - Pass data as parameters (`$days`, `$staff`, `$activeProjects`)
-
-3. **Update existing HeatMapViewer**
+1. **Update `ProjectEditor` component**
    - Add `use HasHeatmapData;` trait
-   - Delete the now-duplicate methods
-   - Update view to use `@include('components.heatmap-table', [...])`
-   - **Test thoroughly** - the standalone heatmap page must still work!
+   - Add `showHeatmap` property and `toggleHeatmap()` method
+   - Add `#[Computed]` property that returns heatmap data
+   - Collect assigned user IDs from scheduling form
+   - Use `sortStaffByAssignment()` to show assigned staff first
 
-4. **Prepare for Phase C**
-   - Once trait is working, Phase C will add it to `ProjectEditor`
-   - Will add `#[Computed]` property for heatmap data
-   - Will add the partial to the Scheduling tab
+2. **Update Scheduling view**
+   - Add "Model" button to toggle heatmap display
+   - Include heatmap partial below form fields when visible
+   - Ensure "Update" button label (not "Save")
 
-**Estimated Time:** 2-3 hours (careful refactoring + testing)
+3. **Test the integration**
+   - Heatmap displays when Model button clicked
+   - Assigned staff appear at top
+   - Heatmap updates when staff assignments change
 
-**Files to Touch:**
-- New: `app/Traits/HasHeatmapData.php`
-- New: `resources/views/components/heatmap-table.blade.php`
-- Edit: `app/Livewire/HeatMapViewer.php`
-- Edit: `resources/views/livewire/heat-map-viewer.blade.php`
-
-**Testing Strategy:**
-- Run existing tests to ensure no regressions
-- Manually test the standalone heatmap page (`/heatmap` route)
-- Verify all staff display correctly
-- Verify active projects list still appears
-- Check busyness colors render properly
-
-**Gotchas to Watch For:**
-- Make sure all method visibility is correct (public vs protected)
-- Don't break the existing standalone heatmap page!
-- The partial needs access to the component instance for `busynessForDay()` calls
-- Blade `@include` vs `<x-component>` - we want include for simplicity
+**Estimated Time:** 1-2 hours
 
 ---
 
