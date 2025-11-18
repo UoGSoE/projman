@@ -3,6 +3,423 @@
 ## Note
 The spec for this project came as a PowerPoint slide deck.  The extracted text is in the file 'pptx_text_extract.txt' - it is a useful, if difficult to read reference.
 
+---
+
+## 🚨 CRITICAL: DCGG Workflow Implemented on Wrong Stage! 🚨
+
+**Date Discovered:** 2025-11-18
+
+### The Problem
+
+We implemented the DCGG (Digital Change Governance Group) workflow on the **SCOPING stage**, but after re-reading the PowerPoint spec carefully, it's clear this should be on the **SCHEDULING stage**.
+
+**What the PowerPoint actually says:**
+
+- **Scoping (slide 15, lines 173-176):**
+  - "Add Submit button next to SAVE button"
+  - "Submit will progress the status and email a group 'Work package Assessors'"
+  - **NO MENTION OF DCGG**
+
+- **Scheduling (slide 21, lines 265-269):**
+  - "**Submit: The submit button will allow us to submit the workpackage request to the Digital Change Governance Group (DCGG) for approval**"
+  - "Schedule: will confirm that the schedule has been approved"
+
+### What We Got Wrong
+
+**Incorrectly Implemented on Scoping:**
+- ✅ `dcgg_status`, `submitted_to_dcgg_at`, `scheduled_at` fields added to `scopings` table
+- ✅ "Submit to DCGG" and "Schedule" buttons on Scoping stage
+- ✅ `ScopingSubmittedToDCGG` and `ScopingScheduled` events
+- ✅ Full test coverage (17 tests passing)
+- ❌ **But this is all on the wrong stage!**
+
+**Should Have Been:**
+- Scoping should have a simple "Submit" button that emails Work Package Assessors (no DCGG)
+- Scheduling should have "Submit to DCGG" and "Schedule" buttons
+
+### Remediation Plan
+
+#### Phase 1: Fix Scoping Stage
+1. Remove DCGG-related buttons from Scoping view (keep Update button)
+2. Add simple "Submit" button that emails Work Package Assessors
+3. Remove/rename events: `ScopingSubmittedToDCGG` → `ScopingSubmitted`
+4. Update tests to reflect simpler workflow
+5. Keep database fields (they don't hurt anything) but stop using them
+
+#### Phase 2: Add DCGG to Scheduling Stage
+1. Create migration to add DCGG fields to `schedulings` table:
+   - `submitted_to_dcgg_at` timestamp
+   - `scheduled_at` timestamp
+2. Update `SchedulingForm` with DCGG workflow properties
+3. Add "Submit to DCGG" and "Schedule" buttons to Scheduling view
+4. Create new events: `SchedulingSubmittedToDCGG` and `SchedulingScheduled`
+5. Create listeners with DCGG email handling (using config approach)
+6. Write comprehensive tests
+
+#### Phase 3: Configuration
+1. Add to `config/projman.php`:
+   - `dcgg_email` with env fallback to `dcgg@example.ac.uk`
+2. Update notification config for new Scheduling events
+
+### Impact Assessment
+
+**Effort Required:**
+- Phase 1 (Simplify Scoping): ~1-2 hours
+- Phase 2 (Add DCGG to Scheduling): ~2-3 hours
+- Phase 3 (Config & Testing): ~1 hour
+- **Total: 4-6 hours**
+
+**Files Affected:**
+- Database: New migration for `schedulings` table
+- Models: `Scheduling.php`
+- Forms: `SchedulingForm.php`
+- Components: `ProjectEditor.php`
+- Views: `project-editor.blade.php` (both stages)
+- Events: Rename/create 4 events total
+- Listeners: Update/create 4 listeners
+- Tests: Update `ScopingWorkflowTest.php`, create `SchedulingWorkflowTest.php`
+- Config: `projman.php`
+
+**Risk:**
+- Medium - existing Scoping tests will break but easy to fix
+- No data loss - fields exist but unused won't hurt
+- Good news: No production users yet!
+
+### Why This Happened
+
+The previous developer mentioned confusion about this - and they were right! The spec is verbose and the DCGG workflow details are scattered across multiple slides. Easy to miss that:
+1. Scoping Submit = simple email to Work Package Assessors
+2. Scheduling Submit = DCGG governance approval process
+
+This is a classic case of ambiguous requirements causing implementation in the wrong place.
+
+### Priority
+
+**HIGH** - This affects the governance workflow that leadership specifically requested. Better to fix it now before we continue with Feature 3.
+
+---
+
+## ✅ Phase 1 Complete: Scoping Stage Simplified (2025-11-18)
+
+**Status:** COMPLETE
+**Time Taken:** ~1 hour
+**Tests:** 10 tests passing (21 assertions)
+
+### What We Did
+
+Successfully simplified the Scoping stage to remove DCGG workflow and replace with a simple Submit button that emails Work Package Assessors.
+
+#### Files Modified
+
+**1. View Updates** (`resources/views/livewire/project-editor.blade.php`)
+- ❌ Removed DCGG status badge (was showing "Submitted"/"Approved")
+- ❌ Removed conditional "Submit to DCGG" button
+- ❌ Removed conditional "Schedule" button
+- ✅ Added simple "Submit" button with `data-test="submit-scoping-button"`
+- Result: Clean, simple UI - just Update and Submit buttons
+
+**2. Events & Listeners**
+- ✅ Created `app/Events/ScopingSubmitted.php` (replaces ScopingSubmittedToDCGG)
+- ✅ Created `app/Listeners/ScopingSubmittedListener.php` (emails Work Package Assessors only)
+- ❌ Deleted `app/Events/ScopingSubmittedToDCGG.php`
+- ❌ Deleted `app/Events/ScopingScheduled.php`
+- ❌ Deleted `app/Listeners/ScopingSubmittedToDCGGListener.php`
+- ❌ Deleted `app/Listeners/ScopingScheduledListener.php`
+
+**3. Component Methods** (`app/Livewire/ProjectEditor.php`)
+- ❌ Removed `submitToDCGG()` method (23 lines - was updating dcgg_status, timestamps, dispatching event)
+- ❌ Removed `scheduleScoping()` method (16 lines - was approving and scheduling)
+- ✅ Added `submitScoping()` method (10 lines - validates, adds history, dispatches event, shows toast)
+- Result: 29 lines removed, 10 lines added = net -19 lines
+
+**4. Form Cleanup** (`app/Livewire/Forms/ScopingForm.php`)
+- ❌ Removed `dcggStatus` validation rule (`'in:pending,submitted,approved'`)
+- ✅ Kept properties for backward compatibility (existing DB fields won't break)
+- Result: Simpler validation, no behavioral changes to form saving
+
+**5. Configuration** (`config/projman.php`)
+- ❌ Removed `ScopingSubmittedToDCGG::class` notification config
+- ❌ Removed `ScopingScheduled::class` notification config
+- ✅ Added `ScopingSubmitted::class` → sends to 'Work Package Assessor' role only
+- Result: Clean, simple notification routing
+
+**6. Tests** (`tests/Feature/ScopingWorkflowTest.php`)
+- Completely rewrote test file
+- Removed DCGG-specific tests (7 tests removed):
+  - ❌ Submit to DCGG workflow tests
+  - ❌ Schedule scoping tests
+  - ❌ DCGG status badge tests
+  - ❌ Conditional button visibility tests
+- Simplified remaining tests (10 tests kept):
+  - ✅ Effort scale enum saving
+  - ✅ Effort scale validation
+  - ✅ Submit scoping successfully
+  - ✅ Event dispatching
+  - ✅ Email notifications
+  - ✅ History recording
+  - ✅ Project isolation
+  - ✅ UI button visibility
+  - ✅ Effort scale dropdown
+  - ✅ Update button display
+
+**Test Results:**
+```
+Tests:    10 passed (21 assertions)
+Duration: 3.06s
+```
+
+**7. Code Formatting**
+- ✅ Ran `vendor/bin/pint --dirty` (6 files formatted)
+
+### What Changed for Users
+
+**Before (Incorrect - DCGG on Scoping):**
+```
+Scoping Stage:
+- Update button
+- "Submit to DCGG" button (when pending)
+- "Schedule" button (when submitted)
+- DCGG status badge
+```
+
+**After (Correct - Simple Submit):**
+```
+Scoping Stage:
+- Update button
+- "Submit" button (always visible)
+- (Emails Work Package Assessors)
+```
+
+### Database Impact
+
+**No migrations needed!** The DCGG fields (`dcgg_status`, `submitted_to_dcgg_at`, `scheduled_at`) remain in the `scopings` table but are no longer used. This is intentional:
+- Keeps existing data intact
+- No risk of data loss
+- Can be cleaned up later if needed
+- Form still loads/saves these fields (no errors)
+
+### Key Implementation Details
+
+**Simplified `submitScoping()` method:**
+```php
+public function submitScoping(): void
+{
+    $this->scopingForm->validate();
+    $this->project->addHistory(Auth::user(), 'Submitted scoping for review');
+    event(new \App\Events\ScopingSubmitted($this->project));
+    Flux::toast('Scoping submitted to Work Package Assessors', variant: 'success');
+}
+```
+
+**New listener follows established pattern:**
+- Reads from `config('projman.notifications')`
+- Resolves recipients by role name
+- Queues mailable via `Mail::to($recipients)->queue($mailable)`
+- Uses existing `ScopingSubmittedMail` (no changes needed)
+
+### What's Next: Phase 2
+
+Now we need to **implement DCGG workflow on Scheduling stage** (where it actually belongs according to the spec).
+
+---
+
+## ✅ Phase 2 Complete: DCGG Workflow Added to Scheduling Stage (2025-11-18)
+
+**Status:** COMPLETE (pending tests)
+**Time Taken:** ~2 hours
+**Tests:** Not yet written (next task)
+
+### What We Did
+
+Successfully implemented the DCGG (Digital Change Governance Group) workflow on the Scheduling stage where it belongs according to the PowerPoint spec.
+
+#### Files Created
+
+**1. Migration** (`2025_11_18_163344_add_dcgg_fields_to_schedulings_table.php`)
+- ✅ Added `submitted_to_dcgg_at` timestamp
+- ✅ Added `submitted_to_dcgg_by` foreign key to users table (audit trail - user's idea!)
+- ✅ Added `scheduled_at` timestamp
+- ✅ Proper `down()` method with `dropConstrainedForeignId()`
+
+**2. Events**
+- ✅ Created `app/Events/SchedulingSubmittedToDCGG.php`
+- ✅ Created `app/Events/SchedulingScheduled.php`
+
+**3. Listeners**
+- ✅ Created `app/Listeners/SchedulingSubmittedToDCGGListener.php`
+  - Resolves role-based recipients
+  - Includes project owner if configured
+  - **Special feature**: Includes DCGG email address when `include_dcgg_email` is true
+- ✅ Created `app/Listeners/SchedulingScheduledListener.php`
+  - Sends to Work Package Assessors
+  - Standard role-based notification
+
+**4. Mailables & Templates**
+- ✅ Created `app/Mail/SchedulingSubmittedMail.php`
+- ✅ Created `app/Mail/SchedulingScheduledMail.php`
+- ✅ Created `resources/views/emails/scheduling_submitted.blade.php`
+  - Shows assigned user, estimated dates
+- ✅ Created `resources/views/emails/scheduling_scheduled.blade.php`
+  - Shows assigned user, dates, Change Board date
+
+#### Files Modified
+
+**1. Database Model** (`app/Models/Scheduling.php`)
+- ✅ Added `submitted_to_dcgg_at`, `submitted_to_dcgg_by`, `scheduled_at` to `$fillable`
+- ✅ Added datetime casts for `submitted_to_dcgg_at` and `scheduled_at`
+- ✅ Added `submittedToDcggBy()` relationship method
+
+**2. Form** (`app/Livewire/Forms/SchedulingForm.php`)
+- ✅ Added `Carbon` import
+- ✅ Added three properties: `submittedToDcggAt`, `submittedToDcggBy`, `scheduledAt`
+- ✅ Updated `setProject()` to load DCGG fields
+
+**3. View** (`resources/views/livewire/project-editor.blade.php`)
+- ✅ Reorganized button layout into two rows
+- ✅ Row 1: Update and Model buttons
+- ✅ Row 2: DCGG workflow buttons
+- ✅ Added "Submit to DCGG" button (shows when not yet submitted)
+  - `data-test="submit-scheduling-to-dcgg-button"`
+- ✅ Added "Schedule" button (shows when submitted but not scheduled)
+  - `data-test="schedule-scheduling-button"`
+- ✅ Conditional rendering based on `submittedToDcggAt` and `scheduledAt`
+
+**4. Component** (`app/Livewire/ProjectEditor.php`)
+- ✅ Added `submitSchedulingToDCGG()` method:
+  - Validates form
+  - Updates timestamps and audit fields
+  - Adds history
+  - Dispatches event
+  - Shows success toast
+- ✅ Added `scheduleScheduling()` method:
+  - Validates Change Board date is filled (per spec requirement)
+  - Updates scheduled timestamp
+  - Adds history
+  - Dispatches event
+  - Shows success toast
+
+**5. Configuration** (`config/projman.php`)
+- ✅ Added `dcgg_email` config with env fallback:
+  ```php
+  'dcgg_email' => env('PROJMAN_DCGG_EMAIL', 'dcgg@example.ac.uk'),
+  ```
+- ✅ Added `SchedulingSubmittedToDCGG` notification config:
+  - Sends to Work Package Assessor role
+  - **Special**: `include_dcgg_email => true` (emails DCGG group)
+  - Uses `SchedulingSubmittedMail`
+- ✅ Added `SchedulingScheduled` notification config:
+  - Sends to Work Package Assessor role
+  - Uses `SchedulingScheduledMail`
+
+**6. Code Formatting**
+- ✅ Ran `vendor/bin/pint --dirty` (15 files formatted)
+
+### Key Features Implemented
+
+**1. Audit Trail**
+The `submitted_to_dcgg_by` field tracks WHO submitted to DCGG, not just when. This was a smart addition by the user and provides valuable audit information for governance.
+
+**2. DCGG Email Integration**
+The listener has special logic to include the DCGG email address from config when `include_dcgg_email` is true. This allows emails to go to:
+- Work Package Assessors (role-based)
+- The mysterious DCGG group (could be Brian! 😄)
+- Project owner (optional)
+
+**3. Conditional Button Display**
+The view uses smart conditionals:
+- **Submit to DCGG**: Only shows before submission
+- **Schedule**: Only shows after submission but before scheduling
+- Clean, progressive workflow that guides users
+
+**4. Validation**
+The `scheduleScheduling()` method validates that Change Board date is filled before allowing schedule confirmation, exactly as specified in the PowerPoint.
+
+### What Changed for Users
+
+**Before (Incorrect):**
+```
+Scheduling Stage:
+- Update, Model, Advance buttons in one row
+- No DCGG workflow
+```
+
+**After (Correct per spec):**
+```
+Scheduling Stage:
+- Row 1: Update | Model
+- Row 2: Submit to DCGG (conditional) | Schedule (conditional) | Advance
+- Full DCGG governance workflow
+- Emails to Work Package Assessors + DCGG group
+```
+
+### Database Impact
+
+**New migration adds 3 fields to `schedulings` table:**
+- `submitted_to_dcgg_at` (nullable timestamp)
+- `submitted_to_dcgg_by` (nullable foreign key to users) - **AUDIT TRAIL**
+- `scheduled_at` (nullable timestamp)
+
+User will run migration themselves.
+
+### Implementation Details
+
+**submitSchedulingToDCGG() method:**
+```php
+public function submitSchedulingToDCGG(): void
+{
+    $this->schedulingForm->validate();
+
+    $this->project->scheduling->update([
+        'submitted_to_dcgg_at' => now(),
+        'submitted_to_dcgg_by' => Auth::id(), // Audit trail!
+    ]);
+
+    $this->schedulingForm->submittedToDcggAt = now();
+    $this->schedulingForm->submittedToDcggBy = Auth::id();
+
+    $this->project->addHistory(Auth::user(), 'Submitted scheduling to DCGG for approval');
+    event(new \App\Events\SchedulingSubmittedToDCGG($this->project));
+
+    Flux::toast('Scheduling submitted to Digital Change Governance Group', variant: 'success');
+}
+```
+
+**scheduleScheduling() with validation:**
+```php
+public function scheduleScheduling(): void
+{
+    // Validate Change Board date is filled (per spec)
+    if (empty($this->schedulingForm->changeBoardDate)) {
+        $this->addError('schedulingForm.changeBoardDate',
+            'Change Board date must be set before scheduling.');
+        return;
+    }
+
+    $this->project->scheduling->update(['scheduled_at' => now()]);
+    $this->schedulingForm->scheduledAt = now();
+
+    $this->project->addHistory(Auth::user(), 'Scheduling approved and scheduled');
+    event(new \App\Events\SchedulingScheduled($this->project));
+
+    Flux::toast('Scheduling approved and scheduled', variant: 'success');
+}
+```
+
+### What's Left: Phase 2 Testing
+
+Still need to create comprehensive tests for the Scheduling DCGG workflow:
+- Submit to DCGG workflow
+- Schedule workflow
+- Validation (Change Board date required)
+- Event dispatching
+- Email notifications (including DCGG email)
+- History recording
+- Button visibility
+- Audit trail (submitted_to_dcgg_by)
+
+**Estimated:** 10-15 tests
+
+---
 
 ## Context & Discovery
 

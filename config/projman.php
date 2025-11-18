@@ -12,6 +12,9 @@ return [
         \App\Models\DetailedDesign::class,
     ],
 
+    // DCGG (Digital Change Governance Group) email address
+    'dcgg_email' => env('PROJMAN_DCGG_EMAIL', 'dcgg@example.ac.uk'),
+
     'notifications' => [
         \App\Events\ProjectCreated::class => [
             'roles' => ['Admin', 'Project Manager'],
@@ -28,15 +31,21 @@ return [
             'include_project_owner' => true,
             'mailable' => \App\Mail\FeasibilityRejectedMail::class,
         ],
-        \App\Events\ScopingSubmittedToDCGG::class => [
-            'roles' => ['Work Package Assessor', 'Scoping Manager'],
+        \App\Events\ScopingSubmitted::class => [
+            'roles' => ['Work Package Assessor'],
             'include_project_owner' => false,
             'mailable' => \App\Mail\ScopingSubmittedMail::class,
         ],
-        \App\Events\ScopingScheduled::class => [
-            'roles' => ['Work Package Assessor', 'Scheduling Manager'],
+        \App\Events\SchedulingSubmittedToDCGG::class => [
+            'roles' => ['Work Package Assessor'],
             'include_project_owner' => false,
-            'mailable' => \App\Mail\ScopingScheduledMail::class,
+            'include_dcgg_email' => true,
+            'mailable' => \App\Mail\SchedulingSubmittedMail::class,
+        ],
+        \App\Events\SchedulingScheduled::class => [
+            'roles' => ['Work Package Assessor'],
+            'include_project_owner' => false,
+            'mailable' => \App\Mail\SchedulingScheduledMail::class,
         ],
         \App\Events\ProjectStageChange::class => [
             'stage_roles' => [

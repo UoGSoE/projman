@@ -51,7 +51,6 @@ class ScopingForm extends Form
             'outOfScope' => 'required|string|max:2048',
             'assumptions' => 'required|string|max:2048',
             'skillsRequired' => 'required|array|min:1',
-            'dcggStatus' => 'in:pending,submitted,approved',
         ];
     }
 

@@ -25,6 +25,9 @@ class Scheduling extends Model
         'assigned_to',
         'priority',
         'team_assignment',
+        'submitted_to_dcgg_at',
+        'submitted_to_dcgg_by',
+        'scheduled_at',
     ];
 
     protected $casts = [
@@ -32,6 +35,8 @@ class Scheduling extends Model
         'estimated_completion_date' => 'date',
         'change_board_date' => 'date',
         'cose_it_staff' => 'array',
+        'submitted_to_dcgg_at' => 'datetime',
+        'scheduled_at' => 'datetime',
     ];
 
     public function project(): BelongsTo
@@ -42,5 +47,10 @@ class Scheduling extends Model
     public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function submittedToDcggBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_to_dcgg_by');
     }
 }

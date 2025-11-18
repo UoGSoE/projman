@@ -420,18 +420,34 @@
 
                 <flux:separator />
 
-                <div class="flex flex-col md:grid md:grid-cols-3 gap-4">
-                    <flux:button type="submit" variant="primary" class="w-full">Update</flux:button>
-                    <flux:button
-                        wire:click="toggleHeatmap"
-                        variant="filled"
-                        class="w-full"
-                        data-test="model-heatmap-button">
-                        {{ $showHeatmap ? 'Hide Heatmap' : 'Model' }}
-                    </flux:button>
-                    <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">Advance
-                        To Next Stage
-                    </flux:button>
+                {{-- Action Buttons --}}
+                <div class="space-y-4">
+                    {{-- Row 1: Update and Model --}}
+                    <div class="flex flex-wrap gap-2">
+                        <flux:button type="submit" variant="primary">Update</flux:button>
+                        <flux:button wire:click="toggleHeatmap" variant="filled" data-test="model-heatmap-button">
+                            {{ $showHeatmap ? 'Hide Heatmap' : 'Model' }}
+                        </flux:button>
+                    </div>
+
+                    {{-- Row 2: DCGG Workflow Buttons --}}
+                    <div class="flex flex-wrap gap-2">
+                        @if(!$schedulingForm->submittedToDcggAt)
+                            <flux:button wire:click="submitSchedulingToDCGG" variant="filled" data-test="submit-scheduling-to-dcgg-button">
+                                Submit to DCGG
+                            </flux:button>
+                        @endif
+
+                        @if($schedulingForm->submittedToDcggAt && !$schedulingForm->scheduledAt)
+                            <flux:button wire:click="scheduleScheduling" variant="primary" data-test="schedule-scheduling-button">
+                                Schedule
+                            </flux:button>
+                        @endif
+
+                        <flux:button icon:trailing="arrow-right" wire:click="advanceToNextStage()">
+                            Advance To Next Stage
+                        </flux:button>
+                    </div>
                 </div>
             </form>
 
@@ -492,30 +508,13 @@
 
                 <flux:separator />
 
-                {{-- Status Badge --}}
-                @if ($scopingForm->dcggStatus !== 'pending')
-                    <flux:badge
-                        size="sm"
-                        :color="$scopingForm->dcggStatus === 'approved' ? 'green' : 'blue'">
-                        DCGG Status: {{ ucfirst($scopingForm->dcggStatus) }}
-                    </flux:badge>
-                @endif
-
                 {{-- Action Buttons --}}
                 <div class="flex flex-wrap gap-2">
                     <flux:button type="submit" variant="primary">Update</flux:button>
 
-                    @if ($scopingForm->dcggStatus === 'pending')
-                        <flux:button wire:click="submitToDCGG" variant="filled" data-test="submit-to-dcgg-button">
-                            Submit to DCGG
-                        </flux:button>
-                    @endif
-
-                    @if ($scopingForm->dcggStatus === 'submitted')
-                        <flux:button wire:click="scheduleScoping" variant="primary" data-test="schedule-scoping-button">
-                            Schedule
-                        </flux:button>
-                    @endif
+                    <flux:button wire:click="submitScoping" variant="filled" data-test="submit-scoping-button">
+                        Submit
+                    </flux:button>
 
                     <flux:button icon:trailing="arrow-right" wire:click="advanceToNextStage()">
                         Advance To Next Stage

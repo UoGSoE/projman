@@ -2,13 +2,13 @@
 
 namespace App\Listeners;
 
-use App\Events\ScopingScheduled;
+use App\Events\SchedulingScheduled;
 use App\Models\Role;
 use Illuminate\Support\Facades\Mail;
 
-class ScopingScheduledListener
+class SchedulingScheduledListener
 {
-    public function handle(ScopingScheduled $event): void
+    public function handle(SchedulingScheduled $event): void
     {
         $eventClass = get_class($event);
         $config = config('projman.notifications')[$eventClass] ?? null;
@@ -28,7 +28,7 @@ class ScopingScheduledListener
         Mail::to($recipients)->queue($mailable);
     }
 
-    protected function resolveRecipients($event, array $config): array
+    protected function resolveRecipients(SchedulingScheduled $event, array $config): array
     {
         $recipients = [];
 

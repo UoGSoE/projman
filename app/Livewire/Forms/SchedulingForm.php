@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Project;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -58,6 +59,12 @@ class SchedulingForm extends Form
     // #[Validate('required|string|max:255')]
     // public ?string $teamAssignment;
 
+    public ?Carbon $submittedToDcggAt = null;
+
+    public ?int $submittedToDcggBy = null;
+
+    public ?Carbon $scheduledAt = null;
+
     public function setProject(Project $project)
     {
         $this->project = $project;
@@ -71,6 +78,9 @@ class SchedulingForm extends Form
         $this->assignedTo = $project->scheduling->assigned_to;
         $this->technicalLeadId = $project->scheduling->technical_lead_id;
         $this->changeChampionId = $project->scheduling->change_champion_id;
+        $this->submittedToDcggAt = $project->scheduling->submitted_to_dcgg_at;
+        $this->submittedToDcggBy = $project->scheduling->submitted_to_dcgg_by;
+        $this->scheduledAt = $project->scheduling->scheduled_at;
         // $this->teamAssignment = $project->scheduling->team_assignment;
     }
 

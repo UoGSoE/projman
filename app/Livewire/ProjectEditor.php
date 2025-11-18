@@ -173,40 +173,56 @@ class ProjectEditor extends Component
         Flux::toast('Feasibility rejected', variant: 'warning');
     }
 
-    public function submitToDCGG(): void
+    public function submitScoping(): void
     {
         $this->scopingForm->validate();
 
-        $this->project->scoping->update([
-            'dcgg_status' => 'submitted',
-            'submitted_to_dcgg_at' => now(),
-        ]);
+        $this->project->addHistory(Auth::user(), 'Submitted scoping for review');
 
-        $this->scopingForm->dcggStatus = 'submitted';
-        $this->scopingForm->submittedToDcggAt = now();
+        event(new \App\Events\ScopingSubmitted($this->project));
 
-        $this->project->addHistory(Auth::user(), 'Submitted to DCGG for approval');
-
-        event(new \App\Events\ScopingSubmittedToDCGG($this->project));
-
-        Flux::toast('Submitted to Digital Change Governance Group', variant: 'success');
+        Flux::toast('Scoping submitted to Work Package Assessors', variant: 'success');
     }
 
-    public function scheduleScoping(): void
+    public function submitSchedulingToDCGG(): void
     {
-        $this->project->scoping->update([
-            'dcgg_status' => 'approved',
+        $this->schedulingForm->validate();
+
+        $this->project->scheduling->update([
+            'submitted_to_dcgg_at' => now(),
+            'submitted_to_dcgg_by' => Auth::id(),
+        ]);
+
+        $this->schedulingForm->submittedToDcggAt = now();
+        $this->schedulingForm->submittedToDcggBy = Auth::id();
+
+        $this->project->addHistory(Auth::user(), 'Submitted scheduling to DCGG for approval');
+
+        event(new \App\Events\SchedulingSubmittedToDCGG($this->project));
+
+        Flux::toast('Scheduling submitted to Digital Change Governance Group', variant: 'success');
+    }
+
+    public function scheduleScheduling(): void
+    {
+        // Validate Change Board date is filled
+        if (empty($this->schedulingForm->changeBoardDate)) {
+            $this->addError('schedulingForm.changeBoardDate', 'Change Board date must be set before scheduling.');
+
+            return;
+        }
+
+        $this->project->scheduling->update([
             'scheduled_at' => now(),
         ]);
 
-        $this->scopingForm->dcggStatus = 'approved';
-        $this->scopingForm->scheduledAt = now();
+        $this->schedulingForm->scheduledAt = now();
 
-        $this->project->addHistory(Auth::user(), 'Scoping approved and scheduled');
+        $this->project->addHistory(Auth::user(), 'Scheduling approved and scheduled');
 
-        event(new \App\Events\ScopingScheduled($this->project));
+        event(new \App\Events\SchedulingScheduled($this->project));
 
-        Flux::toast('Scoping approved and scheduled', variant: 'success');
+        Flux::toast('Scheduling approved and scheduled', variant: 'success');
     }
 
     public function toggleHeatmap(): void
