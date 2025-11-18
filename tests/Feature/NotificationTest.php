@@ -1,11 +1,17 @@
 <?php
 
-use App\Events\ProjectCreated;
+use App\Events\FeasibilityApproved;
+use App\Events\FeasibilityRejected;
 use App\Events\ProjectStageChange;
+use App\Events\ScopingScheduled;
+use App\Events\ScopingSubmittedToDCGG;
 use App\Livewire\ProjectCreator;
+use App\Mail\FeasibilityApprovedMail;
+use App\Mail\FeasibilityRejectedMail;
 use App\Mail\ProjectCreatedMail;
 use App\Mail\ProjectStageChangeMail;
-use App\Models\NotificationRule;
+use App\Mail\ScopingScheduledMail;
+use App\Mail\ScopingSubmittedMail;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
@@ -16,36 +22,34 @@ use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
-describe('Form stage notifications', function () {
+describe('Config-based notifications', function () {
 
     beforeEach(function () {
         Mail::fake();
 
-        $this->roles = Role::factory()->count(6)->create();
-        $this->users = User::factory()->count(6)->create();
-        $this->projects = Project::factory()->count(6)->create();
+        // Create roles configured in projman.notifications
+        $this->adminRole = Role::factory()->create(['name' => 'Admin']);
+        $this->projectManagerRole = Role::factory()->create(['name' => 'Project Manager']);
+        $this->assessorRole = Role::factory()->create(['name' => 'Work Package Assessor']);
+        $this->scopingManagerRole = Role::factory()->create(['name' => 'Scoping Manager']);
+        $this->testingManagerRole = Role::factory()->create(['name' => 'Testing Manager']);
+        $this->serviceLeadRole = Role::factory()->create(['name' => 'Service Lead']);
 
-        $this->users->take(2)->each(fn ($user) => $user->roles()->attach($this->roles->first()));
+        // Create users and assign roles
+        $this->admin = User::factory()->create();
+        $this->admin->roles()->attach($this->adminRole);
 
-        $this->projectCreatedRule = NotificationRule::factory()->create([
-            'event' => ['class' => ProjectCreated::class],
-            'active' => true,
-            'recipients' => [
-                'users' => $this->users->pluck('id')->toArray(),
-            ],
-        ]);
+        $this->projectManager = User::factory()->create();
+        $this->projectManager->roles()->attach($this->projectManagerRole);
 
-        $this->projectStageChangeRule = NotificationRule::factory()->create([
-            'event' => ['class' => ProjectStageChange::class],
-            'active' => true,
-            'recipients' => [
-                'users' => $this->users->pluck('id')->toArray(),
-            ],
-        ]);
+        $this->assessor = User::factory()->create();
+        $this->assessor->roles()->attach($this->assessorRole);
+
+        $this->projectOwner = User::factory()->create();
     });
 
-    it('sends a notification when a project is created', function () {
-        $this->actingAs($this->users->first());
+    it('sends ProjectCreated notification to configured roles', function () {
+        $this->actingAs($this->projectOwner);
 
         livewire(ProjectCreator::class)
             ->set('projectName', 'Test Project')
@@ -54,181 +58,151 @@ describe('Form stage notifications', function () {
 
         Mail::assertQueued(ProjectCreatedMail::class);
 
-        // Check that emails were sent to the users specified in the notification rule
-        foreach ($this->users as $user) {
-            Mail::assertQueued(ProjectCreatedMail::class, function ($mail) use ($user) {
-                return $mail->hasTo($user->email);
-            });
-        }
+        // Should send to Admin and Project Manager roles
+        Mail::assertQueued(ProjectCreatedMail::class, function ($mail) {
+            return $mail->hasTo($this->admin->email);
+        });
+
+        Mail::assertQueued(ProjectCreatedMail::class, function ($mail) {
+            return $mail->hasTo($this->projectManager->email);
+        });
+
+        // Should NOT include project owner (config has include_project_owner = false)
+        Mail::assertNotQueued(ProjectCreatedMail::class, function ($mail) {
+            return $mail->hasTo($this->projectOwner->email);
+        });
     });
 
-    // TODO: test content of the email
+    it('sends FeasibilityApproved notification to Work Package Assessor role', function () {
+        $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
-    it('sends a notification when a project advances to the next stage', function () {
-        $project = Project::factory()->create();
-        $newStatus = $project->advanceToNextStage();
+        event(new FeasibilityApproved($project));
+
+        Mail::assertQueued(FeasibilityApprovedMail::class);
+
+        Mail::assertQueued(FeasibilityApprovedMail::class, function ($mail) {
+            return $mail->hasTo($this->assessor->email);
+        });
+
+        // Should NOT include project owner
+        Mail::assertNotQueued(FeasibilityApprovedMail::class, function ($mail) {
+            return $mail->hasTo($this->projectOwner->email);
+        });
+    });
+
+    it('sends FeasibilityRejected notification to Work Package Assessor and project owner', function () {
+        $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
+
+        event(new FeasibilityRejected($project));
+
+        Mail::assertQueued(FeasibilityRejectedMail::class);
+
+        Mail::assertQueued(FeasibilityRejectedMail::class, function ($mail) {
+            return $mail->hasTo($this->assessor->email);
+        });
+
+        // SHOULD include project owner (config has include_project_owner = true)
+        Mail::assertQueued(FeasibilityRejectedMail::class, function ($mail) {
+            return $mail->hasTo($this->projectOwner->email);
+        });
+    });
+
+    it('sends ScopingSubmittedToDCGG notification to configured roles', function () {
+        $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
+
+        event(new ScopingSubmittedToDCGG($project));
+
+        Mail::assertQueued(ScopingSubmittedMail::class);
+
+        Mail::assertQueued(ScopingSubmittedMail::class, function ($mail) {
+            return $mail->hasTo($this->assessor->email);
+        });
+    });
+
+    it('sends ScopingScheduled notification to configured roles', function () {
+        $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
+
+        event(new ScopingScheduled($project));
+
+        Mail::assertQueued(ScopingScheduledMail::class);
+
+        Mail::assertQueued(ScopingScheduledMail::class, function ($mail) {
+            return $mail->hasTo($this->assessor->email);
+        });
+    });
+
+    it('sends ProjectStageChange notification to stage-specific roles', function () {
+        $testingManager = User::factory()->create();
+        $testingManager->roles()->attach($this->testingManagerRole);
+
+        $serviceLead = User::factory()->create();
+        $serviceLead->roles()->attach($this->serviceLeadRole);
+
+        $project = Project::factory()->create([
+            'user_id' => $this->projectOwner->id,
+            'status' => 'testing',
+        ]);
+
+        event(new ProjectStageChange($project, 'development', 'testing'));
 
         Mail::assertQueued(ProjectStageChangeMail::class);
 
-        // Check that emails were sent to the users specified in the notification rule
-        foreach ($this->users as $user) {
-            Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($user) {
-                return $mail->hasTo($user->email);
-            });
-        }
+        // Testing stage should notify Testing Manager and Service Lead
+        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($testingManager) {
+            return $mail->hasTo($testingManager->email);
+        });
+
+        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($serviceLead) {
+            return $mail->hasTo($serviceLead->email);
+        });
+
+        // Should include project owner
+        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) {
+            return $mail->hasTo($this->projectOwner->email);
+        });
     });
 
-    it('sends notification only for specific project stage when rule has stage filter', function () {
-        // Create a rule that only triggers for 'development' stage
-        $developmentRule = NotificationRule::factory()->create([
-            'event' => [
-                'class' => ProjectStageChange::class,
-                'project_stage' => 'development',
-            ],
-            'active' => true,
-            'recipients' => [
-                'users' => $this->users->pluck('id')->toArray(),
-            ],
-        ]);
+    it('does not send notifications when no users have configured roles', function () {
+        // Remove all role assignments
+        $this->admin->roles()->detach();
+        $this->projectManager->roles()->detach();
+        $this->assessor->roles()->detach();
 
-        // Create a project and advance it to development stage
-        $project = Project::factory()->create(['status' => 'development']);
+        $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
-        // Advance to next stage (testing)
-        $project->advanceToNextStage();
+        event(new FeasibilityApproved($project));
 
-        // Should trigger notification because it moved to development stage
-        Mail::assertQueued(ProjectStageChangeMail::class);
+        // Should not queue any mail since no users have the required role
+        Mail::assertNothingQueued();
     });
 
-    it('does not send notification when project stage does not match rule filter', function () {
-        // Create a rule that only triggers for 'testing' stage
-        $testingRule = NotificationRule::factory()->create([
-            'event' => [
-                'class' => ProjectStageChange::class,
-                'project_stage' => 'testing',
-            ],
-            'active' => true,
-            'recipients' => [
-                'users' => $this->users->pluck('id')->toArray(),
-            ],
+    it('sends notification only to users with the correct role', function () {
+        // Create Feasibility Manager role and a user with that role
+        $feasibilityManagerRole = Role::factory()->create(['name' => 'Feasibility Manager']);
+        $feasibilityManager = User::factory()->create();
+        $feasibilityManager->roles()->attach($feasibilityManagerRole);
+
+        // Create a user WITHOUT the Feasibility Manager role
+        $randomUser = User::factory()->create();
+
+        $project = Project::factory()->create([
+            'user_id' => $this->projectOwner->id,
+            'status' => 'ideation',
         ]);
 
-        // Create a project and advance it to development stage (not testing)
-        $project = Project::factory()->create(['status' => 'development']);
-        $project->advanceToNextStage(); // This moves to testing, should trigger
-
-        // Should trigger because it moved to testing stage
-        Mail::assertQueued(ProjectStageChangeMail::class);
-    });
-
-    it('sends notification for all stages when rule has no stage filter', function () {
-        // Create a rule without stage filter (should trigger for any stage change)
-        $generalRule = NotificationRule::factory()->create([
-            'event' => ['class' => ProjectStageChange::class], // No project_stage specified
-            'active' => true,
-            'recipients' => [
-                'users' => $this->users->pluck('id')->toArray(),
-            ],
-        ]);
-
-        // Create a project and advance it to any stage
-        $project = Project::factory()->create(['status' => 'ideation']);
         $project->advanceToNextStage(); // Move to feasibility
 
-        // Should trigger because rule has no stage filter
-        Mail::assertQueued(ProjectStageChangeMail::class);
-    });
+        // Assert mail was queued only once (not to every user in the system)
+        Mail::assertQueued(ProjectStageChangeMail::class, 1);
 
-    it('handles multiple rules with different stage filters correctly', function () {
-        // Clear existing rules and mail
-        NotificationRule::query()->delete();
-        Mail::fake();
-
-        // Create rules for different stages
-        $ideationRule = NotificationRule::factory()->create([
-            'event' => [
-                'class' => ProjectStageChange::class,
-                'project_stage' => 'ideation',
-            ],
-            'active' => true,
-            'recipients' => [
-                'users' => [$this->users->first()->id],
-            ],
-        ]);
-
-        $developmentRule = NotificationRule::factory()->create([
-            'event' => [
-                'class' => ProjectStageChange::class,
-                'project_stage' => 'development',
-            ],
-            'active' => true,
-            'recipients' => [
-                'users' => [$this->users->last()->id],
-            ],
-        ]);
-
-        // Create a project and advance it to development stage
-        $project = Project::factory()->create(['status' => 'development']);
-        $project->advanceToNextStage(); // Move to testing
-
-        // Should only trigger the development rule (when moving to development stage)
-        $project2 = Project::factory()->create(['status' => 'detailed-design']);
-        $project2->advanceToNextStage(); // Move to development
-
-        // Should trigger the development rule
-        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) {
-            return $mail->hasTo($this->users->last()->email);
+        // Should send to the Feasibility Manager
+        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($feasibilityManager) {
+            return $mail->hasTo($feasibilityManager->email);
         });
 
-        // Should not trigger for the ideation rule user
-        Mail::assertNotQueued(ProjectStageChangeMail::class, function ($mail) {
-            return $mail->hasTo($this->users->first()->email);
+        // Should NOT send to the random user without the role
+        Mail::assertNotQueued(ProjectStageChangeMail::class, function ($mail) use ($randomUser) {
+            return $mail->hasTo($randomUser->email);
         });
-    });
-
-    it('sends notification when project moves to specific stage from any previous stage', function () {
-        // Create a rule for 'testing' stage
-        $testingRule = NotificationRule::factory()->create([
-            'event' => [
-                'class' => ProjectStageChange::class,
-                'project_stage' => 'testing',
-            ],
-            'active' => true,
-            'recipients' => [
-                'users' => $this->users->pluck('id')->toArray(),
-            ],
-        ]);
-
-        // Test moving from development to testing
-        $project = Project::factory()->create(['status' => 'development']);
-        $project->advanceToNextStage(); // Should move to testing
-
-        Mail::assertQueued(ProjectStageChangeMail::class);
-    });
-
-    it('does not send notification for inactive rules with stage filters', function () {
-        // Clear existing rules and mail
-        NotificationRule::query()->delete();
-        Mail::fake();
-
-        // Create an inactive rule for 'development' stage
-        $inactiveRule = NotificationRule::factory()->create([
-            'event' => [
-                'class' => ProjectStageChange::class,
-                'project_stage' => 'development',
-            ],
-            'active' => false, // Inactive rule
-            'recipients' => [
-                'users' => $this->users->pluck('id')->toArray(),
-            ],
-        ]);
-
-        // Create a project and advance it to development stage
-        $project = Project::factory()->create(['status' => 'development']);
-        $project->advanceToNextStage();
-
-        // Should not trigger because rule is inactive
-        Mail::assertNothingQueued();
     });
 });

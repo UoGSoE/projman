@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class FeasibilityApprovedMail extends Mailable
+class ScopingScheduledMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -18,14 +18,14 @@ class FeasibilityApprovedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Feasibility Approved: '.$this->project->title,
+            subject: 'Scoping Scheduled: '.$this->project->title,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.feasibility_approved',
+            markdown: 'emails.scoping_scheduled',
         );
     }
 

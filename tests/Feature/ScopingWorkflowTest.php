@@ -4,7 +4,6 @@ use App\Enums\EffortScale;
 use App\Events\ScopingScheduled;
 use App\Events\ScopingSubmittedToDCGG;
 use App\Livewire\ProjectEditor;
-use App\Models\NotificationRule;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
@@ -161,14 +160,6 @@ describe('Scoping Effort Scale & DCGG Workflow', function () {
         $role = Role::factory()->create(['name' => 'Work Package Assessor']);
         $assessor = User::factory()->create();
         $assessor->roles()->attach($role);
-
-        NotificationRule::create([
-            'name' => 'Scoping Submitted to DCGG Notification',
-            'description' => 'Notify Work Package Assessors when scoping is submitted to DCGG',
-            'event' => ['class' => ScopingSubmittedToDCGG::class],
-            'recipients' => ['roles' => [$role->id]],
-            'active' => true,
-        ]);
 
         $user = User::factory()->create(['is_admin' => true]);
         $projectAssessor = User::factory()->create();

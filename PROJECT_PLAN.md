@@ -238,6 +238,99 @@ By following this plan we satisfy the most visible leadership asks first, unbloc
 
 ---
 
+### Completed: Notification System Refactor ✓
+
+**Date Completed:** 2025-11-18
+
+**Context:**
+The application originally used a complex database-driven notification rules engine with admin UI, JSON configuration, and queue jobs. This was over-engineered for the actual use case: sending a fixed set of governance emails to predetermined roles. The refactor simplified the entire notification pipeline to use a config-driven approach.
+
+**Problem Statement:**
+- Notification system required database seeds, admin UI maintenance, and multiple query/dispatch layers
+- Missing configuration for scoping events meant emails weren't being sent
+- High complexity (700+ lines of code) for simple, fixed notification requirements
+- Database dependency created failure points (missing seeds, inactive rules)
+
+**Solution Implemented:**
+Replaced the entire notification rules infrastructure with a simple config-based system in `config/projman.php`.
+
+**Files Created:**
+- ✅ Added `notifications` array to `config/projman.php` - Maps events → roles → mailables
+- ✅ `app/Mail/ScopingSubmittedMail.php` - Markdown mailable for DCGG submission
+- ✅ `app/Mail/ScopingScheduledMail.php` - Markdown mailable for scoping schedule
+- ✅ `resources/views/emails/scoping_submitted.blade.php` - Email template
+- ✅ `resources/views/emails/scoping_scheduled.blade.php` - Email template
+- ✅ `tests/Feature/NotificationTest.php` - 8 comprehensive tests for config-based notifications
+
+**Files Simplified:**
+- ✅ `app/Listeners/ProjectEventsListener.php` - Direct config lookup, role-based recipient resolution
+- ✅ `app/Listeners/ScopingSubmittedToDCGGListener.php` - Simplified to read from config
+- ✅ `app/Listeners/ScopingScheduledListener.php` - Simplified to read from config
+- ✅ Updated `app/Mail/*Mail.php` - Changed `protected` to `public` for Blade template access
+
+**Files Deleted:**
+- ✅ `app/Models/NotificationRule.php` - Entire model removed
+- ✅ `database/factories/NotificationRuleFactory.php` - Factory removed
+- ✅ `database/migrations/2025_10_15_161248_create_notification_rules_table.php` - Migration removed
+- ✅ `app/Livewire/NotificationRules.php` - Admin CRUD component removed
+- ✅ `app/Livewire/NotificationRulesTable.php` - Admin table component removed
+- ✅ `resources/views/livewire/notification-rules.blade.php` - Blade view removed
+- ✅ `resources/views/livewire/notification-rules-table.blade.php` - Blade view removed
+- ✅ `app/Jobs/SendEmailJob.php` - Queue job removed (replaced with direct Mail::queue())
+- ✅ `config/notifiable_events.php` - Old config file removed
+- ✅ `tests/Feature/SendEmailJobTest.php` - Obsolete test file removed
+- ✅ Removed notification rules route from `routes/web.php`
+- ✅ Removed `seedNotificationRules()` method from `TestDataSeeder.php`
+
+**Configuration Structure:**
+```php
+'notifications' => [
+    \App\Events\ProjectCreated::class => [
+        'roles' => ['Admin', 'Project Manager'],
+        'include_project_owner' => false,
+        'mailable' => \App\Mail\ProjectCreatedMail::class,
+    ],
+    \App\Events\ProjectStageChange::class => [
+        'stage_roles' => [
+            'ideation' => ['Ideation Manager'],
+            'feasibility' => ['Feasibility Manager'],
+            // ... etc
+        ],
+        'include_project_owner' => true,
+        'mailable' => \App\Mail\ProjectStageChangeMail::class,
+    ],
+    // ... other events
+]
+```
+
+**Testing:**
+- ✅ Created 8 new tests covering all notification scenarios (23 assertions)
+- ✅ Updated `FeasibilityApprovalTest.php` to remove NotificationRule dependencies
+- ✅ Updated `ScopingWorkflowTest.php` to remove NotificationRule dependencies
+- ✅ All 333 tests passing (1,154 assertions)
+- ✅ Code formatted with Laravel Pint
+
+**Key Benefits:**
+1. **Simpler**: One config file vs database + UI + jobs + JSON parsing
+2. **Reliable**: No risk of missing seeds or inactive rules breaking notifications
+3. **Maintainable**: Adding new events = update config + add mailable + write test
+4. **Readable**: Clear, explicit mapping of "when X happens, notify Y roles"
+5. **Version controlled**: All notification logic tracked in git
+6. **10x complexity reduction**: ~700 lines of infrastructure → ~60 lines of config
+
+**Impact:**
+- Notifications now work out-of-the-box with no database configuration required
+- Missing scoping notifications are now properly configured and functional
+- System follows Laravel best practices with direct Mail facade usage
+- Zero admin UI maintenance burden
+
+**Lessons Learned:**
+- Over-engineering flexibility for fixed requirements creates unnecessary complexity
+- Config-driven approach is perfectly adequate when rules don't change per-environment
+- Simpler code = fewer failure modes = higher reliability
+
+---
+
 ## Phase 1 Implementation Details
 
 This section provides step-by-step implementation guidance for all 6 Phase 1 features, informed by thorough codebase analysis.

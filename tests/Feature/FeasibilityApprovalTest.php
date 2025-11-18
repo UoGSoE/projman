@@ -5,7 +5,6 @@ use App\Events\FeasibilityRejected;
 use App\Livewire\ProjectEditor;
 use App\Mail\FeasibilityApprovedMail;
 use App\Mail\FeasibilityRejectedMail;
-use App\Models\NotificationRule;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
@@ -134,14 +133,6 @@ describe('Feasibility Approval Workflow', function () {
         $assessor = User::factory()->create();
         $assessor->roles()->attach($role);
 
-        NotificationRule::create([
-            'name' => 'Feasibility Approved Notification',
-            'description' => 'Notify Work Package Assessors when feasibility is approved',
-            'event' => ['class' => FeasibilityApproved::class],
-            'recipients' => ['roles' => [$role->id]],
-            'active' => true,
-        ]);
-
         $user = User::factory()->create(['is_admin' => true]);
         $project = Project::factory()->create();
         $this->actingAs($user);
@@ -161,14 +152,6 @@ describe('Feasibility Approval Workflow', function () {
         Mail::fake();
         $owner = User::factory()->create();
         $project = Project::factory()->create(['user_id' => $owner->id]);
-
-        NotificationRule::create([
-            'name' => 'Feasibility Rejected Notification',
-            'description' => 'Notify project owner when feasibility is rejected',
-            'event' => ['class' => FeasibilityRejected::class],
-            'recipients' => ['users' => [$owner->id]],
-            'active' => true,
-        ]);
 
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin);

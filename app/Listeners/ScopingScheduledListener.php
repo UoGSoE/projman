@@ -3,22 +3,52 @@
 namespace App\Listeners;
 
 use App\Events\ScopingScheduled;
-use App\Jobs\SendEmailJob;
-use App\Models\NotificationRule;
+use App\Models\Role;
+use Illuminate\Support\Facades\Mail;
 
 class ScopingScheduledListener
 {
     public function handle(ScopingScheduled $event): void
     {
         $eventClass = get_class($event);
-        $rules = NotificationRule::where('event->class', $eventClass)->where('active', true)->get();
+        $config = config('projman.notifications')[$eventClass] ?? null;
 
-        if ($rules->isEmpty()) {
+        if (! $config) {
             return;
         }
 
-        foreach ($rules as $rule) {
-            SendEmailJob::dispatch($rule, $event);
+        $recipients = $this->resolveRecipients($event, $config);
+
+        if (empty($recipients)) {
+            return;
         }
+
+        $mailable = new ($config['mailable'])($event->project);
+
+        Mail::to($recipients)->queue($mailable);
+    }
+
+    protected function resolveRecipients($event, array $config): array
+    {
+        $recipients = [];
+
+        if (! empty($config['roles'])) {
+            $roleUsers = Role::whereIn('name', $config['roles'])
+                ->with('users')
+                ->get()
+                ->pluck('users')
+                ->flatten()
+                ->pluck('email')
+                ->unique()
+                ->toArray();
+
+            $recipients = array_merge($recipients, $roleUsers);
+        }
+
+        if (! empty($config['include_project_owner']) && $event->project->user) {
+            $recipients[] = $event->project->user->email;
+        }
+
+        return array_unique($recipients);
     }
 }

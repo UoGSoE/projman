@@ -6,74 +6,112 @@ use App\Events\FeasibilityApproved;
 use App\Events\FeasibilityRejected;
 use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
-use App\Jobs\SendEmailJob;
-use App\Models\NotificationRule;
+use App\Models\Role;
+use Illuminate\Support\Facades\Mail;
 
 class ProjectEventsListener
 {
-    /**
-     * Create the event listener.
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
-     * Handle the event.
-     */
     public function handle(ProjectCreated|ProjectStageChange $event): void
     {
         $eventClass = get_class($event);
-        $rules = NotificationRule::where('event->class', $eventClass)->where('active', true)->get();
+        $config = config('projman.notifications')[$eventClass] ?? null;
 
-        if ($event instanceof ProjectStageChange) {
-            $currentStage = $event->project->status->value;
-            $rules = $rules->filter(function ($rule) use ($currentStage) {
-                $eventData = $rule->event;
-                if (! isset($eventData['project_stage'])) {
-                    return true;
-                }
-
-                return $eventData['project_stage'] === $currentStage;
-            });
-        }
-
-        if ($rules->isEmpty()) {
-
+        if (! $config) {
             return;
         }
 
-        foreach ($rules as $rule) {
-            SendEmailJob::dispatch($rule, $event);
+        if ($event instanceof ProjectStageChange) {
+            $recipients = $this->resolveStageRecipients($event, $config);
+        } else {
+            $recipients = $this->resolveRecipients($event, $config);
         }
+
+        if (empty($recipients)) {
+            return;
+        }
+
+        $mailable = new ($config['mailable'])($event->project);
+
+        Mail::to($recipients)->queue($mailable);
     }
 
     public function handleFeasibilityApproved(FeasibilityApproved $event): void
     {
-        $eventClass = get_class($event);
-        $rules = NotificationRule::where('event->class', $eventClass)->where('active', true)->get();
-
-        if ($rules->isEmpty()) {
-            return;
-        }
-
-        foreach ($rules as $rule) {
-            SendEmailJob::dispatch($rule, $event);
-        }
+        $this->sendNotification($event);
     }
 
     public function handleFeasibilityRejected(FeasibilityRejected $event): void
     {
-        $eventClass = get_class($event);
-        $rules = NotificationRule::where('event->class', $eventClass)->where('active', true)->get();
+        $this->sendNotification($event);
+    }
 
-        if ($rules->isEmpty()) {
+    protected function sendNotification($event): void
+    {
+        $eventClass = get_class($event);
+        $config = config('projman.notifications')[$eventClass] ?? null;
+
+        if (! $config) {
             return;
         }
 
-        foreach ($rules as $rule) {
-            SendEmailJob::dispatch($rule, $event);
+        $recipients = $this->resolveRecipients($event, $config);
+
+        if (empty($recipients)) {
+            return;
         }
+
+        $mailable = new ($config['mailable'])($event->project);
+
+        Mail::to($recipients)->queue($mailable);
+    }
+
+    protected function resolveRecipients($event, array $config): array
+    {
+        $recipients = [];
+
+        if (! empty($config['roles'])) {
+            $roleUsers = Role::whereIn('name', $config['roles'])
+                ->with('users')
+                ->get()
+                ->pluck('users')
+                ->flatten()
+                ->pluck('email')
+                ->unique()
+                ->toArray();
+
+            $recipients = array_merge($recipients, $roleUsers);
+        }
+
+        if (! empty($config['include_project_owner']) && $event->project->user) {
+            $recipients[] = $event->project->user->email;
+        }
+
+        return array_unique($recipients);
+    }
+
+    protected function resolveStageRecipients(ProjectStageChange $event, array $config): array
+    {
+        $recipients = [];
+        $currentStage = $event->project->status->value;
+
+        if (! empty($config['stage_roles'][$currentStage])) {
+            $stageRoles = $config['stage_roles'][$currentStage];
+            $roleUsers = Role::whereIn('name', $stageRoles)
+                ->with('users')
+                ->get()
+                ->pluck('users')
+                ->flatten()
+                ->pluck('email')
+                ->unique()
+                ->toArray();
+
+            $recipients = array_merge($recipients, $roleUsers);
+        }
+
+        if (! empty($config['include_project_owner']) && $event->project->user) {
+            $recipients[] = $event->project->user->email;
+        }
+
+        return array_unique($recipients);
     }
 }

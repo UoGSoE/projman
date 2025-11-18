@@ -13,7 +13,7 @@ class FeasibilityRejectedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(protected Project $project) {}
+    public function __construct(public Project $project) {}
 
     public function envelope(): Envelope
     {

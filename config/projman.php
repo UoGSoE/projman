@@ -11,66 +11,48 @@ return [
         \App\Models\Development::class,
         \App\Models\DetailedDesign::class,
     ],
-    'mail' => [
-        'project_created' => [
-            'admin@example.com',
-            'admin2@example.com',
-            'admin3@example.com',
+
+    'notifications' => [
+        \App\Events\ProjectCreated::class => [
+            'roles' => ['Admin', 'Project Manager'],
+            'include_project_owner' => false,
+            'mailable' => \App\Mail\ProjectCreatedMail::class,
         ],
-        'stages' => [
-            'ideation' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
+        \App\Events\FeasibilityApproved::class => [
+            'roles' => ['Work Package Assessor'],
+            'include_project_owner' => false,
+            'mailable' => \App\Mail\FeasibilityApprovedMail::class,
+        ],
+        \App\Events\FeasibilityRejected::class => [
+            'roles' => ['Work Package Assessor'],
+            'include_project_owner' => true,
+            'mailable' => \App\Mail\FeasibilityRejectedMail::class,
+        ],
+        \App\Events\ScopingSubmittedToDCGG::class => [
+            'roles' => ['Work Package Assessor', 'Scoping Manager'],
+            'include_project_owner' => false,
+            'mailable' => \App\Mail\ScopingSubmittedMail::class,
+        ],
+        \App\Events\ScopingScheduled::class => [
+            'roles' => ['Work Package Assessor', 'Scheduling Manager'],
+            'include_project_owner' => false,
+            'mailable' => \App\Mail\ScopingScheduledMail::class,
+        ],
+        \App\Events\ProjectStageChange::class => [
+            'stage_roles' => [
+                'ideation' => ['Ideation Manager'],
+                'feasibility' => ['Feasibility Manager'],
+                'scoping' => ['Scoping Manager'],
+                'scheduling' => ['Scheduling Manager'],
+                'detailed-design' => ['Detailed Design Manager'],
+                'development' => ['Development Manager'],
+                'testing' => ['Testing Manager', 'Service Lead'],
+                'deployed' => ['Deployment Manager'],
+                'completed' => ['Completed Manager', 'Project Manager'],
+                'cancelled' => ['Cancelled Manager', 'Project Manager'],
             ],
-            'feasibility' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
-            'scoping' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
-            'scheduling' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
-            'detailed-design' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
-            'development' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
-            'testing' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
-            'deployed' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
-            'completed' => [
-                'admin@example.com',
-                'admin2@example.com',
-                'admin3@example.com',
-            ],
-
+            'include_project_owner' => true,
+            'mailable' => \App\Mail\ProjectStageChangeMail::class,
         ],
     ],
 ];

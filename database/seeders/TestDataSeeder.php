@@ -2,24 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\User;
-use App\Models\Skill;
 use App\Enums\Busyness;
-use App\Models\Project;
-use App\Enums\SkillLevel;
 use App\Enums\EffortScale;
-use App\Models\Scheduling;
-use Illuminate\Support\Str;
 use App\Enums\ProjectStatus;
-use App\Events\ProjectCreated;
+use App\Enums\SkillLevel;
+use App\Models\Project;
 use App\Models\ProjectHistory;
-use Illuminate\Support\Carbon;
-use Illuminate\Database\Seeder;
-use App\Models\NotificationRule;
-use App\Events\ProjectStageChange;
-use Illuminate\Support\Collection;
+use App\Models\Role;
+use App\Models\Scheduling;
+use App\Models\Skill;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class TestDataSeeder extends Seeder
 {
@@ -46,7 +43,6 @@ class TestDataSeeder extends Seeder
         $this->assignRolesAndSkills($staffMembers);
         $this->seedProjectPortfolio($staffMembers);
         $this->updateBusynessFromWorkload();
-        $this->seedNotificationRules();
     }
 
     private function seedRoles(): void
@@ -831,70 +827,5 @@ class TestDataSeeder extends Seeder
     private function skillNames(): Collection
     {
         return $this->skillNameCache ??= $this->skills()->pluck('name', 'id');
-    }
-
-    private function seedNotificationRules(): void
-    {
-        $stageToRole = [
-            'ideation' => 'Ideation Manager',
-            'feasibility' => 'Feasibility Manager',
-            'scoping' => 'Scoping Manager',
-            'scheduling' => 'Scheduling Manager',
-            'detailed-design' => 'Detailed Design Manager',
-            'development' => 'Development Manager',
-            'testing' => 'Testing Manager',
-            'deployed' => 'Deployment Manager',
-            'completed' => 'Completed Manager',
-            'cancelled' => 'Cancelled Manager',
-        ];
-
-        $allRoles = Role::pluck('id')->toArray();
-
-        NotificationRule::updateOrCreate(
-            [
-                'event->class' => 'project.created',
-            ],
-            [
-                'name' => 'Project Created',
-                'description' => 'Notification when a new project is created',
-                'event' => [
-                    'class' => ProjectCreated::class,
-                ],
-                'recipients' => ['roles' => $allRoles],
-                'active' => true,
-            ]
-        );
-
-        foreach ($stageToRole as $stage => $roleName) {
-            $roleId = Role::where('name', $roleName)->value('id');
-            if ($roleId) {
-                NotificationRule::updateOrCreate(
-                    [
-                        'event->class' => ProjectStageChange::class,
-                        'event->project_stage' => $stage,
-                    ],
-                    [
-                        'name' => 'Stage Changed: '.ucfirst(str_replace('-', ' ', $stage)),
-                        'description' => "Notifies when project moves to $stage stage.",
-                        'event' => [
-                            'class' => ProjectStageChange::class,
-                            'project_stage' => $stage,
-                        ],
-                        'recipients' => ['roles' => [$roleId]],
-                        'active' => true,
-                    ]
-                );
-            }
-        }
-
-        NotificationRule::create([
-            'name' => 'Test Email Rule',
-            'description' => 'Test rule for sending emails',
-            'event' => ['class' => 'project.created'],
-            'recipients' => [
-                'users' => [User::where('email', 'test@mailhog.local')->value('id')], // Use the test user's ID
-            ],
-            'active' => true,
-        ]);
     }
 }

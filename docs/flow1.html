@@ -1,0 +1,225 @@
+<html>
+<head>
+    <title>Project Management Flow</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.12.0/mermaid.min.js"></script>
+</head>
+<body>
+
+
+
+<div class="mermaid">
+flowchart TD
+
+%% MAIN ENTRY / IDEATION
+A0([New demand / idea])
+A1[Ideation form
+objective
+benefits
+business case
+school or group
+deliverable title
+deadline
+strategic initiative]
+
+A0 --> A1
+A1 --> A2[Ideation submitted
+email to work package assessors]
+
+%% FEASIBILITY
+F0[Feasibility assessment
+technical credence
+dependencies
+cost benefit case
+assessed date
+assessed by
+existing solution in UofG
+off the shelf solution]
+
+A2 --> F0
+F0 --> F1{All feasibility fields complete?}
+F1 --> F0
+
+F1 --> F2{Existing solution in UofG?}
+F2 --> FR[Reject RIF
+reason needed
+status rejected
+email requester]
+
+F2 --> F3{Off the shelf solution exists?}
+F3 --> F3X[Outcome use off the shelf
+next step ?]
+
+F3 --> F4{Approve or reject?}
+F4 --> FR
+F4 --> FOK[Feasibility approved
+move to scoping]
+
+%% SCOPING
+S0[Scoping
+effort bucket
+small medium large
+x large xx large
+assumptions
+in scope
+out of scope
+assessed by
+skills or competency needed]
+
+FOK --> S0
+S0 --> S1{All scoping fields complete?}
+S1 --> S0
+S1 --> S2[Scoping submitted
+email assessors
+ready for scheduling]
+
+%% SCHEDULING / CHANGE BOARD
+C0[Scheduling
+estimated start date
+estimated end date
+assigned staff
+technical lead
+priority
+change board review date
+change board outcome
+change champion
+skills matching view]
+
+S2 --> C0
+
+C0 --> C1{Skills match found?}
+C1 --> C1A[List of matching staff
+assessor chooses assignee]
+C1 --> C1B[No match available
+manual decision]
+
+C0 --> C2{All scheduling fields complete?}
+C2 --> C0
+C2 --> C3[Submitted to change board
+status pending board
+email change board]
+
+C3 --> C4{Change board outcome?}
+C4 --> CRJ[Rejected at board
+next step ?]
+C4 --> CAPP[Board approved]
+
+CAPP --> CSCH[Schedule confirmed
+start and end locked
+status scheduled]
+
+%% DETAILED DESIGN
+D0[Detailed design
+service or function
+designed by
+functional requirements
+non functional requirements
+delivery notes
+HLD link
+approvals operations
+approvals resilience
+approvals architecture board]
+
+CSCH --> D0
+D0 --> D1{All design and approvals complete?}
+D1 --> D0
+D1 --> DOK[Design complete
+move to dev or build]
+
+%% DEVELOPMENT / BUILD
+DEV0[Delivery setup
+service or function
+change lead
+is software development project]
+
+DOK --> DEV0
+DEV0 --> DEV1{Software development project?}
+DEV1 --> DEV[Development work
+repos tasks
+detail ?]
+DEV1 --> BLD[Build or configuration work
+detail ?]
+
+DEV --> DEVX[Development in progress
+steps ?]
+BLD --> BLDX[Build in progress
+steps ?]
+
+DEVX --> T0
+BLDX --> T0
+
+%% TESTING
+T0[Testing
+service or function
+department or office
+test lead
+UAT tester
+functional tests
+non functional tests
+test repo link
+resilience sign off
+delivery sign off
+test lead sign off]
+
+T0 --> T1[UAT approval
+email UAT tester]
+T1 --> T2[Service acceptance
+requires UAT
+email service leads]
+T2 --> T3[Submit to deployment
+all testing approvals complete
+status ready for deployment]
+
+%% DEPLOYMENT / BAU
+DEP0[Deployment
+service or function
+deployment lead
+live functional tests
+live non functional tests
+BAU or ops wiki
+handover approvals resilience
+handover approvals operations
+handover approvals delivery]
+
+T3 --> DEP0
+DEP0 --> DEP1[Service acceptance
+all deployment fields complete
+email service leads]
+DEP1 --> DEP2[Approved
+status complete and BAU]
+
+%% PORTFOLIO VIEWS
+O1[Backlog view
+list of all work packages]
+
+O2[Roadmap view
+timeline by service or function
+RAG statuses]
+
+O3[Heatmap view
+resource load per staff]
+
+A2 --- O1
+FOK --- O1
+S2 --- O1
+CSCH --- O1
+DEVX --- O1
+BLDX --- O1
+T0 --- O1
+DEP2 --- O1
+
+CSCH --- O2
+DEVX --- O2
+BLDX --- O2
+T0 --- O2
+DEP2 --- O2
+
+C0 --- O3
+CSCH --- O3
+
+</div>
+<script>
+    mermaid.initialize({ startOnLoad: true });
+</script>
+
+</body>
+</html>

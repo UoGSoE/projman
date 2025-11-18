@@ -40,9 +40,6 @@
                         wire:navigate>Roles</flux:sidebar.item>
                     <flux:sidebar.item icon="academic-cap" href="/skills" :current="request()->routeIs('skills.manage')"
                         wire:navigate>Skills</flux:sidebar.item>
-                    <flux:sidebar.item icon="bell" href="/notification-rules"
-                        :current="request()->routeIs('notification.rules')" wire:navigate>Notification Rules
-                    </flux:sidebar.item>
                 @endif
             </flux:sidebar.nav>
             <flux:sidebar.spacer />

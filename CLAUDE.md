@@ -542,12 +542,15 @@ If you are having a problem with a test passing - don't just keep adding code or
 
 Simplicity and readability of the code.  If you read the code and you can't imagine saying it out loud - then we consider it bad code.
 
+### Use of lando
+
+We use lando for local development - but we also have functional local development environments.  You can run laravel/artisan commands directly without using lando.  The only thing that requires lando is interrogating the local development database - which is much better done using dump() or dd() calls in code/tests.  The user will be very suspicious if you try and mess with their development database.
+
 ### Notes from your past self
 
 • Future-me, read this before you touch the keyboard
 
-  - Start with the most obvious solution that satisfies the spec; don’t add guards, validation, or abstractions unless the user
-    explicitly asks.
+  - Start with the most obvious solution that satisfies the spec; don’t add guards, double-up "just in case" validation, or abstractions unless the user explicitly asks.
   - Respect the existing guarantees in the stack (Laravel validation, Blade escaping, etc.)—don’t re-implement or double-check them “just in case.”
   - In **ALL CASES**, simplicity beats “clever” logic every time.
   - If a requirement says “simple,” take it literally. No defensive programming unless requested.
