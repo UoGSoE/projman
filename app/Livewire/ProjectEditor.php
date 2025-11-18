@@ -314,8 +314,9 @@ class ProjectEditor extends Component
             ->get()
             ->map(function ($user) {
                 // Calculate skill score (will be 0 for users with no matching skills)
-                $totalScore = $user->skills->sum(function ($skill) use ($user) {
-                    $level = SkillLevel::from($user->getSkillLevel($skill));
+                // Access pivot data directly to avoid N+1 queries
+                $totalScore = $user->skills->sum(function ($skill) {
+                    $level = SkillLevel::from($skill->pivot->skill_level);
 
                     return $level->getNumericValue();
                 });
