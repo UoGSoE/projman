@@ -3,14 +3,16 @@
 use App\Events\FeasibilityApproved;
 use App\Events\FeasibilityRejected;
 use App\Events\ProjectStageChange;
-use App\Events\ScopingScheduled;
-use App\Events\ScopingSubmittedToDCGG;
+use App\Events\SchedulingScheduled;
+use App\Events\SchedulingSubmittedToDCGG;
+use App\Events\ScopingSubmitted;
 use App\Livewire\ProjectCreator;
 use App\Mail\FeasibilityApprovedMail;
 use App\Mail\FeasibilityRejectedMail;
 use App\Mail\ProjectCreatedMail;
 use App\Mail\ProjectStageChangeMail;
-use App\Mail\ScopingScheduledMail;
+use App\Mail\SchedulingScheduledMail;
+use App\Mail\SchedulingSubmittedMail;
 use App\Mail\ScopingSubmittedMail;
 use App\Models\Project;
 use App\Models\Role;
@@ -107,27 +109,54 @@ describe('Config-based notifications', function () {
         });
     });
 
-    it('sends ScopingSubmittedToDCGG notification to configured roles', function () {
+    it('sends ScopingSubmitted notification to Work Package Assessor role', function () {
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
-        event(new ScopingSubmittedToDCGG($project));
+        event(new ScopingSubmitted($project));
 
         Mail::assertQueued(ScopingSubmittedMail::class);
 
         Mail::assertQueued(ScopingSubmittedMail::class, function ($mail) {
             return $mail->hasTo($this->assessor->email);
         });
+
+        // Should NOT include project owner (config has include_project_owner = false)
+        Mail::assertNotQueued(ScopingSubmittedMail::class, function ($mail) {
+            return $mail->hasTo($this->projectOwner->email);
+        });
     });
 
-    it('sends ScopingScheduled notification to configured roles', function () {
+    it('sends SchedulingSubmittedToDCGG notification to configured roles', function () {
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
-        event(new ScopingScheduled($project));
+        event(new SchedulingSubmittedToDCGG($project));
 
-        Mail::assertQueued(ScopingScheduledMail::class);
+        Mail::assertQueued(SchedulingSubmittedMail::class);
 
-        Mail::assertQueued(ScopingScheduledMail::class, function ($mail) {
+        Mail::assertQueued(SchedulingSubmittedMail::class, function ($mail) {
             return $mail->hasTo($this->assessor->email);
+        });
+
+        // Should NOT include project owner
+        Mail::assertNotQueued(SchedulingSubmittedMail::class, function ($mail) {
+            return $mail->hasTo($this->projectOwner->email);
+        });
+    });
+
+    it('sends SchedulingScheduled notification to configured roles', function () {
+        $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
+
+        event(new SchedulingScheduled($project));
+
+        Mail::assertQueued(SchedulingScheduledMail::class);
+
+        Mail::assertQueued(SchedulingScheduledMail::class, function ($mail) {
+            return $mail->hasTo($this->assessor->email);
+        });
+
+        // Should NOT include project owner
+        Mail::assertNotQueued(SchedulingScheduledMail::class, function ($mail) {
+            return $mail->hasTo($this->projectOwner->email);
         });
     });
 

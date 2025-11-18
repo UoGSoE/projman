@@ -210,11 +210,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
 
         // Act & Assert
         livewire(ProjectEditor::class, ['project' => $project])
-            ->assertSee('Small (≤5 days)')
-            ->assertSee('Medium (6-15 days)')
-            ->assertSee('Large (16-30 days)')
-            ->assertSee('X-Large (31-50 days)')
-            ->assertSee('XX-Large (>50 days)');
+            ->assertSeeInOrder(array_map(fn ($scale) => $scale->label(), EffortScale::cases()));
     });
 
     it('shows Update button in Scoping tab', function () {
