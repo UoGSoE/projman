@@ -3,7 +3,7 @@
         <div class="w-full max-w-md">
             <flux:card>
                 <div class="text-center mb-6">
-                    <flux:heading size="xl">Projman Login</flux:heading>
+                    <flux:heading size="xl">{{ ucwords(config('app.name')) }} Login</flux:heading>
                 </div>
 
                 @error('authentication')
