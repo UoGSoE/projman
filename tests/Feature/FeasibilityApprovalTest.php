@@ -17,6 +17,11 @@ use function Pest\Livewire\livewire;
 uses(RefreshDatabase::class);
 
 describe('Feasibility Approval Workflow', function () {
+    beforeEach(function () {
+        // Set up notification roles required for ProjectCreated and Feasibility events
+        $this->setupBaseNotificationRoles();
+    });
+
     it('approves feasibility when no existing solution exists', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
@@ -129,7 +134,7 @@ describe('Feasibility Approval Workflow', function () {
     it('sends email to Work Package Assessor role on approval', function () {
         // Arrange
         Mail::fake();
-        $role = Role::factory()->create(['name' => 'Work Package Assessor']);
+        $role = Role::firstOrCreate(['name' => 'Work Package Assessor']);
         $assessor = User::factory()->create();
         $assessor->roles()->attach($role);
 

@@ -14,6 +14,9 @@ use function Pest\Livewire\livewire;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // Fake notifications for this test suite (doesn't test notification behavior)
+    $this->fakeNotifications();
+
     $this->adminUser = User::factory()->admin()->create();
 });
 

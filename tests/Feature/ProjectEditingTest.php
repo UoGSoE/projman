@@ -11,6 +11,11 @@ use function Pest\Livewire\livewire;
 uses(RefreshDatabase::class);
 
 describe('Project Editing', function () {
+    beforeEach(function () {
+        // Fake notifications for this test suite (doesn't test notification behavior)
+        $this->fakeNotifications();
+    });
+
     it('can advance a project to the next stage', function () {
         // please check NotificationtTest.php for the correct emails being sent
         $user = User::factory()->create();

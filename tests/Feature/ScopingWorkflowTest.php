@@ -15,6 +15,11 @@ use function Pest\Livewire\livewire;
 uses(RefreshDatabase::class);
 
 describe('Scoping Effort Scale & Simplified Workflow', function () {
+    beforeEach(function () {
+        // Fake notifications for this test suite (doesn't test notification behavior)
+        $this->fakeNotifications();
+    });
+
     it('saves effort scale enum correctly', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);

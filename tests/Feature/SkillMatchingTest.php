@@ -10,6 +10,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 describe('Skill Matching', function () {
+    beforeEach(function () {
+        // Fake notifications for this test suite (doesn't test notification behavior)
+        $this->fakeNotifications();
+    });
 
     it('can sort a list of people with most applicable skill level for a given competency', function () {
         $skill1 = Skill::factory()->create(['name' => 'Laravel', 'skill_category' => 'Programming Languages', 'description' => 'PHP framework for web development']);

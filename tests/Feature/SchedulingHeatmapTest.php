@@ -10,6 +10,11 @@ use function Pest\Livewire\livewire;
 uses(RefreshDatabase::class);
 
 describe('Scheduling Heatmap Integration', function () {
+    beforeEach(function () {
+        // Fake notifications for this test suite (doesn't test notification behavior)
+        $this->fakeNotifications();
+    });
+
     it('displays heatmap when Model button is clicked', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);

@@ -2,6 +2,7 @@
 
 use App\Livewire\HeatMapViewer;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -13,6 +14,15 @@ beforeEach(function () {
         'is_admin' => true,
         'surname' => 'AdminUser',
     ]);
+
+    // Attach Admin role so ensureProjectCreatedRoles() doesn't create duplicate admin user
+    $adminRole = Role::firstOrCreate(['name' => 'Admin']);
+    $this->user->roles()->attach($adminRole);
+
+    // Fake notifications for this test suite (doesn't test notification behavior)
+    // Must be called AFTER user creation so ensureProjectCreatedRoles() sees this user
+    $this->fakeNotifications();
+
     $this->actingAs($this->user);
 });
 

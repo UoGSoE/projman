@@ -1,18 +1,21 @@
 <?php
 
-use App\Models\User;
-use App\Models\Project;
 use App\Enums\EffortScale;
-use App\Livewire\ProjectEditor;
 use App\Livewire\ProjectCreator;
+use App\Livewire\ProjectEditor;
+use App\Models\Project;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Livewire\livewire;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 describe('Project Creation', function () {
     beforeEach(function () {
+        // Fake notifications for this test suite (doesn't test notification behavior)
+        $this->fakeNotifications();
+
         $this->user = User::factory()->create();
     });
     it('can create a project with valid data', function () {
@@ -44,6 +47,9 @@ describe('Project Creation', function () {
 
 describe('Project Editing', function () {
     beforeEach(function () {
+        // Fake notifications for this test suite (doesn't test notification behavior)
+        $this->fakeNotifications();
+
         // Create a test admin user
         $this->user = User::factory()->create(['is_admin' => true]);
         $this->project = Project::factory()->create([

@@ -331,6 +331,151 @@ Replaced the entire notification rules infrastructure with a simple config-based
 
 ---
 
+### Completed: Listener Refactor & Test Infrastructure ✓
+
+**Date Completed:** 2025-11-18
+
+**Context:**
+After the notification system refactor, we had a legacy "big massive listener" (`ProjectEventsListener`) that handled all notification events. This was refactored into discrete, Laravel 12 auto-discovery compliant listeners. However, the new fail-fast exception handling (throwing when no notification recipients exist) exposed that 84 tests were failing due to missing role setup.
+
+**Problem Statement:**
+- New listeners throw `RuntimeException` when no users have required notification roles (by design for Sentry integration)
+- 84 tests were failing because they created projects (triggering `ProjectCreated` event) but no roles existed
+- Tests needed explicit, discoverable way to set up notification roles
+- Using traits or hidden magic would make debugging difficult for developers
+
+**Refactoring Solution: RoleUserResolver Service**
+
+Created a centralized service to resolve which users should receive notifications based on events:
+
+**Files Created:**
+- ✅ `app/Services/RoleUserResolver.php` - Service class with `forEvent(object $event): Collection` method
+- ✅ `app/Listeners/FeasibilityApprovedListener.php` - Discrete listener (~17 lines)
+- ✅ `app/Listeners/FeasibilityRejectedListener.php` - Discrete listener (~17 lines)
+- ✅ `app/Listeners/ProjectCreatedListener.php` - Discrete listener (~17 lines)
+- ✅ `app/Listeners/ProjectStageChangeListener.php` - Discrete listener (~17 lines)
+- ✅ `REFACTOR_LISTENERS.md` - Complete documentation of architectural decisions
+
+**Files Refactored:**
+- ✅ `app/Listeners/ScopingSubmittedListener.php` - Reduced from 54 lines to 17 lines
+- ✅ `app/Listeners/SchedulingScheduledListener.php` - Reduced from 54 lines to 17 lines
+
+**Files Deleted:**
+- ✅ `app/Listeners/ProjectEventsListener.php` - Removed 117-line mega-listener
+
+**Key Pattern Established:**
+All listeners follow consistent pattern:
+```php
+public function handle(EventClass $event): void
+{
+    $users = app(RoleUserResolver::class)->forEvent($event);
+
+    if ($users->isEmpty()) {
+        throw new \RuntimeException(
+            'No recipients found for '.EventClass::class.
+            ' notification (Project #'.$event->project->id.')'
+        );
+    }
+
+    Mail::to($users->pluck('email'))->queue(new SomeMailClass($event->project));
+}
+```
+
+**Benefits:**
+- Separation of concerns: Service returns data, listeners apply business logic
+- Fail-fast error handling with descriptive exceptions for Sentry
+- ~400 lines of duplicated recipient resolution → ~60 lines in service + ~140 lines in listeners
+- Easier to test, maintain, and extend
+
+---
+
+**Test Infrastructure Solution:**
+
+Created helper methods in `tests/TestCase.php` for explicit, discoverable test setup:
+
+**Helper Methods Added:**
+
+1. **`setupBaseNotificationRoles()`** - Creates all 14 required notification roles with dummy users assigned
+   - Used in tests that verify notification behavior or event dispatching
+   - Explicitly called in test `beforeEach()` blocks for visibility
+
+2. **`fakeNotifications()`** - Fakes notification events but allows `ProjectCreated` to run
+   - Used in tests that don't verify notification behavior
+   - Does NOT fake `ProjectCreated` because that's needed for `CreateRelatedForms` listener
+   - Calls `ensureProjectCreatedRoles()` to create minimal role setup
+
+3. **`ensureProjectCreatedRoles()`** - Creates minimal Admin and Project Manager roles
+   - Lightweight version of `setupBaseNotificationRoles()` for tests using `fakeNotifications()`
+   - Uses `firstOrCreate()` to avoid duplicates
+
+**Files Modified:**
+- ✅ `tests/TestCase.php` - Added 3 helper methods (72 lines)
+- ✅ `tests/Feature/FeasibilityApprovalTest.php` - Added `setupBaseNotificationRoles()` call, changed `Role::factory()->create()` to `Role::firstOrCreate()`
+- ✅ `tests/Feature/ProjectCreationTest.php` - Added `fakeNotifications()` calls
+- ✅ `tests/Feature/ScopingWorkflowTest.php` - Added `fakeNotifications()` calls
+- ✅ `tests/Feature/SchedulingWorkflowTest.php` - Added `fakeNotifications()` calls
+- ✅ `tests/Feature/SchedulingHeatmapTest.php` - Added `fakeNotifications()` calls
+- ✅ `tests/Feature/ProjectEditingTest.php` - Added `fakeNotifications()` calls
+- ✅ `tests/Feature/HeatMapViewerTest.php` - Added role attachment to prevent duplicate users
+- ✅ `tests/Feature/SkillMatchingTest.php` - Added `fakeNotifications()` calls
+- ✅ `tests/Feature/UserViewerTest.php` - Added `fakeNotifications()` calls
+
+**Testing:**
+- ✅ Reduced from 84 test failures to 0 failures
+- ✅ All 342 tests passing (1,171 assertions)
+- ✅ Code formatted with Laravel Pint
+
+**Critical Learning: Test Setup Order Matters**
+
+When using `fakeNotifications()`, you must create test users and attach roles **before** calling `fakeNotifications()`. Otherwise `ensureProjectCreatedRoles()` will create duplicate users.
+
+**Incorrect Order (causes duplicate users):**
+```php
+beforeEach(function () {
+    $this->fakeNotifications();  // ← Called first, creates admin user
+
+    $this->user = User::factory()->create(['is_admin' => true]);
+    $adminRole = Role::firstOrCreate(['name' => 'Admin']);
+    $this->user->roles()->attach($adminRole);  // ← Too late, duplicate exists
+});
+```
+
+**Correct Order:**
+```php
+beforeEach(function () {
+    // Create user FIRST
+    $this->user = User::factory()->create(['is_admin' => true]);
+    $adminRole = Role::firstOrCreate(['name' => 'Admin']);
+    $this->user->roles()->attach($adminRole);
+
+    // THEN call fakeNotifications()
+    // Now ensureProjectCreatedRoles() sees existing user and doesn't create duplicate
+    $this->fakeNotifications();
+});
+```
+
+**Why This Happens:**
+1. `fakeNotifications()` calls `ensureProjectCreatedRoles()`
+2. `ensureProjectCreatedRoles()` checks: "Does Admin role have any users?"
+3. If NO users exist yet, it creates one
+4. If you create your test user AFTER this, you now have 2 admin users
+5. Tests that count users (like HeatMapViewerTest) will get unexpected results
+
+**Key Benefits of This Approach:**
+- **Explicit**: Developers see exactly what setup is happening in `beforeEach()` blocks
+- **Discoverable**: Helper methods are IDE-clickable from test code
+- **Flexible**: Choose `setupBaseNotificationRoles()` OR `fakeNotifications()` based on test needs
+- **No Magic**: No hidden traits or auto-setup that developers have to discover through debugging
+- **Clear Intent**: Method names clearly communicate what they do
+
+**Impact:**
+- 84 failing tests → 342 passing tests
+- Clear pattern for future test development
+- No runtime notification failures due to missing roles
+- Developers can easily see and understand test setup requirements
+
+---
+
 ## Phase 1 Implementation Details
 
 This section provides step-by-step implementation guidance for all 6 Phase 1 features, informed by thorough codebase analysis.
