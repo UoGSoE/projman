@@ -292,21 +292,28 @@ class ProjectEditor extends Component
 
     public function getUsersMatchedBySkills(array $requiredSkillIds): Collection
     {
+        // If no skills required, return all staff sorted alphabetically by surname
         if (empty($requiredSkillIds)) {
-            return User::whereRaw('1 = 0')->get(); // Return empty Eloquent Collection
+            return User::where('is_staff', true)
+                ->orderBy('surname')
+                ->orderBy('forenames')
+                ->get()
+                ->map(function ($user) {
+                    $user->total_skill_score = 0;
+
+                    return $user;
+                });
         }
 
-        return User::with(['skills' => function ($query) use ($requiredSkillIds) {
-            // eager load only skills with ids in the array requiredSkillIds for each user
-            // this helps to not include skills we dont need to match
-            $query->whereIn('skill_id', $requiredSkillIds);
-        }])
-            ->whereHas('skills', function ($query) use ($requiredSkillIds) {
-                // whereHas filters the users to only include those with skills with ids in the array requiredSkillIds
+        // Get ALL staff users, not just those with matching skills
+        return User::where('is_staff', true)
+            ->with(['skills' => function ($query) use ($requiredSkillIds) {
+                // Eager load only the required skills for score calculation
                 $query->whereIn('skill_id', $requiredSkillIds);
-            })
+            }])
             ->get()
             ->map(function ($user) {
+                // Calculate skill score (will be 0 for users with no matching skills)
                 $totalScore = $user->skills->sum(function ($skill) use ($user) {
                     $level = SkillLevel::from($user->getSkillLevel($skill));
 
@@ -317,6 +324,8 @@ class ProjectEditor extends Component
                 return $user;
             })
             ->sortByDesc('total_skill_score')
+            ->sortBy('surname')
+            ->sortBy('forenames')
             ->values();
     }
 

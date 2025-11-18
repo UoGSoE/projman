@@ -23,6 +23,8 @@ class Scheduling extends Model
         'estimated_completion_date',
         'change_board_date',
         'assigned_to',
+        'technical_lead_id',
+        'change_champion_id',
         'priority',
         'team_assignment',
         'submitted_to_dcgg_at',

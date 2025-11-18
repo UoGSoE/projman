@@ -173,6 +173,111 @@ describe('Scheduling Heatmap Integration', function () {
             ->and($assignedStaffIds)->toContain($coseStaff2->id);
     });
 
+    it('shows both assigned_to and coseItStaff together at top of heatmap', function () {
+        // Arrange - This tests the exact user scenario: Joe (assigned_to) + Jenny (coseItStaff)
+        $user = User::factory()->create(['is_admin' => true]);
+        $project = Project::factory()->create();
+
+        // Joe Blogs - assigned_to
+        $joeBlogs = User::factory()->create([
+            'surname' => 'Blogs',
+            'forenames' => 'Joe',
+            'is_staff' => true,
+        ]);
+
+        // Jenny Smith - in coseItStaff
+        $jennySmith = User::factory()->create([
+            'surname' => 'Smith',
+            'forenames' => 'Jenny',
+            'is_staff' => true,
+        ]);
+
+        // Unassigned staff with surnames that would sort BEFORE Joe and Jenny alphabetically
+        $alice = User::factory()->create(['surname' => 'Anderson', 'forenames' => 'Alice', 'is_staff' => true]);
+        $bob = User::factory()->create(['surname' => 'Baker', 'forenames' => 'Bob', 'is_staff' => true]);
+        $charlie = User::factory()->create(['surname' => 'Carter', 'forenames' => 'Charlie', 'is_staff' => true]);
+
+        $this->actingAs($user);
+
+        // Act - set Joe as assigned_to and Jenny in coseItStaff
+        $component = livewire(ProjectEditor::class, ['project' => $project])
+            ->set('schedulingForm.assignedTo', $joeBlogs->id)
+            ->set('schedulingForm.coseItStaff', [$jennySmith->id])
+            ->call('toggleHeatmap');
+
+        // Assert
+        $heatmapData = $component->get('heatmapData');
+        expect($heatmapData['hasAssignedStaff'])->toBeTrue();
+
+        $staffCollection = $heatmapData['staff'];
+
+        // Get the first 2 staff (should be Joe and Jenny in some order, both assigned)
+        $topTwoStaffIds = $staffCollection->take(2)->pluck('user.id')->all();
+
+        // Both Joe and Jenny should be in the top 2 positions
+        expect($topTwoStaffIds)->toContain($joeBlogs->id)
+            ->and($topTwoStaffIds)->toContain($jennySmith->id);
+
+        // Alice/Bob/Charlie (unassigned) should NOT be in top 2, despite alphabetical advantage
+        expect($topTwoStaffIds)->not->toContain($alice->id)
+            ->and($topTwoStaffIds)->not->toContain($bob->id)
+            ->and($topTwoStaffIds)->not->toContain($charlie->id);
+
+        // Verify unassigned staff come after (position 3+)
+        $remainingStaffIds = $staffCollection->skip(2)->pluck('user.id')->all();
+        expect($remainingStaffIds)->toContain($alice->id)
+            ->and($remainingStaffIds)->toContain($bob->id)
+            ->and($remainingStaffIds)->toContain($charlie->id);
+    });
+
+    it('loads assigned staff from database correctly when reopening project', function () {
+        // Arrange - This tests data persistence: save to DB, then reload
+        $user = User::factory()->create(['is_admin' => true]);
+        $project = Project::factory()->create();
+
+        $joeBlogs = User::factory()->create(['surname' => 'Blogs', 'forenames' => 'Joe', 'is_staff' => true]);
+        $jennySmith = User::factory()->create(['surname' => 'Smith', 'forenames' => 'Jenny', 'is_staff' => true]);
+        $alice = User::factory()->create(['surname' => 'Anderson', 'forenames' => 'Alice', 'is_staff' => true]);
+        $bob = User::factory()->create(['surname' => 'Baker', 'forenames' => 'Bob', 'is_staff' => true]);
+
+        $this->actingAs($user);
+
+        // Act - Save the scheduling data to database (must fill all required fields for validation)
+        $component = livewire(ProjectEditor::class, ['project' => $project])
+            ->set('schedulingForm.keySkills', 'PHP, Laravel')
+            ->set('schedulingForm.estimatedStartDate', now()->addDays(5)->format('Y-m-d'))
+            ->set('schedulingForm.estimatedCompletionDate', now()->addDays(15)->format('Y-m-d'))
+            ->set('schedulingForm.changeBoardDate', now()->addDays(3)->format('Y-m-d'))
+            ->set('schedulingForm.priority', 'high')
+            ->set('schedulingForm.assignedTo', $joeBlogs->id)
+            ->set('schedulingForm.coseItStaff', [$jennySmith->id])
+            ->call('save', 'scheduling');
+
+        // Verify data was actually saved to database
+        $project->refresh();
+        expect($project->scheduling->assigned_to)->toBe($joeBlogs->id)
+            ->and($project->scheduling->cose_it_staff)->toBe([$jennySmith->id]);
+
+        // Act - Now open a FRESH component instance (simulates page reload)
+        $freshComponent = livewire(ProjectEditor::class, ['project' => $project->fresh()])
+            ->call('toggleHeatmap');
+
+        // Assert - Check that loaded data produces correct heatmap sorting
+        $heatmapData = $freshComponent->get('heatmapData');
+        expect($heatmapData['hasAssignedStaff'])->toBeTrue();
+
+        $staffCollection = $heatmapData['staff'];
+        $topTwoStaffIds = $staffCollection->take(2)->pluck('user.id')->all();
+
+        // Both Joe and Jenny should STILL be in top 2 after reload
+        expect($topTwoStaffIds)->toContain($joeBlogs->id)
+            ->and($topTwoStaffIds)->toContain($jennySmith->id);
+
+        // Alice and Bob (alphabetically earlier) should come after
+        expect($topTwoStaffIds)->not->toContain($alice->id)
+            ->and($topTwoStaffIds)->not->toContain($bob->id);
+    });
+
     it('returns correct structure in heatmapData computed property', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
