@@ -2,6 +2,7 @@
 
 use App\Events\FeasibilityApproved;
 use App\Events\FeasibilityRejected;
+use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Events\SchedulingScheduled;
 use App\Events\SchedulingSubmittedToDCGG;
@@ -18,6 +19,7 @@ use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 
 use function Pest\Livewire\livewire;
@@ -27,8 +29,6 @@ uses(RefreshDatabase::class);
 describe('Config-based notifications', function () {
 
     beforeEach(function () {
-        Mail::fake();
-
         // Create roles configured in projman.notifications
         $this->adminRole = Role::factory()->create(['name' => 'Admin']);
         $this->projectManagerRole = Role::factory()->create(['name' => 'Project Manager']);
@@ -51,6 +51,8 @@ describe('Config-based notifications', function () {
     });
 
     it('sends ProjectCreated notification to configured roles', function () {
+        Mail::fake();
+
         $this->actingAs($this->projectOwner);
 
         livewire(ProjectCreator::class)
@@ -76,6 +78,8 @@ describe('Config-based notifications', function () {
     });
 
     it('sends FeasibilityApproved notification to Work Package Assessor role', function () {
+        Mail::fake();
+
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
         event(new FeasibilityApproved($project));
@@ -93,6 +97,8 @@ describe('Config-based notifications', function () {
     });
 
     it('sends FeasibilityRejected notification to Work Package Assessor and project owner', function () {
+        Mail::fake();
+
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
         event(new FeasibilityRejected($project));
@@ -110,6 +116,8 @@ describe('Config-based notifications', function () {
     });
 
     it('sends ScopingSubmitted notification to Work Package Assessor role', function () {
+        Mail::fake();
+
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
         event(new ScopingSubmitted($project));
@@ -126,24 +134,25 @@ describe('Config-based notifications', function () {
         });
     });
 
-    it('sends SchedulingSubmittedToDCGG notification to configured roles', function () {
+    it('sends SchedulingSubmittedToDCGG notification to configured email address', function () {
+        Mail::fake();
+
+        config(['projman.dcgg_email' => 'dcgg@example.ac.uk']);
+
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
         event(new SchedulingSubmittedToDCGG($project));
 
-        Mail::assertQueued(SchedulingSubmittedMail::class);
+        Mail::assertQueued(SchedulingSubmittedMail::class, 1);
 
         Mail::assertQueued(SchedulingSubmittedMail::class, function ($mail) {
-            return $mail->hasTo($this->assessor->email);
-        });
-
-        // Should NOT include project owner
-        Mail::assertNotQueued(SchedulingSubmittedMail::class, function ($mail) {
-            return $mail->hasTo($this->projectOwner->email);
+            return $mail->hasTo('dcgg@example.ac.uk');
         });
     });
 
     it('sends SchedulingScheduled notification to configured roles', function () {
+        Mail::fake();
+
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
         event(new SchedulingScheduled($project));
@@ -161,6 +170,8 @@ describe('Config-based notifications', function () {
     });
 
     it('sends ProjectStageChange notification to stage-specific roles', function () {
+        Mail::fake();
+
         $testingManager = User::factory()->create();
         $testingManager->roles()->attach($this->testingManagerRole);
 
@@ -172,7 +183,7 @@ describe('Config-based notifications', function () {
             'status' => 'testing',
         ]);
 
-        event(new ProjectStageChange($project, 'development', 'testing'));
+        event(new ProjectStageChange($project));
 
         Mail::assertQueued(ProjectStageChangeMail::class);
 
@@ -191,21 +202,25 @@ describe('Config-based notifications', function () {
         });
     });
 
-    it('does not send notifications when no users have configured roles', function () {
+    it('throws exception when no users have configured roles', function () {
         // Remove all role assignments
         $this->admin->roles()->detach();
         $this->projectManager->roles()->detach();
         $this->assessor->roles()->detach();
 
+        // Fake ProjectCreated event to prevent its listener from throwing during project creation
+        Event::fake([ProjectCreated::class]);
+
         $project = Project::factory()->create(['user_id' => $this->projectOwner->id]);
 
-        event(new FeasibilityApproved($project));
-
-        // Should not queue any mail since no users have the required role
-        Mail::assertNothingQueued();
+        // Now test that FeasibilityApproved throws when there are no recipients
+        expect(fn () => event(new FeasibilityApproved($project)))
+            ->toThrow(\RuntimeException::class, 'No recipients found');
     });
 
     it('sends notification only to users with the correct role', function () {
+        Mail::fake();
+
         // Create Feasibility Manager role and a user with that role
         $feasibilityManagerRole = Role::factory()->create(['name' => 'Feasibility Manager']);
         $feasibilityManager = User::factory()->create();

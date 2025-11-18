@@ -36,12 +36,12 @@ return [
             'include_project_owner' => false,
             'mailable' => \App\Mail\ScopingSubmittedMail::class,
         ],
-        \App\Events\SchedulingSubmittedToDCGG::class => [
-            'roles' => ['Work Package Assessor'],
-            'include_project_owner' => false,
-            'include_dcgg_email' => true,
-            'mailable' => \App\Mail\SchedulingSubmittedMail::class,
-        ],
+        //        \App\Events\SchedulingSubmittedToDCGG::class => [
+        //            'roles' => ['Work Package Assessor'],
+        //            'include_project_owner' => false,
+        //            'include_dcgg_email' => true,
+        //            'mailable' => \App\Mail\SchedulingSubmittedMail::class,
+        //        ],
         \App\Events\SchedulingScheduled::class => [
             'roles' => ['Work Package Assessor'],
             'include_project_owner' => false,

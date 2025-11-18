@@ -2,26 +2,26 @@
 
 namespace App\Listeners;
 
-use App\Events\SchedulingScheduled;
-use App\Mail\SchedulingScheduledMail;
+use App\Events\ProjectCreated;
+use App\Mail\ProjectCreatedMail;
 use App\Services\RoleUserResolver;
 use Illuminate\Support\Facades\Mail;
 
-class SchedulingScheduledListener
+class ProjectCreatedListener
 {
-    public function handle(SchedulingScheduled $event): void
+    public function handle(ProjectCreated $event): void
     {
         $users = app(RoleUserResolver::class)->forEvent($event);
 
         if ($users->isEmpty()) {
             throw new \RuntimeException(
-                'No recipients found for '.SchedulingScheduled::class.
+                'No recipients found for '.ProjectCreated::class.
                 ' notification (Project #'.$event->project->id.')'
             );
         }
 
         Mail::to($users->pluck('email'))->queue(
-            new SchedulingScheduledMail($event->project)
+            new ProjectCreatedMail($event->project)
         );
     }
 }

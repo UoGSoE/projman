@@ -2,26 +2,26 @@
 
 namespace App\Listeners;
 
-use App\Events\SchedulingScheduled;
-use App\Mail\SchedulingScheduledMail;
+use App\Events\FeasibilityApproved;
+use App\Mail\FeasibilityApprovedMail;
 use App\Services\RoleUserResolver;
 use Illuminate\Support\Facades\Mail;
 
-class SchedulingScheduledListener
+class FeasibilityApprovedListener
 {
-    public function handle(SchedulingScheduled $event): void
+    public function handle(FeasibilityApproved $event): void
     {
         $users = app(RoleUserResolver::class)->forEvent($event);
 
         if ($users->isEmpty()) {
             throw new \RuntimeException(
-                'No recipients found for '.SchedulingScheduled::class.
+                'No recipients found for '.FeasibilityApproved::class.
                 ' notification (Project #'.$event->project->id.')'
             );
         }
 
         Mail::to($users->pluck('email'))->queue(
-            new SchedulingScheduledMail($event->project)
+            new FeasibilityApprovedMail($event->project)
         );
     }
 }
