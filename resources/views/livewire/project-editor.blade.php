@@ -421,7 +421,7 @@
                 <flux:separator />
 
                 {{-- Action Buttons --}}
-                <div class="space-y-4">
+                <div class="flex flex-col md:flex-row gap-4 w-full justify-between items-center">
                     {{-- Row 1: Update and Model --}}
                     <div class="flex flex-wrap gap-2">
                         <flux:button type="submit" variant="primary">Update</flux:button>
