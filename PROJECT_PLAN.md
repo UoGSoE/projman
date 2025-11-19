@@ -476,6 +476,59 @@ beforeEach(function () {
 
 ---
 
+### Completed: Staff Heatmap Sorting Fix ✓
+
+**Date Completed:** 2025-11-19
+
+**Context:**
+Management requested the ability to allocate tasks to staff members who don't have matching skills, to support onboarding and skill development within the team. The `getUsersMatchedBySkills()` method was refactored to return ALL staff users (not just matched ones), sorted by skill score descending.
+
+**Problem Statement:**
+- Multi-column sort was incorrectly ordered, causing final results to only be sorted by forenames
+- Tests expected old behavior (only returning users with matching skills)
+- Browser testing showed incorrect sorting: users weren't properly grouped by skill score
+
+**Solution Implemented:**
+
+**Files Modified:**
+- ✅ `app/Livewire/ProjectEditor.php` - Fixed sorting order in `getUsersMatchedBySkills()` method (lines 327-330)
+- ✅ `tests/Feature/SkillMatchingTest.php` - Updated 4 tests to match new behavior
+
+**Sorting Fix:**
+Changed from incorrect order:
+```php
+->sortByDesc('total_skill_score')  // Applied first
+->sortBy('surname')                // Overwrites previous
+->sortBy('forenames')              // Final sort (wrong!)
+```
+
+To correct stable multi-column sort:
+```php
+->sortBy('forenames')              // Least important
+->sortBy('surname')                // More important
+->sortByDesc('total_skill_score')  // Most important (final)
+```
+
+**Test Updates:**
+All 4 failing tests updated to expect new "return all staff" behavior:
+1. `can get users matched by skills and sorted by score` - Now expects 4 users (all staff), not 3 (matched only)
+2. `returns all staff sorted alphabetically when no required skills provided` - Returns all staff with score 0, not empty
+3. `returns all staff with score 0 when no users have required skills` - Returns all staff with score 0, not empty
+4. `returns all staff with matched users sorted first by skill score` - Returns all 4 users with matched first
+
+**Testing:**
+- ✅ All 344 tests passing (1,196 assertions)
+- ✅ Code formatted with Laravel Pint
+- ✅ Browser testing confirmed correct behavior
+
+**Key Benefits:**
+- Users with matching skills appear at the top (sorted by skill score)
+- All staff remain available for selection (onboarding opportunities)
+- Stable sort maintains alphabetical ordering within same skill level
+- Management can now assign tasks to develop team member skills
+
+---
+
 ## Phase 1 Implementation Details
 
 This section provides step-by-step implementation guidance for all 6 Phase 1 features, informed by thorough codebase analysis.

@@ -324,9 +324,9 @@ class ProjectEditor extends Component
 
                 return $user;
             })
-            ->sortByDesc('total_skill_score')
-            ->sortBy('surname')
             ->sortBy('forenames')
+            ->sortBy('surname')
+            ->sortByDesc('total_skill_score')
             ->values();
     }
 

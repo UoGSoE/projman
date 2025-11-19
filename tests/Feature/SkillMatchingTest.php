@@ -81,7 +81,7 @@ describe('Skill Matching', function () {
 
         $user2->skills()->attach($skill1->id, ['skill_level' => SkillLevel::INTERMEDIATE->value]); // Score: 2
         $user2->skills()->attach($skill3->id, ['skill_level' => SkillLevel::ADVANCED->value]); // Score: 3
-        // Total: 5
+        // Total: 2 (only skill1 matches required skills)
 
         $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::BEGINNER->value]); // Score: 1
         // Total: 1
@@ -89,27 +89,39 @@ describe('Skill Matching', function () {
         // Test matching for skills 1 and 2
         $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([$skill1->id, $skill2->id]);
 
-        expect($matchedUsers)->toHaveCount(3); // user1, user2, and user3 (all have skill1)
+        // Now returns ALL staff (4 total: user1, user2, user3 + 1 from fakeNotifications)
+        expect($matchedUsers)->toHaveCount(4);
         expect($matchedUsers->first()->id)->toBe($user1->id); // user1 should be first (score: 5)
         expect($matchedUsers->first()->total_skill_score)->toBe(5);
-        expect($matchedUsers->last()->id)->toBe($user3->id); // user3 should be last (score: 1)
-        expect($matchedUsers->last()->total_skill_score)->toBe(1);
+        expect($matchedUsers[1]->id)->toBe($user2->id); // user2 second (score: 2)
+        expect($matchedUsers[1]->total_skill_score)->toBe(2);
+        expect($matchedUsers[2]->id)->toBe($user3->id); // user3 third (score: 1)
+        expect($matchedUsers[2]->total_skill_score)->toBe(1);
+        // Fourth user (from fakeNotifications) has score: 0
+        expect($matchedUsers->last()->total_skill_score)->toBe(0);
     });
 
-    it('returns empty collection when no required skills provided', function () {
+    it('returns all staff sorted alphabetically when no required skills provided', function () {
         $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([]);
-        expect($matchedUsers)->toBeEmpty();
+
+        // Should return all staff users sorted by surname (1 from fakeNotifications)
+        expect($matchedUsers)->toHaveCount(1);
+        expect($matchedUsers->first()->total_skill_score)->toBe(0);
     });
 
-    it('returns empty collection when no users have required skills', function () {
+    it('returns all staff with score 0 when no users have required skills', function () {
         $skill = Skill::factory()->create();
         $user = User::factory()->create();
 
         $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([$skill->id]);
-        expect($matchedUsers)->toBeEmpty();
+
+        // Should return all staff (2 total: test user + 1 from fakeNotifications), all with score 0
+        expect($matchedUsers)->toHaveCount(2);
+        expect($matchedUsers->first()->total_skill_score)->toBe(0);
+        expect($matchedUsers->last()->total_skill_score)->toBe(0);
     });
 
-    it('only returns users who have at least one of the required skills', function () {
+    it('returns all staff with matched users sorted first by skill score', function () {
         $skill1 = Skill::factory()->create(['name' => 'Laravel']);
         $skill2 = Skill::factory()->create(['name' => 'React']);
         $skill3 = Skill::factory()->create(['name' => 'Vue']);
@@ -125,8 +137,13 @@ describe('Skill Matching', function () {
 
         $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([$skill1->id, $skill2->id]);
 
-        expect($matchedUsers)->toHaveCount(1); // Only user1 should match
+        // Now returns ALL staff (4 total), with user1 first (score 5), others with score 0
+        expect($matchedUsers)->toHaveCount(4);
         expect($matchedUsers->first()->id)->toBe($user1->id);
         expect($matchedUsers->first()->total_skill_score)->toBe(5); // 3 + 2
+        // Remaining users have score 0
+        expect($matchedUsers[1]->total_skill_score)->toBe(0);
+        expect($matchedUsers[2]->total_skill_score)->toBe(0);
+        expect($matchedUsers[3]->total_skill_score)->toBe(0);
     });
 });
