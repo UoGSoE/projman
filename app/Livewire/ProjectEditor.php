@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Enums\ProjectStatus;
 use App\Enums\SkillLevel;
+use App\Livewire\Forms\BuildForm;
 use App\Livewire\Forms\DeployedForm;
 use App\Livewire\Forms\DetailedDesignForm;
 use App\Livewire\Forms\DevelopmentForm;
@@ -43,6 +44,8 @@ class ProjectEditor extends Component
 
     public DeployedForm $deployedForm;
 
+    public BuildForm $buildForm;
+
     public $userSearch = '';
 
     #[Url]
@@ -78,6 +81,7 @@ class ProjectEditor extends Component
             'development',
             'testing',
             'deployed',
+            'build',
             'history',
         ]);
         $this->projectId = $project->id;

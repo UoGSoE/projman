@@ -38,6 +38,8 @@ describe('Project Editing', function () {
         $project->advanceToNextStage();
         expect($project->fresh()->status->value)->toEqual(ProjectStatus::DEPLOYED->value);
         $project->advanceToNextStage();
+        expect($project->fresh()->status->value)->toEqual(ProjectStatus::BUILD->value);
+        $project->advanceToNextStage();
         expect($project->fresh()->status->value)->toEqual(ProjectStatus::COMPLETED->value);
 
     });

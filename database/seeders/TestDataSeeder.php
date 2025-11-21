@@ -277,6 +277,9 @@ class TestDataSeeder extends Seeder
                 case ProjectStatus::DEPLOYED:
                     $attributes['deployed_by'] = $assignee->id;
                     break;
+                case ProjectStatus::BUILD:
+                    // No special attributes yet - fields TBD
+                    break;
             }
 
             if ($stage === ProjectStatus::SCOPING) {
@@ -511,6 +514,9 @@ class TestDataSeeder extends Seeder
                     'change_advisory_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
                 ];
             },
+            ProjectStatus::BUILD => fn () => [
+                // No fields yet - TBD
+            ],
             default => fn () => [],
         };
 

@@ -626,6 +626,65 @@ Feature 3 adds three new input fields to the Scheduling stage to support Change 
 
 ---
 
+### Completed: Software Development vs Build Project Toggle ✓
+
+**Date Completed:** 2025-11-21
+**Source:** pptx_text_extract.txt slides 24-25
+
+**Context:**
+Stakeholders requested the ability to distinguish between Software Development projects (custom coding) and Build projects (infrastructure, hardware, configuration). Requirements were vague with no specific field definitions provided.
+
+**Solution Implemented:**
+Two-phase pragmatic approach that delivers value immediately while remaining flexible for future requirements:
+
+**Phase 1: UI Toggle (2 hours)**
+- Added checkbox to Scoping stage: "Requires in-house/custom software development"
+- Checkbox defaults to checked (backward compatible)
+- Development form fields disabled when unchecked (with explanatory callout)
+- Both Development and Build tabs always visible
+- Build tab shows "TBC" placeholder to force stakeholder conversation
+
+**Phase 2: Model Infrastructure (1.5 hours)**
+- Created complete Build model, migration, factory, and Livewire form
+- Integrated Build into project lifecycle (ProjectStatus enum, config, seeder)
+- Build tab now functional with proper form handling
+- No field definitions yet - infrastructure ready when requirements arrive
+
+**Files Created (5):**
+- Migration: `2025_11_21_134055_create_builds_table.php`
+- Models: `Build.php`, `BuildFactory.php`, `BuildForm.php`
+- Migration: `add_requires_software_dev_to_scopings.php`
+
+**Files Modified (8):**
+- Enhanced: `Scoping.php`, `ScopingForm.php`, `Project.php`, `ProjectStatus.php`
+- Config: `config/projman.php`
+- Seeding: `TestDataSeeder.php`
+- UI: `scoping-form.blade.php`, `development-form.blade.php`, `build-form.blade.php`, `project-editor.blade.php`, `ProjectEditor.php`
+
+**Testing:**
+- ✅ 10 new tests for toggle functionality
+- ✅ Fixed 3 existing tests for new stage progression
+- ✅ All 371 tests passing (1,268 assertions)
+
+**Key Design Decisions:**
+- Checkbox in Scoping stage (where project type is defined)
+- Default to "software dev" (non-breaking for existing projects)
+- Both tabs always visible (forces conversation about Build requirements)
+- Disabled fields visible, not hidden (shows existing functionality)
+- Infrastructure complete, fields added later (clean separation of concerns)
+
+**Business Value:**
+- Unblocks stakeholder governance reporting need immediately
+- Visible TBC placeholder forces requirements conversation
+- Zero technical debt - all patterns follow existing conventions
+- When Build requirements arrive, implementation is just adding fields (no refactoring needed)
+
+**Documentation:**
+- Full implementation details in `NEW_TAB.md`
+- Includes questions for stakeholders about Build project definitions
+
+---
+
 ## Phase 1 Implementation Details
 
 This section provides step-by-step implementation guidance for all 6 Phase 1 features, informed by thorough codebase analysis.

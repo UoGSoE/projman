@@ -117,6 +117,11 @@ class Project extends Model
         return $this->hasOne(Deployed::class);
     }
 
+    public function build(): HasOne
+    {
+        return $this->hasOne(Build::class);
+    }
+
     public function scopeIncomplete($query)
     {
         return $query->whereNotIn('status', [

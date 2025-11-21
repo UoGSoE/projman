@@ -2,6 +2,7 @@
 
 namespace App\Enums;
 
+use App\Models\Build;
 use App\Models\Deployed;
 use App\Models\DetailedDesign;
 use App\Models\Development;
@@ -21,6 +22,7 @@ enum ProjectStatus: string
     case DEVELOPMENT = 'development';
     case TESTING = 'testing';
     case DEPLOYED = 'deployed';
+    case BUILD = 'build';
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
 
@@ -35,6 +37,7 @@ enum ProjectStatus: string
             self::DEVELOPMENT => 'amber',
             self::TESTING => 'amber',
             self::DEPLOYED => 'green',
+            self::BUILD => 'amber',
             self::COMPLETED => 'zinc',
             self::CANCELLED => 'red',
         };
@@ -51,6 +54,7 @@ enum ProjectStatus: string
             self::DEVELOPMENT => 'developmentForm',
             self::TESTING => 'testingForm',
             self::DEPLOYED => 'deployedForm',
+            self::BUILD => 'buildForm',
         };
     }
 
@@ -64,7 +68,8 @@ enum ProjectStatus: string
             self::DETAILED_DESIGN => self::DEVELOPMENT,
             self::DEVELOPMENT => self::TESTING,
             self::TESTING => self::DEPLOYED,
-            self::DEPLOYED => self::COMPLETED,
+            self::DEPLOYED => self::BUILD,
+            self::BUILD => self::COMPLETED,
         };
     }
 
@@ -75,7 +80,7 @@ enum ProjectStatus: string
 
     public static function getAllFormNames(): array
     {
-        return array_map(fn ($case) => $case->getFormName(), [self::IDEATION, self::FEASIBILITY, self::SCOPING, self::SCHEDULING, self::DETAILED_DESIGN, self::DEVELOPMENT, self::TESTING, self::DEPLOYED]);
+        return array_map(fn ($case) => $case->getFormName(), [self::IDEATION, self::FEASIBILITY, self::SCOPING, self::SCHEDULING, self::DETAILED_DESIGN, self::DEVELOPMENT, self::TESTING, self::DEPLOYED, self::BUILD]);
     }
 
     public function getStageColor(ProjectStatus $currentStage): string
@@ -135,6 +140,7 @@ enum ProjectStatus: string
             self::DEVELOPMENT => 'development',
             self::TESTING => 'testing',
             self::DEPLOYED => 'deployed',
+            self::BUILD => 'build',
             default => null,
         };
     }
@@ -150,6 +156,7 @@ enum ProjectStatus: string
             self::DEVELOPMENT => Development::class,
             self::TESTING => Testing::class,
             self::DEPLOYED => Deployed::class,
+            self::BUILD => Build::class,
             default => null,
         };
     }

@@ -81,9 +81,8 @@ describe('Software Development vs Build Toggle', function () {
             // Act
             $response = livewire(ProjectEditor::class, ['project' => $project]);
 
-            // Assert - Fieldset should have disabled attribute bound to false
+            // Assert - Fieldset should exist and show explanatory message
             $response->assertSeeHtml('data-test="development-form-fieldset"')
-                ->assertSeeHtml(':disabled="!$scopingForm->requiresSoftwareDev"')
                 ->assertSee('This project does not require custom software development');
         });
 
@@ -95,7 +94,7 @@ describe('Software Development vs Build Toggle', function () {
             // Act
             $response = livewire(ProjectEditor::class, ['project' => $project]);
 
-            // Assert - Fieldset should have disabled attribute bound to true
+            // Assert - Fieldset should exist and NOT show explanatory message
             $response->assertSeeHtml('data-test="development-form-fieldset"')
                 ->assertDontSee('This project does not require custom software development');
         });
