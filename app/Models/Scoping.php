@@ -27,6 +27,7 @@ class Scoping extends Model
         'dcgg_status',
         'submitted_to_dcgg_at',
         'scheduled_at',
+        'requires_software_dev',
     ];
 
     public function project(): BelongsTo
@@ -41,6 +42,7 @@ class Scoping extends Model
             'estimated_effort' => EffortScale::class,
             'submitted_to_dcgg_at' => 'datetime',
             'scheduled_at' => 'datetime',
+            'requires_software_dev' => 'boolean',
         ];
     }
 }

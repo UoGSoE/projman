@@ -79,6 +79,8 @@ We like to use helpful variable names in tests.  For example we might have '$use
 
 When writing tests and you are getting unexpected results with assertSee or assertDontSee - consider that it might be that Laravels exception page is showing the values in the stack trace or contextual debug into.  Do a quick sanity check using an assertStatus() call or assertHasNoErrors().  If that doesn't help **ask the user for help**.  They can visit the page in the browser and tell you exactly what is happening and even provide you a screenshot.
 
+Note: if you are running the whole test suite, you can use the `--compact` flag.  It will still show you the full output for any failures, but will save you having to fill up your context window with all the passing test names.
+
 ### UI styling
 
 We use the FluxUI component library for our UI and Livewire/AlpineJS for interactivity.
@@ -125,4 +127,9 @@ We use lando for local development - but we also have functional local developme
   - In **ALL CASES**, simplicity beats “clever” logic every time.
   - If a requirement says “simple,” take it literally. No defensive programming unless requested.
   - For ambiguous cases, ask.  THIS IS CRITICAL TO THE USER.
+  - Do not use the users name or the names of anyone in documents you read.  Your chats with the user are logged to disk so we do not want to leak PII.  Just refer to the user as 'you', or 'stakeholders', 'the person who requested the feature', etc
+
+### Final inspiring quote
+
+"Simplicity is the ultimate sophistication."
 

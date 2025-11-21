@@ -42,6 +42,8 @@ class ScopingForm extends Form
 
     public ?Carbon $scheduledAt = null;
 
+    public bool $requiresSoftwareDev = true;
+
     public function rules(): array
     {
         return [
@@ -51,6 +53,7 @@ class ScopingForm extends Form
             'outOfScope' => 'required|string|max:2048',
             'assumptions' => 'required|string|max:2048',
             'skillsRequired' => 'required|array|min:1',
+            'requiresSoftwareDev' => 'boolean',
         ];
     }
 
@@ -66,6 +69,7 @@ class ScopingForm extends Form
         $this->dcggStatus = $project->scoping->dcgg_status ?? 'pending';
         $this->submittedToDcggAt = $project->scoping->submitted_to_dcgg_at;
         $this->scheduledAt = $project->scoping->scheduled_at;
+        $this->requiresSoftwareDev = $project->scoping->requires_software_dev ?? true;
     }
 
     public function save()
@@ -80,6 +84,7 @@ class ScopingForm extends Form
             'dcgg_status' => $this->dcggStatus,
             'submitted_to_dcgg_at' => $this->submittedToDcggAt,
             'scheduled_at' => $this->scheduledAt,
+            'requires_software_dev' => $this->requiresSoftwareDev,
         ]);
     }
 }

@@ -25,6 +25,7 @@
                 <flux:tab name="scheduling">Scheduling</flux:tab>
                 <flux:tab name="detailed-design">Detailed Design</flux:tab>
                 <flux:tab name="development">Development</flux:tab>
+                <flux:tab name="build">Build</flux:tab>
                 <flux:tab name="testing">Testing</flux:tab>
                 <flux:tab name="deployed">Deployed</flux:tab>
             @endadmin
@@ -59,6 +60,10 @@
 
         <flux:tab.panel name="development" class="mt-6 space-y-6">
             @include('livewire.forms.development-form')
+        </flux:tab.panel>
+
+        <flux:tab.panel name="build" class="mt-6 space-y-6">
+            @include('livewire.forms.build-form')
         </flux:tab.panel>
 
         <flux:tab.panel name="deployed" class="mt-6 space-y-6">

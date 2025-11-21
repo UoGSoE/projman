@@ -1,6 +1,14 @@
 <form wire:submit="save('development')" class="space-y-6">
-    {{-- Lead Developer / Development Team --}}
-    <div class="grid grid-cols-2 gap-4">
+    {{-- Explanatory Note When Not Software Development --}}
+    @if (!$scopingForm->requiresSoftwareDev)
+        <flux:callout variant="info">
+            This project does not require custom software development. Fields are disabled.
+        </flux:callout>
+    @endif
+
+    <flux:fieldset :disabled="!$scopingForm->requiresSoftwareDev" data-test="development-form-fieldset" class="space-y-6">
+        {{-- Lead Developer / Development Team --}}
+        <div class="grid grid-cols-2 gap-4">
         <flux:select label="Lead Developer" wire:model="developmentForm.leadDeveloper">
             @foreach ($this->availableUsers as $user)
                 <flux:select.option value="{{ $user->id }}">
@@ -58,4 +66,7 @@
             To Next Stage
         </flux:button>
     </div>
+
+    </flux:fieldset>
+
 </form>

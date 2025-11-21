@@ -529,6 +529,103 @@ All 4 failing tests updated to expect new "return all staff" behavior:
 
 ---
 
+### Completed: Feature 3 - Scheduling Stage Triage Inputs ✓
+
+**Date Completed:** 2025-11-21
+
+**Context:**
+Feature 3 adds three new input fields to the Scheduling stage to support Change Board workflow tracking and team assignment. The database migrations were already run during infrastructure setup, and Feature 2 had partially implemented two of the fields (`technicalLeadId` and `changeChampionId`) in the backend but not the UI.
+
+**What Was Missing Before Implementation:**
+- Backend had `technicalLeadId` and `changeChampionId` properties but missing `changeBoardOutcome`
+- UI had none of the three dropdowns visible
+- Model missing relationship methods and enum cast
+- No tests for these fields
+
+**Files Modified:**
+
+1. ✅ **`app/Models/Scheduling.php`**
+   - Added `change_board_outcome` and `fields_locked` to `$fillable` array
+   - Added enum cast for `change_board_outcome` (ChangeBoardOutcome::class)
+   - Added boolean cast for `fields_locked`
+   - Added `technicalLead()` BelongsTo relationship
+   - Added `changeChampion()` BelongsTo relationship
+
+2. ✅ **`app/Livewire/Forms/SchedulingForm.php`**
+   - Added `changeBoardOutcome` property with empty `#[Validate]` attribute
+   - Created `rules()` method with `Rule::enum(ChangeBoardOutcome::class)` validation
+   - Updated `setProject()` to load `change_board_outcome` from model
+   - Updated `save()` to persist `change_board_outcome` (using `?->value` for enum)
+
+3. ✅ **`resources/views/livewire/forms/scheduling-form.blade.php`**
+   - Added Technical Lead dropdown (foreign key to users)
+   - Added Change Champion dropdown (foreign key to users)
+   - Added Change Board Outcome dropdown (enum: Pending, Approved, Deferred, Rejected)
+   - Used 3-column grid layout for visual consistency
+   - Added `data-test` attributes for testing
+
+**Testing:**
+- ✅ Created `tests/Feature/SchedulingTriageTest.php` with 17 comprehensive tests:
+  - 5 field persistence tests (save/load for each field, all together, and null values)
+  - 4 validation tests (invalid user IDs, valid enum, invalid enum protection)
+  - 5 UI display tests (dropdowns visible, options correct, selected values display)
+  - 2 relationship tests (technicalLead and changeChampion relationships work)
+  - 1 project isolation test (changes don't affect other projects)
+- ✅ All 17 new tests passing (47 assertions)
+- ✅ All 361 total tests passing (1,251 assertions) - no regressions
+- ✅ Code formatted with Laravel Pint
+
+**Manual QA:**
+- ✅ All three dropdowns display correctly in Scheduling tab
+- ✅ Values save and persist correctly
+- ✅ Dropdowns populate with correct options
+- ✅ Existing Model/DCGG buttons still work (no regressions)
+
+**Key Implementation Patterns Established:**
+
+1. **Livewire Enum Validation Pattern:**
+   ```php
+   #[Validate]  // Empty attribute triggers real-time validation
+   public ?ChangeBoardOutcome $changeBoardOutcome = null;
+
+   public function rules(): array {
+       return [
+           'changeBoardOutcome' => ['nullable', Rule::enum(ChangeBoardOutcome::class)],
+       ];
+   }
+   ```
+   - Empty `#[Validate]` attribute tells Livewire to validate on updates
+   - Actual validation rule in `rules()` method because PHP attributes can't use Rule objects
+   - This pattern should be used for all enum validations going forward
+
+2. **Test Setup Helper for Complex Forms:**
+   - Created `setupValidScheduling()` closure in `beforeEach()` to pre-populate required fields
+   - Prevents validation errors when testing optional fields
+   - Keeps tests focused and avoids duplicating setup code
+
+3. **Enum Nullable Handling:**
+   - Empty string from dropdown converts to `null` (Livewire EnumSynth behavior)
+   - Save using `$this->changeBoardOutcome?->value` to handle null gracefully
+
+**Implementation Time:**
+- Estimated: ~2 hours
+- Actual: ~2 hours ✅ (spot on!)
+
+**Success Metrics:**
+- ✅ All three fields display and function in Scheduling tab
+- ✅ Fields save and persist correctly
+- ✅ Relationships work correctly
+- ✅ Comprehensive test coverage (17 tests)
+- ✅ No regressions
+- ✅ Manual QA passed
+
+**Notes:**
+- `fields_locked` field added to model/database but not implemented in UI yet (skipped for simplicity)
+- Can add field locking behavior later once workflows are stable
+- Feature 2's jump-ahead implementation of `technicalLeadId`/`changeChampionId` saved significant time
+
+---
+
 ## Phase 1 Implementation Details
 
 This section provides step-by-step implementation guidance for all 6 Phase 1 features, informed by thorough codebase analysis.

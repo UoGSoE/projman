@@ -36,6 +36,9 @@
         @endforeach
     </flux:pillbox>
 
+    {{-- Software Development Toggle --}}
+    <flux:checkbox wire:model="scopingForm.requiresSoftwareDev" data-test="requires-software-dev-checkbox" label="Requires in-house/custom software development" />
+
     <flux:separator />
 
     {{-- Action Buttons --}}

@@ -603,4 +603,9 @@ We use lando for local development - but we also have functional local developme
   - In **ALL CASES**, simplicity beats “clever” logic every time.
   - If a requirement says “simple,” take it literally. No defensive programming unless requested.
   - For ambiguous cases, ask.  THIS IS CRITICAL TO THE USER.
+  - Do not use the users name or the names of anyone in documents you read.  Your chats with the user are logged to disk so we do not want to leak PII.  Just refer to the user as 'you', or 'stakeholders', 'the person who requested the feature', etc
+
+### Final inspiring quote
+
+"Simplicity is the ultimate sophistication."
 </laravel-boost-guidelines>
