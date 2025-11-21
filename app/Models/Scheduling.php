@@ -25,6 +25,8 @@ class Scheduling extends Model
         'assigned_to',
         'technical_lead_id',
         'change_champion_id',
+        'change_board_outcome',
+        'fields_locked',
         'priority',
         'team_assignment',
         'submitted_to_dcgg_at',
@@ -37,6 +39,8 @@ class Scheduling extends Model
         'estimated_completion_date' => 'date',
         'change_board_date' => 'date',
         'cose_it_staff' => 'array',
+        'change_board_outcome' => \App\Enums\ChangeBoardOutcome::class,
+        'fields_locked' => 'boolean',
         'submitted_to_dcgg_at' => 'datetime',
         'scheduled_at' => 'datetime',
     ];
@@ -54,5 +58,15 @@ class Scheduling extends Model
     public function submittedToDcggBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_to_dcgg_by');
+    }
+
+    public function technicalLead(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'technical_lead_id');
+    }
+
+    public function changeChampion(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'change_champion_id');
     }
 }

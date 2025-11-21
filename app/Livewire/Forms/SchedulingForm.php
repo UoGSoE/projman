@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\ChangeBoardOutcome;
 use App\Models\Project;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -56,6 +58,9 @@ class SchedulingForm extends Form
     #[Validate('nullable|integer|exists:users,id')]
     public ?int $changeChampionId = null;
 
+    #[Validate]
+    public ?ChangeBoardOutcome $changeBoardOutcome = null;
+
     // #[Validate('required|string|max:255')]
     // public ?string $teamAssignment;
 
@@ -64,6 +69,13 @@ class SchedulingForm extends Form
     public ?int $submittedToDcggBy = null;
 
     public ?Carbon $scheduledAt = null;
+
+    public function rules(): array
+    {
+        return [
+            'changeBoardOutcome' => ['nullable', Rule::enum(ChangeBoardOutcome::class)],
+        ];
+    }
 
     public function setProject(Project $project)
     {
@@ -78,6 +90,7 @@ class SchedulingForm extends Form
         $this->assignedTo = $project->scheduling->assigned_to;
         $this->technicalLeadId = $project->scheduling->technical_lead_id;
         $this->changeChampionId = $project->scheduling->change_champion_id;
+        $this->changeBoardOutcome = $project->scheduling->change_board_outcome;
         $this->submittedToDcggAt = $project->scheduling->submitted_to_dcgg_at;
         $this->submittedToDcggBy = $project->scheduling->submitted_to_dcgg_by;
         $this->scheduledAt = $project->scheduling->scheduled_at;
@@ -95,6 +108,7 @@ class SchedulingForm extends Form
             'assigned_to' => $this->assignedTo,
             'technical_lead_id' => $this->technicalLeadId,
             'change_champion_id' => $this->changeChampionId,
+            'change_board_outcome' => $this->changeBoardOutcome?->value,
             'priority' => $this->priority,
             // 'team_assignment' => $this->teamAssignment,
         ]);

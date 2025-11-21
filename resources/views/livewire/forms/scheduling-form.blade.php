@@ -35,6 +35,36 @@
             wire:model="schedulingForm.changeBoardDate" />
     </div>
 
+    {{-- Technical Lead / Change Champion / Board Outcome --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <flux:select label="Technical Lead" wire:model="schedulingForm.technicalLeadId" data-test="technical-lead-select">
+            <flux:select.option value="">– Select –</flux:select.option>
+            @foreach ($this->availableUsers as $user)
+                <flux:select.option value="{{ $user->id }}">
+                    {{ $user->full_name }}
+                </flux:select.option>
+            @endforeach
+        </flux:select>
+
+        <flux:select label="Change Champion" wire:model="schedulingForm.changeChampionId" data-test="change-champion-select">
+            <flux:select.option value="">– Select –</flux:select.option>
+            @foreach ($this->availableUsers as $user)
+                <flux:select.option value="{{ $user->id }}">
+                    {{ $user->full_name }}
+                </flux:select.option>
+            @endforeach
+        </flux:select>
+
+        <flux:select label="Change Board Outcome" wire:model="schedulingForm.changeBoardOutcome" data-test="change-board-outcome-select">
+            <flux:select.option value="">– Pending –</flux:select.option>
+            @foreach (\App\Enums\ChangeBoardOutcome::cases() as $outcome)
+                <flux:select.option value="{{ $outcome->value }}">
+                    {{ $outcome->label() }}
+                </flux:select.option>
+            @endforeach
+        </flux:select>
+    </div>
+
     {{-- Assigned To / Priority --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <flux:select label="Assigned To (Skill Score)" wire:model="schedulingForm.assignedTo">
