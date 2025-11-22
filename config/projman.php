@@ -48,6 +48,21 @@ return [
             'include_project_owner' => false,
             'mailable' => \App\Mail\SchedulingScheduledMail::class,
         ],
+        \App\Events\UATAccepted::class => [
+            'roles' => [],
+            'include_project_owner' => true,
+            'mailable' => \App\Mail\UATAcceptedMail::class,
+        ],
+        \App\Events\UATRejected::class => [
+            'roles' => [],
+            'include_project_owner' => true,
+            'mailable' => \App\Mail\UATRejectedMail::class,
+        ],
+        \App\Events\ServiceAcceptanceRequested::class => [
+            'roles' => ['Service Lead'],
+            'include_project_owner' => false,
+            'mailable' => \App\Mail\ServiceAcceptanceRequestedMail::class,
+        ],
         \App\Events\ProjectStageChange::class => [
             'stage_roles' => [
                 'ideation' => ['Ideation Manager'],

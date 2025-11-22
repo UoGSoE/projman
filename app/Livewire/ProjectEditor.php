@@ -229,6 +229,67 @@ class ProjectEditor extends Component
         Flux::toast('Scheduling approved and scheduled', variant: 'success');
     }
 
+    public function requestUAT(): void
+    {
+        // Validate UAT Tester is assigned
+        if (empty($this->testingForm->uatTesterId)) {
+            $this->addError('testingForm.uatTesterId', 'UAT Tester must be assigned before requesting UAT.');
+
+            return;
+        }
+
+        $this->project->testing->update([
+            'uat_tester_id' => $this->testingForm->uatTesterId,
+            'uat_requested_at' => now(),
+        ]);
+
+        $this->testingForm->setProject($this->project->fresh());
+
+        $this->project->addHistory(Auth::user(), 'Requested UAT testing');
+
+        event(new \App\Events\UATRequested($this->project->fresh()));
+
+        Flux::toast('UAT testing requested - UAT Tester has been notified', variant: 'success');
+    }
+
+    public function requestServiceAcceptance(): void
+    {
+        // Validate User Acceptance is approved
+        if ($this->testingForm->userAcceptance !== 'approved') {
+            $this->addError('testingForm.userAcceptance', 'User Acceptance must be approved before requesting Service Acceptance.');
+
+            return;
+        }
+
+        $this->project->testing->update([
+            'service_acceptance_requested_at' => now(),
+        ]);
+
+        $this->testingForm->setProject($this->project->fresh());
+
+        $this->project->addHistory(Auth::user(), 'Requested Service Acceptance');
+
+        event(new \App\Events\ServiceAcceptanceRequested($this->project));
+
+        Flux::toast('Service Acceptance requested - Service Leads have been notified', variant: 'success');
+    }
+
+    public function submitTesting(): void
+    {
+        // Validate all 5 sign-offs are approved
+        if (! $this->project->testing->isReadyForSubmit()) {
+            $this->addError('testing', 'All sign-offs must be approved before submitting.');
+
+            return;
+        }
+
+        $this->project->addHistory(Auth::user(), 'Submitted testing - advancing to Deployed stage');
+
+        $this->advanceToNextStage();
+
+        Flux::toast('Testing complete - project advanced to Deployed stage', variant: 'success');
+    }
+
     public function toggleHeatmap(): void
     {
         $this->showHeatmap = ! $this->showHeatmap;

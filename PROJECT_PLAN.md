@@ -1,6 +1,6 @@
 # Projman Project Plan
 
-> **Note**: This is a consolidated planning document presenting the project's clean, intentional progression. For detailed development history and decision-making process, see archived documentation in `development_history/`.
+> **Note**: This is a consolidated planning document presenting the project's clean, intentional progression.
 
 ---
 
@@ -11,10 +11,10 @@
 **Requirements Source**: PowerPoint specification deck (text extracted to `pptx_text_extract.txt` for reference)
 
 **Current Status**:
-- ✅ Features 1-3 complete (Feasibility, Scoping, Scheduling enhancements)
+- ✅ Features 1-4 complete (Feasibility, Scoping, Scheduling, Testing approvals)
 - ✅ Software Development vs Build toggle complete
-- ✅ 371 tests passing (1,268 assertions)
-- ⏳ Features 4-6 remaining (Testing, Deployment, Portfolio outputs)
+- ✅ 396 tests passing (1,329 assertions)
+- ⏳ Features 5-6 remaining (Deployment, Portfolio outputs)
 
 **Tech Stack**:
 - Laravel 12 with streamlined structure
@@ -171,6 +171,46 @@ These principles guide all development decisions and prioritization:
 - All 371 tests passing (no regressions)
 - **Btw**: Build fields TBD - infrastructure complete, forms ready for stakeholder input
 
+### Feature 4: Testing Approvals & UAT Capture ✅
+**Date Completed**: 2025-11-22
+
+**Three-Button Workflow**:
+- Request UAT → Request Service Acceptance → Submit
+- UAT Tester assigned via dropdown, emails sent on request
+- Service Acceptance emails Service Lead role
+- Submit advances to Deployed stage when all 5 sign-offs approved
+
+**Database & Models**:
+- Added `uat_requested_at` and `service_acceptance_requested_at` timestamps
+- Added 5 note fields for sign-off explanations (textarea below each dropdown)
+- Added `department_office` field (text input next to UAT Tester)
+- Added `uatTester` relationship and helper methods (`isReadyForServiceAcceptance()`, `isReadyForSubmit()`)
+- Fixed: Added `department_office` to `$fillable` array (caught by test)
+
+**UI & Form Layout**:
+- Row 1: Test Lead | Service/Function
+- Row 2: UAT Tester | Department/Office
+- 5 sign-off dropdowns (pending/approved/rejected) with explanatory textareas
+- Conditional button visibility based on workflow state
+- Buttons only appear when workflow conditions met
+
+**Events & Notifications**:
+- 4 new events: `UATRequested`, `UATAccepted`, `UATRejected`, `ServiceAcceptanceRequested`
+- 4 discrete listeners following existing patterns
+- 4 mailables and email templates
+- Config mappings in `config/projman.php`
+- UAT emails specific user, Service Acceptance emails role
+
+**Testing**:
+- 27 comprehensive tests (24 for workflow + 3 integration tests)
+- Tests cover: happy paths, validation, events, email notifications, history tracking
+- Helper function: `createTestingProject()` with optional attributes
+- Fixed lazy loading issues with `$touches` relationship
+- Test to verify `department_office` field saves correctly (caught the bug!)
+- All 396 tests passing (1,329 assertions)
+
+**Btw**: PowerPoint spec was vague and contradictory - implemented sensible workflow with structured dropdowns + notes rather than free-text fields
+
 ---
 
 ## 5. Form Partial Extraction
@@ -197,7 +237,12 @@ These principles guide all development decisions and prioritization:
 
 The following implementation guides were created during initial planning and contain valuable detail about requirements, file structure, and patterns to follow. Note that line numbers and file paths reference the old monolithic file structure - see note above about form partials.
 
-### Feature 4: Testing Approvals & UAT Capture
+### ~~Feature 4: Testing Approvals & UAT Capture~~ ✅ COMPLETED
+
+See completed features section above for full implementation details.
+
+<details>
+<summary>Original implementation guide (kept for reference)</summary>
 
 **Changes Required:**
 
@@ -315,6 +360,8 @@ Add UAT Tester field and new action buttons:
 Test UAT approval workflow, service acceptance gating, email notifications.
 
 Run: `lando artisan test --filter=Testing`
+
+</details>
 
 ---
 
@@ -1060,6 +1107,6 @@ After completing each feature:
 
 ---
 
-**Document Version**: 2.0
-**Last Updated**: 2025-11-21
-**Status**: 371 tests passing (1,268 assertions)
+**Document Version**: 2.1
+**Last Updated**: 2025-11-22
+**Status**: 396 tests passing (1,329 assertions) - Feature 4 complete
