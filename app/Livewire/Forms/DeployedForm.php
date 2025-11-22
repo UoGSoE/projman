@@ -10,103 +10,106 @@ class DeployedForm extends Form
 {
     public ?Project $project = null;
 
-    public array $availableEnvironments = [
-        'development' => 'Development',
-        'staging' => 'Staging',
-        'production' => 'Production',
-    ];
+    // Deployment Lead & Service Info
+    #[Validate('nullable|integer|exists:users,id')]
+    public ?int $deploymentLeadId = null;
 
-    public array $availableStatuses = [
-        'pending' => 'Pending',
-        'deployed' => 'Deployed',
-        'failed' => 'Failed',
-        'rolled_back' => 'Rolled Back',
-    ];
+    public ?string $serviceFunction = null;
 
-    #[Validate('required|integer|exists:users,id')]
-    public ?int $deployedBy = null;
+    #[Validate('nullable|string')]
+    public ?string $system = null;
 
-    #[Validate('required|string|max:255')]
-    public ?string $environment;
+    // Live Functional Testing
+    #[Validate('nullable|string')]
+    public ?string $fr1 = null;
 
-    #[Validate('required|string|max:255')]
-    public ?string $status;
+    #[Validate('nullable|string')]
+    public ?string $fr2 = null;
 
-    #[Validate('required|date')]
-    public ?string $deploymentDate;
+    #[Validate('nullable|string')]
+    public ?string $fr3 = null;
 
-    #[Validate('required|string|max:255')]
-    public ?string $version;
+    // Live Non-Functional Testing
+    #[Validate('nullable|string')]
+    public ?string $nfr1 = null;
 
-    #[Validate('url|max:255')]
-    public ?string $productionUrl;
+    #[Validate('nullable|string')]
+    public ?string $nfr2 = null;
 
-    #[Validate('nullable|string|max:2048')]
-    public ?string $deploymentNotes;
+    #[Validate('nullable|string')]
+    public ?string $nfr3 = null;
 
-    #[Validate('nullable|string|max:2048')]
-    public ?string $rollbackPlan;
+    // BAU / Operational
+    #[Validate('nullable|string')]
+    public ?string $bauOperationalWiki = null;
 
-    #[Validate('nullable|string|max:2048')]
-    public ?string $monitoringNotes;
+    // Service Handover - Service Resilience
+    #[Validate('required|in:pending,approved,rejected')]
+    public string $serviceResilienceApproval = 'pending';
 
-    #[Validate('required|string|max:255')]
-    public ?string $deploymentSignOff = '';
+    #[Validate('nullable|string')]
+    public ?string $serviceResilienceNotes = null;
 
-    #[Validate('required|string|max:255')]
-    public ?string $operationsSignOff = '';
+    // Service Handover - Service Operations
+    #[Validate('required|in:pending,approved,rejected')]
+    public string $serviceOperationsApproval = 'pending';
 
-    #[Validate('required|string|max:255')]
-    public ?string $userAcceptanceSignOff = '';
+    #[Validate('nullable|string')]
+    public ?string $serviceOperationsNotes = null;
 
-    #[Validate('required|string|max:255')]
-    public ?string $serviceDeliverySignOff = '';
+    // Service Handover - Service Delivery
+    #[Validate('required|in:pending,approved,rejected')]
+    public string $serviceDeliveryApproval = 'pending';
 
-    #[Validate('required|string|max:255')]
-    public ?string $changeAdvisorySignOff = '';
+    #[Validate('nullable|string')]
+    public ?string $serviceDeliveryNotes = null;
 
-    public $availableApprovalStates = [
+    public array $availableApprovalStates = [
         'pending' => 'Pending',
         'approved' => 'Approved',
         'rejected' => 'Rejected',
     ];
 
-    public function setProject(Project $project)
+    public function setProject(Project $project): void
     {
         $this->project = $project;
-        $this->deployedBy = $project->deployed->deployed_by;
-        $this->environment = $project->deployed->environment;
-        $this->status = $project->deployed->status;
-        $this->deploymentDate = $project->deployed->deployment_date?->format('Y-m-d');
-        $this->version = $project->deployed->version;
-        $this->productionUrl = $project->deployed->production_url;
-        $this->deploymentNotes = $project->deployed->deployment_notes;
-        $this->rollbackPlan = $project->deployed->rollback_plan;
-        $this->monitoringNotes = $project->deployed->monitoring_notes;
-        $this->deploymentSignOff = $project->deployed->deployment_sign_off;
-        $this->operationsSignOff = $project->deployed->operations_sign_off;
-        $this->userAcceptanceSignOff = $project->deployed->user_acceptance;
-        $this->serviceDeliverySignOff = $project->deployed->service_delivery_sign_off;
-        $this->changeAdvisorySignOff = $project->deployed->change_advisory_sign_off;
+        $this->deploymentLeadId = $project->deployed->deployment_lead_id;
+        $this->serviceFunction = $project->user->service_function ?? 'Not Set';
+        $this->system = $project->deployed->system;
+        $this->fr1 = $project->deployed->fr1;
+        $this->fr2 = $project->deployed->fr2;
+        $this->fr3 = $project->deployed->fr3;
+        $this->nfr1 = $project->deployed->nfr1;
+        $this->nfr2 = $project->deployed->nfr2;
+        $this->nfr3 = $project->deployed->nfr3;
+        $this->bauOperationalWiki = $project->deployed->bau_operational_wiki;
+        $this->serviceResilienceApproval = $project->deployed->service_resilience_approval;
+        $this->serviceResilienceNotes = $project->deployed->service_resilience_notes;
+        $this->serviceOperationsApproval = $project->deployed->service_operations_approval;
+        $this->serviceOperationsNotes = $project->deployed->service_operations_notes;
+        $this->serviceDeliveryApproval = $project->deployed->service_delivery_approval;
+        $this->serviceDeliveryNotes = $project->deployed->service_delivery_notes;
     }
 
-    public function save()
+    public function save(): void
     {
         $this->project->deployed->update([
-            'deployed_by' => $this->deployedBy,
-            'environment' => $this->environment,
-            'status' => $this->status,
-            'deployment_date' => $this->deploymentDate,
-            'version' => $this->version,
-            'production_url' => $this->productionUrl,
-            'deployment_notes' => $this->deploymentNotes,
-            'rollback_plan' => $this->rollbackPlan,
-            'monitoring_notes' => $this->monitoringNotes,
-            'deployment_sign_off' => $this->deploymentSignOff,
-            'operations_sign_off' => $this->operationsSignOff,
-            'user_acceptance' => $this->userAcceptanceSignOff,
-            'service_delivery_sign_off' => $this->serviceDeliverySignOff,
-            'change_advisory_sign_off' => $this->changeAdvisorySignOff,
+            'deployment_lead_id' => $this->deploymentLeadId,
+            'service_function' => $this->serviceFunction,
+            'system' => $this->system,
+            'fr1' => $this->fr1,
+            'fr2' => $this->fr2,
+            'fr3' => $this->fr3,
+            'nfr1' => $this->nfr1,
+            'nfr2' => $this->nfr2,
+            'nfr3' => $this->nfr3,
+            'bau_operational_wiki' => $this->bauOperationalWiki,
+            'service_resilience_approval' => $this->serviceResilienceApproval,
+            'service_resilience_notes' => $this->serviceResilienceNotes,
+            'service_operations_approval' => $this->serviceOperationsApproval,
+            'service_operations_notes' => $this->serviceOperationsNotes,
+            'service_delivery_approval' => $this->serviceDeliveryApproval,
+            'service_delivery_notes' => $this->serviceDeliveryNotes,
         ]);
     }
 }

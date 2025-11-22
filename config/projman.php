@@ -63,6 +63,16 @@ return [
             'include_project_owner' => false,
             'mailable' => \App\Mail\ServiceAcceptanceRequestedMail::class,
         ],
+        \App\Events\DeploymentServiceAccepted::class => [
+            'roles' => ['Service Lead'],
+            'include_project_owner' => false,
+            'mailable' => \App\Mail\DeploymentServiceAcceptedMail::class,
+        ],
+        \App\Events\DeploymentApproved::class => [
+            'roles' => ['Service Lead'],
+            'include_project_owner' => true,
+            'mailable' => \App\Mail\DeploymentApprovedMail::class,
+        ],
         \App\Events\ProjectStageChange::class => [
             'stage_roles' => [
                 'ideation' => ['Ideation Manager'],

@@ -33,4 +33,11 @@ class ProjectFactory extends Factory
             'status' => ProjectStatus::COMPLETED,
         ]);
     }
+
+    public function deployed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => ProjectStatus::DEPLOYED,
+        ]);
+    }
 }

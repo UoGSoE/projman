@@ -290,6 +290,54 @@ class ProjectEditor extends Component
         Flux::toast('Testing complete - project advanced to Deployed stage', variant: 'success');
     }
 
+    public function acceptDeploymentService(): void
+    {
+        // Validate all required fields are completed
+        if (! $this->project->deployed->isReadyForServiceAcceptance()) {
+            $this->addError('deployed', 'All required fields must be completed before Service Acceptance.');
+
+            return;
+        }
+
+        $this->project->deployed->update([
+            'service_accepted_at' => now(),
+        ]);
+
+        $this->deployedForm->setProject($this->project->fresh());
+
+        $this->project->addHistory(Auth::user(), 'Service Acceptance submitted');
+
+        event(new \App\Events\DeploymentServiceAccepted($this->project));
+
+        Flux::toast('Service Acceptance submitted - Service Leads have been notified', variant: 'success');
+    }
+
+    public function approveDeployment(): void
+    {
+        // Validate all 3 Service Handover approvals are received
+        if (! $this->project->deployed->isReadyForApproval()) {
+            $this->addError('deployed', 'All Service Handover approvals must be received before final approval.');
+
+            return;
+        }
+
+        $this->project->deployed->update([
+            'deployment_approved_at' => now(),
+        ]);
+
+        $this->project->update([
+            'status' => ProjectStatus::COMPLETED,
+        ]);
+
+        $this->deployedForm->setProject($this->project->fresh());
+
+        $this->project->addHistory(Auth::user(), 'Deployment approved - project completed');
+
+        event(new \App\Events\DeploymentApproved($this->project));
+
+        Flux::toast('Deployment approved - project status set to Completed', variant: 'success');
+    }
+
     public function toggleHeatmap(): void
     {
         $this->showHeatmap = ! $this->showHeatmap;

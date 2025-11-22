@@ -426,62 +426,37 @@ describe('Project Editing', function () {
 
     describe('Deployed Form', function () {
         it('can create a deployed form with valid data', function () {
-            $today = now()->format('Y-m-d');
-
             livewire(ProjectEditor::class, ['project' => $this->project])
-                ->set('deployedForm.deployedBy', $this->testDeployer->id)
-                ->set('deployedForm.environment', 'production')
-                ->set('deployedForm.status', 'deployed')
-                ->set('deployedForm.deploymentDate', $today)
-                ->set('deployedForm.version', '1.0.0')
-                ->set('deployedForm.productionUrl', 'https://example.com/app')
-                ->set('deployedForm.deploymentNotes', 'Test deployment notes')
-                ->set('deployedForm.rollbackPlan', 'Test rollback plan')
-                ->set('deployedForm.monitoringNotes', 'Test monitoring notes')
-                ->set('deployedForm.deploymentSignOff', $this->testAssessor->id)
-                ->set('deployedForm.operationsSignOff', $this->testLead->id)
-                ->set('deployedForm.userAcceptanceSignOff', $this->testDesigner->id)
-                ->set('deployedForm.serviceDeliverySignOff', $this->testDeployer->id)
-                ->set('deployedForm.changeAdvisorySignOff', $this->testAssessor->id)
+                ->set('deployedForm.deploymentLeadId', $this->testDeployer->id)
+                ->set('deployedForm.serviceFunction', 'Applications & Data')
+                ->set('deployedForm.system', 'Test System')
+                ->set('deployedForm.fr1', 'Functional requirement 1')
+                ->set('deployedForm.fr2', 'Functional requirement 2')
+                ->set('deployedForm.nfr1', 'Non-functional requirement 1')
+                ->set('deployedForm.bauOperationalWiki', 'https://wiki.example.com')
+                ->set('deployedForm.serviceResilienceApproval', 'pending')
+                ->set('deployedForm.serviceOperationsApproval', 'pending')
+                ->set('deployedForm.serviceDeliveryApproval', 'pending')
                 ->call('save', 'deployed')
                 ->assertHasNoErrors();
             $this->project->refresh();
-            expect($this->project->deployed->deployed_by)->toBe($this->testDeployer->id);
-            expect($this->project->deployed->environment)->toBe('production');
-            expect($this->project->deployed->status)->toBe('deployed');
-            expect($this->project->deployed->deployment_date->format('Y-m-d'))->toBe($today);
-            expect($this->project->deployed->version)->toBe('1.0.0');
-            expect($this->project->deployed->production_url)->toBe('https://example.com/app');
-            expect($this->project->deployed->deployment_notes)->toBe('Test deployment notes');
-            expect($this->project->deployed->rollback_plan)->toBe('Test rollback plan');
-            expect($this->project->deployed->monitoring_notes)->toBe('Test monitoring notes');
-            expect($this->project->deployed->deployment_sign_off)->toEqual($this->testAssessor->id);
-            expect($this->project->deployed->operations_sign_off)->toEqual($this->testLead->id);
-            expect($this->project->deployed->user_acceptance)->toEqual($this->testDesigner->id);
+            expect($this->project->deployed->deployment_lead_id)->toBe($this->testDeployer->id);
+            expect($this->project->deployed->service_function)->toBe('Applications & Data');
+            expect($this->project->deployed->system)->toBe('Test System');
+            expect($this->project->deployed->fr1)->toBe('Functional requirement 1');
+            expect($this->project->deployed->fr2)->toBe('Functional requirement 2');
+            expect($this->project->deployed->nfr1)->toBe('Non-functional requirement 1');
+            expect($this->project->deployed->bau_operational_wiki)->toBe('https://wiki.example.com');
+            expect($this->project->deployed->service_resilience_approval)->toBe('pending');
+            expect($this->project->deployed->service_operations_approval)->toBe('pending');
+            expect($this->project->deployed->service_delivery_approval)->toBe('pending');
         });
 
-        it('validates required fields for deployed form', function () {
+        it('validates approval field values for deployed form', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('deployedForm.serviceResilienceApproval', 'invalid')
                 ->call('save', 'deployed')
-                ->assertHasErrors([
-                    'deployedForm.deployedBy' => 'required',
-                    'deployedForm.environment' => 'required',
-                    'deployedForm.status' => 'required',
-                    'deployedForm.deploymentDate' => 'required',
-                    'deployedForm.version' => 'required',
-                    'deployedForm.deploymentSignOff' => 'required',
-                    'deployedForm.operationsSignOff' => 'required',
-                    'deployedForm.userAcceptanceSignOff' => 'required',
-                    'deployedForm.serviceDeliverySignOff' => 'required',
-                    'deployedForm.changeAdvisorySignOff' => 'required',
-                ]);
-        });
-
-        it('validates URL format for deployment URL', function () {
-            livewire(ProjectEditor::class, ['project' => $this->project])
-                ->set('deployedForm.productionUrl', 'not-a-url')
-                ->call('save', 'deployed')
-                ->assertHasErrors(['deployedForm.productionUrl' => 'url']);
+                ->assertHasErrors(['deployedForm.serviceResilienceApproval']);
         });
     });
 

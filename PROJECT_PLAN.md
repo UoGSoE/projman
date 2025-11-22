@@ -365,7 +365,49 @@ Run: `lando artisan test --filter=Testing`
 
 ---
 
-### Feature 5: Deployment Acceptance Workflow
+### Feature 5: Deployment Acceptance Workflow ✅
+**Date Completed**: 2025-11-22
+
+**Stakeholder Spec Change:**
+Original implementation guide (below) was based on sign-off workflow similar to Testing stage. During implementation, stakeholder provided updated specification with completely different field structure focusing on service handover and live testing requirements. New spec eliminated deployment metadata fields (deployed_by, environment, version) in favor of functional/non-functional requirement tracking.
+
+**Two-Button Workflow:**
+- Service Acceptance → Final Approval
+- Service Acceptance requires all required fields filled (deployment lead, service function, system, fr1, nfr1, BAU wiki)
+- Final Approval requires all 3 service handover approvals (Service Resilience, Operations, Delivery)
+- Final Approval completes project to COMPLETED status
+
+**Database & Models:**
+- New field structure: `deployment_lead_id`, `service_function`, `system`, `fr1-fr3` (functional requirements), `nfr1-nfr3` (non-functional requirements), `bau_operational_wiki`
+- 3 approval fields with notes: `service_resilience_approval/notes`, `service_operations_approval/notes`, `service_delivery_approval/notes`
+- Timestamps: `service_accepted_at`, `deployment_approved_at`
+- Helper methods: `isReadyForServiceAcceptance()`, `isReadyForApproval()`, `hasServiceAcceptance()`, `needsServiceAcceptance()`, `hasDeploymentApproval()`, `needsDeploymentApproval()`
+- Relationship: `deploymentLead()` to User model
+
+**Events & Notifications:**
+- 2 new events: `DeploymentServiceAccepted`, `DeploymentApproved`
+- 2 discrete listeners following existing patterns
+- 2 mailables and email templates
+- Config mappings in `config/projman.php`
+- Service Acceptance emails Service Lead role
+- Final Approval emails Service Lead role + project owner
+
+**Testing:**
+- 24 comprehensive tests (Service Acceptance, Deployment Approval, Helper Methods, Integration)
+- Tests cover: happy paths, validation, events, email notifications, timestamp recording, helper methods
+- Factory states: `readyForServiceAcceptance()`, `serviceAccepted()`, `readyForApproval()`, `incomplete()`
+- All 398 tests passing (1,335 assertions)
+
+**Testing Challenges Overcome:**
+- Discovered `CreateRelatedForms` listener auto-creates all subforms on project creation
+- Tests were inadvertently creating duplicate Deployed records
+- Solution: Update existing auto-created record using `Arr::except(Factory::make()->toArray(), 'project_id')`
+- See "Factory Testing Patterns & Debugging" section for full details
+
+**Btw**: This feature took significantly longer than expected due to factory testing complexity - see Developer Reference for lessons learned that will speed up future feature development.
+
+<details>
+<summary>Original implementation guide (obsolete due to spec change)</summary>
 
 **Changes Required:**
 
@@ -483,6 +525,8 @@ Add service function display and new buttons:
 Test completeness validation, sign-off gating, project completion.
 
 Run: `lando artisan test --filter=Deployed`
+
+</details>
 
 ---
 
@@ -991,6 +1035,176 @@ class FeasibilityApprovedListener
 ]
 ```
 
+### Factory Testing Patterns & Debugging
+
+**Context:** This section documents lessons learned from Feature 5 (Deployment Acceptance) implementation, which took significantly longer than expected due to factory testing complexity. These patterns will speed up future feature development.
+
+**The Auto-Created Subforms Gotcha:**
+
+The `CreateRelatedForms` listener (registered in `EventServiceProvider`) automatically creates ALL subform records when a project is created:
+
+```php
+// This creates 9 records automatically: Ideation, Feasibility, Scoping, etc.
+$project = Project::factory()->create();
+
+// This means you CANNOT do this:
+$deployed = Deployed::factory()->create(['project_id' => $project->id]);
+// ❌ Error: Deployed record already exists for this project!
+```
+
+**Solution: Update the auto-created record instead:**
+
+```php
+use Illuminate\Support\Arr;
+
+$project = Project::factory()->create();
+
+// Get the attributes from factory without creating
+$deployedData = Deployed::factory()->make()->toArray();
+
+// Update the existing auto-created record (strip project_id)
+$project->deployed()->update(
+    Arr::except($deployedData, 'project_id')
+);
+
+// Now refresh to get the updated model
+$deployed = $project->deployed()->first();
+```
+
+**Debugging with dd() and dump():**
+
+When tests fail unexpectedly, use liberal `dd()` and `dump()` calls to inspect state:
+
+```php
+it('submits for service acceptance', function () {
+    $project = Project::factory()->create();
+
+    // What does the deployed record look like?
+    dump($project->deployed);
+
+    $response = $this->post(route('deployed.service-accept', $project), [
+        'deployment_lead_id' => $user->id,
+        // ...
+    ]);
+
+    // What's in the response?
+    dd($response->json());
+});
+```
+
+**Common debugging scenarios:**
+- Record not found? → `dump($model)` to see if it exists
+- Validation failing? → `dd($request->all())` to see submitted data
+- Email not sent? → `dump(Mail::sent())` or check Mail fake assertions
+- Timestamp issue? → `dump($model->fresh()->timestamp_field)` to see actual DB value
+- Assertion failing? → `dd($model->toArray())` to see all attributes
+
+**Factory States for Clean Tests:**
+
+Instead of repeating ugly setup code in every test, encapsulate it in factory states:
+
+```php
+// ❌ BAD - Repeated setup in every test
+it('approves deployment', function () {
+    $project = Project::factory()->create();
+    $project->deployed()->update([
+        'service_accepted_at' => now(),
+        'service_resilience_approval' => 'approved',
+        'service_operations_approval' => 'approved',
+        'service_delivery_approval' => 'approved',
+    ]);
+    // ... test logic
+});
+
+// ✅ GOOD - Encapsulate in factory state
+// database/factories/DeployedFactory.php
+public function readyForApproval(): static
+{
+    return $this->state(fn (array $attributes) => [
+        'service_accepted_at' => now(),
+        'service_resilience_approval' => 'approved',
+        'service_operations_approval' => 'approved',
+        'service_delivery_approval' => 'approved',
+    ]);
+}
+
+// tests/Feature/DeploymentWorkflowTest.php
+it('approves deployment', function () {
+    $project = Project::factory()->create();
+    $project->deployed()->update(
+        Arr::except(Deployed::factory()->readyForApproval()->make()->toArray(), 'project_id')
+    );
+    // ... test logic - much cleaner!
+});
+```
+
+**When Factories Don't Work as Expected:**
+
+If a factory-created model doesn't have expected data:
+
+1. **Check the factory definition** - Are defaults set correctly?
+2. **Check for listeners** - Does model creation trigger events that modify it?
+3. **Refresh the model** - `$model->fresh()` to get latest DB state
+4. **Dump the model** - `dump($model->toArray())` to see actual attributes
+5. **Check relationships** - `dump($model->relation)` to verify loaded correctly
+
+**Timestamp Precision in Tests:**
+
+Carbon's `now()` includes microseconds, but database `TIMESTAMP` columns don't:
+
+```php
+// ❌ FAILS - Microsecond precision mismatch
+$expectedTime = now();
+$model->update(['accepted_at' => $expectedTime]);
+expect($model->fresh()->accepted_at)->toBe($expectedTime); // Fails!
+
+// ✅ WORKS - Use database-precise comparison
+expect($model->fresh()->accepted_at)->toDateTimeString()
+    ->toBe($expectedTime->toDateTimeString());
+
+// ✅ ALSO WORKS - Use Carbon comparison that ignores microseconds
+expect($model->fresh()->accepted_at->timestamp)
+    ->toBe($expectedTime->timestamp);
+```
+
+**Email Recipient Testing with beforeEach:**
+
+When using `beforeEach()` to set up common test data, remember to account for those users in email assertions:
+
+```php
+beforeEach(function () {
+    $this->user = User::factory()->create(); // Created in every test
+});
+
+it('sends email to service lead', function () {
+    $serviceLead = User::factory()->hasRole('Service Lead')->create();
+
+    // Trigger event that sends email
+    event(new DeploymentApproved($project));
+
+    // ❌ WRONG - Assumes only 1 email sent
+    Mail::assertSent(DeploymentApprovedMail::class, 1);
+
+    // ✅ CORRECT - Account for beforeEach user + service lead (2 total)
+    Mail::assertSent(DeploymentApprovedMail::class, 2);
+
+    // OR be explicit about recipients
+    Mail::assertSent(DeploymentApprovedMail::class, function ($mail) use ($serviceLead) {
+        return $mail->hasTo($serviceLead->email);
+    });
+});
+```
+
+**Testing Strategy Summary:**
+
+1. **Start with the simplest test** - Happy path with minimal setup
+2. **Use dd() liberally** - Inspect state when tests fail
+3. **Create factory states early** - Don't copy-paste setup code
+4. **Account for auto-created records** - Use `Arr::except()` pattern with `make()->toArray()`
+5. **Check for event listeners** - They might modify your test data
+6. **Test email recipients explicitly** - Don't assume counts, verify recipients
+7. **Use database-precise timestamps** - Avoid microsecond comparison issues
+
 ### When You're Stuck: Check the Original Spec
 
 **Source material:** `pptx_text_extract.txt` in project root
@@ -1107,6 +1321,6 @@ After completing each feature:
 
 ---
 
-**Document Version**: 2.1
+**Document Version**: 2.2
 **Last Updated**: 2025-11-22
-**Status**: 396 tests passing (1,329 assertions) - Feature 4 complete
+**Status**: 398 tests passing (1,335 assertions) - Feature 5 complete

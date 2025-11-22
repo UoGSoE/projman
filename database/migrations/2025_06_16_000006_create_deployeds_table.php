@@ -14,20 +14,41 @@ return new class extends Migration
         Schema::create('deployeds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('deployed_by')->nullable()->constrained('users');
-            $table->string('environment')->nullable();
-            $table->string('status')->nullable();
-            $table->date('deployment_date')->nullable();
-            $table->string('version')->nullable();
-            $table->string('production_url')->nullable();
-            $table->text('deployment_notes')->nullable();
-            $table->text('rollback_plan')->nullable();
-            $table->text('monitoring_notes')->nullable();
-            $table->string('deployment_sign_off')->nullable();
-            $table->string('operations_sign_off')->nullable();
-            $table->string('user_acceptance')->nullable();
-            $table->string('service_delivery_sign_off')->nullable();
-            $table->string('change_advisory_sign_off')->nullable();
+
+            // Deployment Lead & Service Info
+            $table->foreignId('deployment_lead_id')->nullable()->constrained('users');
+            $table->string('service_function')->nullable();
+            $table->text('system')->nullable();
+
+            // Live Functional Testing
+            $table->text('fr1')->nullable();
+            $table->text('fr2')->nullable();
+            $table->text('fr3')->nullable();
+
+            // Live Non-Functional Testing
+            $table->text('nfr1')->nullable();
+            $table->text('nfr2')->nullable();
+            $table->text('nfr3')->nullable();
+
+            // BAU / Operational
+            $table->text('bau_operational_wiki')->nullable();
+
+            // Service Handover - Service Resilience
+            $table->string('service_resilience_approval')->default('pending');
+            $table->text('service_resilience_notes')->nullable();
+
+            // Service Handover - Service Operations
+            $table->string('service_operations_approval')->default('pending');
+            $table->text('service_operations_notes')->nullable();
+
+            // Service Handover - Service Delivery
+            $table->string('service_delivery_approval')->default('pending');
+            $table->text('service_delivery_notes')->nullable();
+
+            // Workflow timestamps
+            $table->timestamp('service_accepted_at')->nullable();
+            $table->timestamp('deployment_approved_at')->nullable();
+
             $table->timestamps();
         });
     }

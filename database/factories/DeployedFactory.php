@@ -20,20 +20,84 @@ class DeployedFactory extends Factory
     {
         return [
             'project_id' => Project::factory(),
-            'deployed_by' => User::factory(),
-            'environment' => fake()->randomElement(['development', 'staging', 'production']),
-            'status' => fake()->randomElement(['pending', 'deployed', 'failed', 'rolled_back']),
-            'deployment_date' => fake()->dateTimeBetween('-1 month', 'now'),
-            'version' => fake()->semver(),
-            'production_url' => fake()->url(),
-            'deployment_notes' => fake()->paragraph(),
-            'rollback_plan' => fake()->paragraph(),
-            'monitoring_notes' => fake()->paragraph(),
-            'deployment_sign_off' => fake()->randomElement(['pending', 'approved', 'rejected']),
-            'operations_sign_off' => fake()->randomElement(['pending', 'approved', 'rejected']),
-            'user_acceptance' => fake()->randomElement(['pending', 'approved', 'rejected']),
-            'service_delivery_sign_off' => fake()->randomElement(['pending', 'approved', 'rejected']),
-            'change_advisory_sign_off' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'deployment_lead_id' => User::factory(),
+            'service_function' => fake()->randomElement([
+                'Applications & Data',
+                'College Infrastructure',
+                'Research Computing',
+                'Service Resilience',
+                'Service Delivery',
+            ]),
+            'system' => fake()->sentence(),
+            'fr1' => fake()->sentence(),
+            'fr2' => fake()->sentence(),
+            'fr3' => fake()->sentence(),
+            'nfr1' => fake()->sentence(),
+            'nfr2' => fake()->sentence(),
+            'nfr3' => fake()->sentence(),
+            'bau_operational_wiki' => fake()->url(),
+            'service_resilience_approval' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'service_resilience_notes' => fake()->paragraph(),
+            'service_operations_approval' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'service_operations_notes' => fake()->paragraph(),
+            'service_delivery_approval' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'service_delivery_notes' => fake()->paragraph(),
+            'service_accepted_at' => null,
+            'deployment_approved_at' => null,
         ];
+    }
+
+    /**
+     * State for a deployed record ready for service acceptance.
+     * All required fields are filled with valid data.
+     */
+    public function readyForServiceAcceptance(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'deployment_lead_id' => User::factory(),
+            'service_function' => 'Applications & Data',
+            'system' => 'Test System',
+            'fr1' => 'Functional Requirement 1',
+            'nfr1' => 'Non-Functional Requirement 1',
+            'bau_operational_wiki' => 'https://wiki.example.com',
+            'service_accepted_at' => null,
+            'deployment_approved_at' => null,
+        ]);
+    }
+
+    /**
+     * State for a deployed record that has been service accepted.
+     */
+    public function serviceAccepted(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'service_accepted_at' => now(),
+        ]);
+    }
+
+    /**
+     * State for a deployed record ready for final approval.
+     * Service has been accepted and all 3 service handover approvals are received.
+     */
+    public function readyForApproval(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'service_accepted_at' => now(),
+            'service_resilience_approval' => 'approved',
+            'service_operations_approval' => 'approved',
+            'service_delivery_approval' => 'approved',
+        ]);
+    }
+
+    /**
+     * State for a deployed record with incomplete required fields.
+     * Used for testing validation failures.
+     */
+    public function incomplete(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'deployment_lead_id' => null,
+            'system' => null,
+        ]);
     }
 }

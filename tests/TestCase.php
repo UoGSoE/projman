@@ -51,6 +51,9 @@ abstract class TestCase extends BaseTestCase
 
         $assessorUser = \App\Models\User::factory()->create();
         $assessorUser->roles()->attach($assessorRole);
+
+        $serviceLeadUser = \App\Models\User::factory()->create();
+        $serviceLeadUser->roles()->attach($serviceLeadRole);
     }
 
     /**
