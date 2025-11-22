@@ -3,7 +3,6 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Project;
-use App\Models\User;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -14,8 +13,6 @@ class DeployedForm extends Form
     // Deployment Lead & Service Info
     #[Validate('nullable|integer|exists:users,id')]
     public ?int $deploymentLeadId = null;
-
-    public ?string $serviceFunction = null;
 
     // Live Functional Testing
     #[Validate('nullable|string')]
@@ -60,7 +57,6 @@ class DeployedForm extends Form
     {
         $this->project = $project;
         $this->deploymentLeadId = $project->deployed->deployment_lead_id;
-        $this->updateServiceFunction();
         $this->functionalTests = $project->deployed->functional_tests;
         $this->nonFunctionalTests = $project->deployed->non_functional_tests;
         $this->bauOperationalWiki = $project->deployed->bau_operational_wiki;
@@ -72,26 +68,10 @@ class DeployedForm extends Form
         $this->serviceDeliveryNotes = $project->deployed->service_delivery_notes;
     }
 
-    public function updatedDeploymentLeadId(): void
-    {
-        $this->updateServiceFunction();
-    }
-
-    protected function updateServiceFunction(): void
-    {
-        if ($this->deploymentLeadId) {
-            $user = User::find($this->deploymentLeadId);
-            $this->serviceFunction = $user?->service_function?->label() ?? 'Not Set';
-        } else {
-            $this->serviceFunction = $this->project?->user->service_function?->label() ?? 'Not Set';
-        }
-    }
-
     public function save(): void
     {
         $this->project->deployed->update([
             'deployment_lead_id' => $this->deploymentLeadId,
-            'service_function' => $this->serviceFunction,
             'functional_tests' => $this->functionalTests,
             'non_functional_tests' => $this->nonFunctionalTests,
             'bau_operational_wiki' => $this->bauOperationalWiki,

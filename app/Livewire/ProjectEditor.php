@@ -403,6 +403,18 @@ class ProjectEditor extends Component
         return $this->getUsersMatchedBySkills($requiredSkillIds);
     }
 
+    #[Computed]
+    public function deployedServiceFunction(): string
+    {
+        if ($this->deployedForm->deploymentLeadId) {
+            $user = User::find($this->deployedForm->deploymentLeadId);
+
+            return $user?->service_function?->label() ?? 'Not Set';
+        }
+
+        return $this->project->user->service_function?->label() ?? 'Not Set';
+    }
+
     public function getUsersMatchedBySkills(array $requiredSkillIds): Collection
     {
         // If no skills required, return all staff sorted alphabetically by surname

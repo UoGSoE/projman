@@ -1,7 +1,7 @@
 <form wire:submit="save('deployed')" class="space-y-6">
     {{-- Service Info --}}
     <div class="grid grid-cols-2 gap-4">
-        <flux:select label="Deployment Lead" wire:model="deployedForm.deploymentLeadId">
+        <flux:select label="Deployment Lead" wire:model.live="deployedForm.deploymentLeadId">
             <flux:select.option value="">– Select –</flux:select.option>
             @foreach ($this->availableUsers as $user)
                 <flux:select.option value="{{ $user->id }}">
@@ -10,7 +10,7 @@
             @endforeach
         </flux:select>
 
-        <flux:input label="Service / Function" value="{{ $deployedForm->serviceFunction }}" disabled />
+        <flux:input label="Service / Function" value="{{ $this->deployedServiceFunction }}" disabled />
 
 
     </div>
