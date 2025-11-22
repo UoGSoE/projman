@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ServiceFunction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -30,6 +31,7 @@ class UserFactory extends Factory
             'is_staff' => true,
             'is_admin' => false,
             'email' => fake()->unique()->safeEmail(),
+            'service_function' => fake()->randomElement(ServiceFunction::cases()),
             'email_verified_at' => now(),
             'password' => function () {
                 return static::$password ??= Hash::make('password');

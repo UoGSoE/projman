@@ -18,17 +18,12 @@ return new class extends Migration
             // Deployment Lead & Service Info
             $table->foreignId('deployment_lead_id')->nullable()->constrained('users');
             $table->string('service_function')->nullable();
-            $table->text('system')->nullable();
 
             // Live Functional Testing
-            $table->text('fr1')->nullable();
-            $table->text('fr2')->nullable();
-            $table->text('fr3')->nullable();
+            $table->text('functional_tests')->nullable();
 
             // Live Non-Functional Testing
-            $table->text('nfr1')->nullable();
-            $table->text('nfr2')->nullable();
-            $table->text('nfr3')->nullable();
+            $table->text('non_functional_tests')->nullable();
 
             // BAU / Operational
             $table->text('bau_operational_wiki')->nullable();

@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Project;
+use App\Models\User;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -16,28 +17,13 @@ class DeployedForm extends Form
 
     public ?string $serviceFunction = null;
 
-    #[Validate('nullable|string')]
-    public ?string $system = null;
-
     // Live Functional Testing
     #[Validate('nullable|string')]
-    public ?string $fr1 = null;
-
-    #[Validate('nullable|string')]
-    public ?string $fr2 = null;
-
-    #[Validate('nullable|string')]
-    public ?string $fr3 = null;
+    public ?string $functionalTests = null;
 
     // Live Non-Functional Testing
     #[Validate('nullable|string')]
-    public ?string $nfr1 = null;
-
-    #[Validate('nullable|string')]
-    public ?string $nfr2 = null;
-
-    #[Validate('nullable|string')]
-    public ?string $nfr3 = null;
+    public ?string $nonFunctionalTests = null;
 
     // BAU / Operational
     #[Validate('nullable|string')]
@@ -74,14 +60,9 @@ class DeployedForm extends Form
     {
         $this->project = $project;
         $this->deploymentLeadId = $project->deployed->deployment_lead_id;
-        $this->serviceFunction = $project->user->service_function ?? 'Not Set';
-        $this->system = $project->deployed->system;
-        $this->fr1 = $project->deployed->fr1;
-        $this->fr2 = $project->deployed->fr2;
-        $this->fr3 = $project->deployed->fr3;
-        $this->nfr1 = $project->deployed->nfr1;
-        $this->nfr2 = $project->deployed->nfr2;
-        $this->nfr3 = $project->deployed->nfr3;
+        $this->updateServiceFunction();
+        $this->functionalTests = $project->deployed->functional_tests;
+        $this->nonFunctionalTests = $project->deployed->non_functional_tests;
         $this->bauOperationalWiki = $project->deployed->bau_operational_wiki;
         $this->serviceResilienceApproval = $project->deployed->service_resilience_approval;
         $this->serviceResilienceNotes = $project->deployed->service_resilience_notes;
@@ -91,18 +72,28 @@ class DeployedForm extends Form
         $this->serviceDeliveryNotes = $project->deployed->service_delivery_notes;
     }
 
+    public function updatedDeploymentLeadId(): void
+    {
+        $this->updateServiceFunction();
+    }
+
+    protected function updateServiceFunction(): void
+    {
+        if ($this->deploymentLeadId) {
+            $user = User::find($this->deploymentLeadId);
+            $this->serviceFunction = $user?->service_function?->label() ?? 'Not Set';
+        } else {
+            $this->serviceFunction = $this->project?->user->service_function?->label() ?? 'Not Set';
+        }
+    }
+
     public function save(): void
     {
         $this->project->deployed->update([
             'deployment_lead_id' => $this->deploymentLeadId,
             'service_function' => $this->serviceFunction,
-            'system' => $this->system,
-            'fr1' => $this->fr1,
-            'fr2' => $this->fr2,
-            'fr3' => $this->fr3,
-            'nfr1' => $this->nfr1,
-            'nfr2' => $this->nfr2,
-            'nfr3' => $this->nfr3,
+            'functional_tests' => $this->functionalTests,
+            'non_functional_tests' => $this->nonFunctionalTests,
             'bau_operational_wiki' => $this->bauOperationalWiki,
             'service_resilience_approval' => $this->serviceResilienceApproval,
             'service_resilience_notes' => $this->serviceResilienceNotes,

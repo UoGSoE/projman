@@ -11,10 +11,10 @@
 **Requirements Source**: PowerPoint specification deck (text extracted to `pptx_text_extract.txt` for reference)
 
 **Current Status**:
-- ✅ Features 1-4 complete (Feasibility, Scoping, Scheduling, Testing approvals)
+- ✅ Features 1-5 complete (Feasibility, Scoping, Scheduling, Testing, Deployment approvals)
 - ✅ Software Development vs Build toggle complete
-- ✅ 396 tests passing (1,329 assertions)
-- ⏳ Features 5-6 remaining (Deployment, Portfolio outputs)
+- ✅ 419 tests passing (1,366 assertions)
+- ⏳ Feature 6 remaining (Portfolio outputs)
 
 **Tech Stack**:
 - Laravel 12 with streamlined structure
@@ -405,6 +405,20 @@ Original implementation guide (below) was based on sign-off workflow similar to 
 - See "Factory Testing Patterns & Debugging" section for full details
 
 **Btw**: This feature took significantly longer than expected due to factory testing complexity - see Developer Reference for lessons learned that will speed up future feature development.
+
+**Post-Completion Refactors:**
+
+After Feature 5 completion, three schema/UI refactors were implemented based on stakeholder clarification:
+
+1. **FR/NFR Schema Consolidation** - Replaced 6 separate database columns (fr1-fr3, nfr1-nfr3) with 2 text columns (`functional_tests`, `non_functional_tests`) matching the Testing form pattern. Users enter multiple items in textareas, not separate fields.
+
+2. **Removed System Field** - The `system` field was removed as it was added by mistake (was just an example in the mockup, not an actual field requirement).
+
+3. **ServiceFunction Enum Added to Users** - Created `ServiceFunction` enum with 5 service categories and added `service_function` field to users table. Service/Function now auto-populates correctly from the project owner's service function instead of showing "Not Set".
+
+4. **UI Polish** - Changed Service/Function display from plain text to a disabled `flux:input` for better visual balance with the Deployment Lead dropdown.
+
+All refactors complete with 419 tests passing (1,366 assertions). See `OHNO.md` for detailed implementation notes.
 
 <details>
 <summary>Original implementation guide (obsolete due to spec change)</summary>
@@ -1321,6 +1335,6 @@ After completing each feature:
 
 ---
 
-**Document Version**: 2.2
+**Document Version**: 2.3
 **Last Updated**: 2025-11-22
-**Status**: 398 tests passing (1,335 assertions) - Feature 5 complete
+**Status**: 419 tests passing (1,366 assertions) - Feature 5 complete with post-completion refactors

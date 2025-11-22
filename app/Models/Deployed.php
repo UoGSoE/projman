@@ -16,13 +16,8 @@ class Deployed extends Model
         'project_id',
         'deployment_lead_id',
         'service_function',
-        'system',
-        'fr1',
-        'fr2',
-        'fr3',
-        'nfr1',
-        'nfr2',
-        'nfr3',
+        'functional_tests',
+        'non_functional_tests',
         'bau_operational_wiki',
         'service_resilience_approval',
         'service_resilience_notes',
@@ -58,9 +53,8 @@ class Deployed extends Model
     {
         return ! empty($this->deployment_lead_id)
             && ! empty($this->service_function)
-            && ! empty($this->system)
-            && ! empty($this->fr1)
-            && ! empty($this->nfr1)
+            && ! empty($this->functional_tests)
+            && ! empty($this->non_functional_tests)
             && ! empty($this->bau_operational_wiki);
     }
 

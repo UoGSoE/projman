@@ -28,13 +28,8 @@ class DeployedFactory extends Factory
                 'Service Resilience',
                 'Service Delivery',
             ]),
-            'system' => fake()->sentence(),
-            'fr1' => fake()->sentence(),
-            'fr2' => fake()->sentence(),
-            'fr3' => fake()->sentence(),
-            'nfr1' => fake()->sentence(),
-            'nfr2' => fake()->sentence(),
-            'nfr3' => fake()->sentence(),
+            'functional_tests' => fake()->paragraph(),
+            'non_functional_tests' => fake()->paragraph(),
             'bau_operational_wiki' => fake()->url(),
             'service_resilience_approval' => fake()->randomElement(['pending', 'approved', 'rejected']),
             'service_resilience_notes' => fake()->paragraph(),
@@ -56,9 +51,8 @@ class DeployedFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'deployment_lead_id' => User::factory(),
             'service_function' => 'Applications & Data',
-            'system' => 'Test System',
-            'fr1' => 'Functional Requirement 1',
-            'nfr1' => 'Non-Functional Requirement 1',
+            'functional_tests' => 'FR1: Test functional requirement one',
+            'non_functional_tests' => 'NFR1: Test non-functional requirement one',
             'bau_operational_wiki' => 'https://wiki.example.com',
             'service_accepted_at' => null,
             'deployment_approved_at' => null,
@@ -97,7 +91,6 @@ class DeployedFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'deployment_lead_id' => null,
-            'system' => null,
         ]);
     }
 }

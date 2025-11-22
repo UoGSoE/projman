@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('is_staff')->default(true);
             $table->boolean('is_admin')->default(false);
             $table->string('email')->unique();
+            $table->string('service_function')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->integer('busyness_week_1')->nullable();

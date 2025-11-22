@@ -1,11 +1,6 @@
 <form wire:submit="save('deployed')" class="space-y-6">
     {{-- Service Info --}}
     <div class="grid grid-cols-2 gap-4">
-        <div>
-            <flux:text class="block mb-2 font-medium">Service / Function</flux:text>
-            <flux:text>{{ $deployedForm->serviceFunction }}</flux:text>
-        </div>
-
         <flux:select label="Deployment Lead" wire:model="deployedForm.deploymentLeadId">
             <flux:select.option value="">– Select –</flux:select.option>
             @foreach ($this->availableUsers as $user)
@@ -14,25 +9,23 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
+
+        <flux:input label="Service / Function" value="{{ $deployedForm->serviceFunction }}" disabled />
+
+
     </div>
 
-    <flux:input label="System" wire:model="deployedForm.system" />
-
-    {{-- Live Functional Testing --}}
+    {{-- Live Testing --}}
     <flux:separator />
-    <flux:heading size="lg">Live Functional Testing</flux:heading>
+    <flux:heading size="lg">Live Testing</flux:heading>
 
-    <flux:textarea label="FR1" wire:model="deployedForm.fr1" rows="3" />
-    <flux:textarea label="FR2" wire:model="deployedForm.fr2" rows="3" />
-    <flux:textarea label="FR3" wire:model="deployedForm.fr3" rows="3" />
+    <div class="grid grid-cols-2 gap-4">
+        <flux:textarea rows="6" label="Functional Testing"
+            wire:model="deployedForm.functionalTests" placeholder="FR1:&#10;FR2:&#10;FR3:" />
 
-    {{-- Live Non-Functional Testing --}}
-    <flux:separator />
-    <flux:heading size="lg">Live Non-Functional Testing</flux:heading>
-
-    <flux:textarea label="NFR1" wire:model="deployedForm.nfr1" rows="3" />
-    <flux:textarea label="NFR2" wire:model="deployedForm.nfr2" rows="3" />
-    <flux:textarea label="NFR3" wire:model="deployedForm.nfr3" rows="3" />
+        <flux:textarea rows="6" label="Non-Functional Testing"
+            wire:model="deployedForm.nonFunctionalTests" placeholder="NFR1:&#10;NFR2:&#10;NFR3:" />
+    </div>
 
     {{-- BAU / Operational --}}
     <flux:separator />
@@ -42,35 +35,43 @@
     <flux:separator />
     <flux:heading size="lg">Service Handover</flux:heading>
 
-    {{-- Service Resilience --}}
-    <flux:select label="Service Resilience" wire:model="deployedForm.serviceResilienceApproval">
-        @foreach ($deployedForm->availableApprovalStates as $id => $label)
-            <flux:select.option value="{{ $id }}">
-                {{ $label }}
-            </flux:select.option>
-        @endforeach
-    </flux:select>
-    <flux:textarea label="Service Resilience Notes" wire:model="deployedForm.serviceResilienceNotes" rows="2" />
+    <div class="grid grid-cols-3 gap-4">
+        {{-- Service Resilience --}}
+        <div class="space-y-2">
+            <flux:select label="Service Resilience" wire:model="deployedForm.serviceResilienceApproval">
+                @foreach ($deployedForm->availableApprovalStates as $id => $label)
+                    <flux:select.option value="{{ $id }}">
+                        {{ $label }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
+            <flux:textarea rows="3" placeholder="Notes..." wire:model="deployedForm.serviceResilienceNotes" />
+        </div>
 
-    {{-- Service Operations --}}
-    <flux:select label="Service Operations" wire:model="deployedForm.serviceOperationsApproval">
-        @foreach ($deployedForm->availableApprovalStates as $id => $label)
-            <flux:select.option value="{{ $id }}">
-                {{ $label }}
-            </flux:select.option>
-        @endforeach
-    </flux:select>
-    <flux:textarea label="Service Operations Notes" wire:model="deployedForm.serviceOperationsNotes" rows="2" />
+        {{-- Service Operations --}}
+        <div class="space-y-2">
+            <flux:select label="Service Operations" wire:model="deployedForm.serviceOperationsApproval">
+                @foreach ($deployedForm->availableApprovalStates as $id => $label)
+                    <flux:select.option value="{{ $id }}">
+                        {{ $label }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
+            <flux:textarea rows="3" placeholder="Notes..." wire:model="deployedForm.serviceOperationsNotes" />
+        </div>
 
-    {{-- Service Delivery --}}
-    <flux:select label="Service Delivery" wire:model="deployedForm.serviceDeliveryApproval">
-        @foreach ($deployedForm->availableApprovalStates as $id => $label)
-            <flux:select.option value="{{ $id }}">
-                {{ $label }}
-            </flux:select.option>
-        @endforeach
-    </flux:select>
-    <flux:textarea label="Service Delivery Notes" wire:model="deployedForm.serviceDeliveryNotes" rows="2" />
+        {{-- Service Delivery --}}
+        <div class="space-y-2">
+            <flux:select label="Service Delivery" wire:model="deployedForm.serviceDeliveryApproval">
+                @foreach ($deployedForm->availableApprovalStates as $id => $label)
+                    <flux:select.option value="{{ $id }}">
+                        {{ $label }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
+            <flux:textarea rows="3" placeholder="Notes..." wire:model="deployedForm.serviceDeliveryNotes" />
+        </div>
+    </div>
 
     <flux:separator />
 

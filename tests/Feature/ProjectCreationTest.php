@@ -429,10 +429,8 @@ describe('Project Editing', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('deployedForm.deploymentLeadId', $this->testDeployer->id)
                 ->set('deployedForm.serviceFunction', 'Applications & Data')
-                ->set('deployedForm.system', 'Test System')
-                ->set('deployedForm.fr1', 'Functional requirement 1')
-                ->set('deployedForm.fr2', 'Functional requirement 2')
-                ->set('deployedForm.nfr1', 'Non-functional requirement 1')
+                ->set('deployedForm.functionalTests', 'FR1: Functional requirement 1')
+                ->set('deployedForm.nonFunctionalTests', 'NFR1: Non-functional requirement 1')
                 ->set('deployedForm.bauOperationalWiki', 'https://wiki.example.com')
                 ->set('deployedForm.serviceResilienceApproval', 'pending')
                 ->set('deployedForm.serviceOperationsApproval', 'pending')
@@ -442,10 +440,8 @@ describe('Project Editing', function () {
             $this->project->refresh();
             expect($this->project->deployed->deployment_lead_id)->toBe($this->testDeployer->id);
             expect($this->project->deployed->service_function)->toBe('Applications & Data');
-            expect($this->project->deployed->system)->toBe('Test System');
-            expect($this->project->deployed->fr1)->toBe('Functional requirement 1');
-            expect($this->project->deployed->fr2)->toBe('Functional requirement 2');
-            expect($this->project->deployed->nfr1)->toBe('Non-functional requirement 1');
+            expect($this->project->deployed->functional_tests)->toBe('FR1: Functional requirement 1');
+            expect($this->project->deployed->non_functional_tests)->toBe('NFR1: Non-functional requirement 1');
             expect($this->project->deployed->bau_operational_wiki)->toBe('https://wiki.example.com');
             expect($this->project->deployed->service_resilience_approval)->toBe('pending');
             expect($this->project->deployed->service_operations_approval)->toBe('pending');

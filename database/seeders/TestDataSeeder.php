@@ -275,7 +275,7 @@ class TestDataSeeder extends Seeder
                     $attributes['test_lead'] = $assignee->id;
                     break;
                 case ProjectStatus::DEPLOYED:
-                    $attributes['deployed_by'] = $assignee->id;
+                    $attributes['deployment_lead_id'] = $assignee->id;
                     break;
                 case ProjectStatus::BUILD:
                     // No special attributes yet - fields TBD
@@ -495,23 +495,20 @@ class TestDataSeeder extends Seeder
                 ];
             },
             ProjectStatus::DEPLOYED => function () use ($faker, $staffMembers, $project) {
-                $deployer = $this->pickStaffId($staffMembers, [$project->user_id]);
+                $deploymentLead = $this->pickStaffId($staffMembers, [$project->user_id]);
 
                 return [
-                    'deployed_by' => $deployer,
-                    'environment' => $faker->randomElement(['development', 'staging', 'production']),
-                    'status' => $faker->randomElement(['pending', 'deployed', 'failed', 'rolled_back']),
-                    'deployment_date' => Carbon::now()->subDays(random_int(1, 14)),
-                    'version' => $faker->semver(),
-                    'production_url' => $faker->url(),
-                    'deployment_notes' => $faker->sentence(),
-                    'rollback_plan' => $faker->sentence(),
-                    'monitoring_notes' => $faker->sentence(),
-                    'deployment_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
-                    'operations_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
-                    'user_acceptance' => $faker->randomElement(['pending', 'approved', 'rejected']),
-                    'service_delivery_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
-                    'change_advisory_sign_off' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'deployment_lead_id' => $deploymentLead,
+                    'service_function' => $faker->words(3, true),
+                    'functional_tests' => $faker->paragraph(),
+                    'non_functional_tests' => $faker->paragraph(),
+                    'bau_operational_wiki' => $faker->url(),
+                    'service_resilience_approval' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'service_resilience_notes' => $faker->paragraph(),
+                    'service_operations_approval' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'service_operations_notes' => $faker->paragraph(),
+                    'service_delivery_approval' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'service_delivery_notes' => $faker->paragraph(),
                 ];
             },
             ProjectStatus::BUILD => fn () => [

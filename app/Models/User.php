@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Busyness;
+use App\Enums\ServiceFunction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,6 +28,7 @@ class User extends Authenticatable
         'is_staff',
         'is_admin',
         'email',
+        'service_function',
         'password',
         'busyness_week_1',
         'busyness_week_2',
@@ -54,6 +56,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_staff' => 'boolean',
             'is_admin' => 'boolean',
+            'service_function' => ServiceFunction::class,
             'busyness_week_1' => Busyness::class,
             'busyness_week_2' => Busyness::class,
         ];
