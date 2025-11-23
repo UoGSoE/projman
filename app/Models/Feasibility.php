@@ -25,8 +25,10 @@ class Feasibility extends Model
         'dependencies_prerequisites',
         'deadlines_achievable',
         'alternative_proposal',
-        'existing_solution',
-        'off_the_shelf_solution',
+        'existing_solution_status',
+        'existing_solution_notes',
+        'off_the_shelf_solution_status',
+        'off_the_shelf_solution_notes',
         'reject_reason',
         'approval_status',
         'approved_at',
@@ -62,5 +64,11 @@ class Feasibility extends Model
             && filled($this->cost_benefit_case)
             && filled($this->dependencies_prerequisites)
             && filled($this->alternative_proposal);
+    }
+
+    public function hasProperSolutionAssessment(): bool
+    {
+        return filled($this->existing_solution_status)
+            || filled($this->off_the_shelf_solution_status);
     }
 }

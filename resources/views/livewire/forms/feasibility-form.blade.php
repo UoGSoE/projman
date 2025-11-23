@@ -40,10 +40,27 @@
 
     {{-- Existing & Off-the-Shelf Solutions --}}
     <div class="grid grid-cols-2 gap-4">
-        <flux:textarea label="Is there an existing UoG solution that meets the need?" rows="4"
-            wire:model="feasibilityForm.existingSolution" />
-        <flux:textarea label="Is there an off-the-shelf solution available?" rows="4"
-            wire:model="feasibilityForm.offTheShelfSolution" />
+        <div class="space-y-2">
+            <flux:select label="Is there an existing UoG solution that meets the need?"
+                wire:model="feasibilityForm.existingSolutionStatus">
+                <flux:select.option value="">Select...</flux:select.option>
+                <flux:select.option value="yes">Yes</flux:select.option>
+                <flux:select.option value="no">No</flux:select.option>
+                <flux:select.option value="yes_not_practical">Yes - not practical</flux:select.option>
+            </flux:select>
+            <flux:textarea rows="3" placeholder="Notes..." wire:model="feasibilityForm.existingSolutionNotes" />
+        </div>
+
+        <div class="space-y-2">
+            <flux:select label="Is there an off-the-shelf solution available?"
+                wire:model="feasibilityForm.offTheShelfSolutionStatus">
+                <flux:select.option value="">Select...</flux:select.option>
+                <flux:select.option value="yes">Yes</flux:select.option>
+                <flux:select.option value="no">No</flux:select.option>
+                <flux:select.option value="yes_not_practical">Yes - not practical</flux:select.option>
+            </flux:select>
+            <flux:textarea rows="3" placeholder="Notes..." wire:model="feasibilityForm.offTheShelfSolutionNotes" />
+        </div>
     </div>
 
     <flux:separator />
@@ -53,13 +70,13 @@
         <flux:button type="submit" variant="primary">Update</flux:button>
 
         <div class="flex flex-col md:flex-row justify-end gap-4">
-            @if($feasibilityForm->approvalStatus === 'pending' && $project->feasibility->isReadyForApproval())
+            @if($errors->isEmpty() && $feasibilityForm->approvalStatus === 'pending' && $project->feasibility->isReadyForApproval() && $project->feasibility->hasProperSolutionAssessment())
                 <flux:button
                     wire:click="approveFeasibility"
                     type="button"
                     variant="primary"
                     color="emerald"
-                    :disabled="!empty($feasibilityForm->existingSolution)"
+                    :disabled="$feasibilityForm->existingSolutionStatus === 'yes' || $feasibilityForm->offTheShelfSolutionStatus === 'yes'"
                     data-test="approve-feasibility-button">
                     Approve
                 </flux:button>

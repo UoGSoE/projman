@@ -28,20 +28,42 @@ class FeasibilityForm extends Form
     #[Validate('required|integer|exists:users,id')]
     public ?int $assessedBy = null;
 
-    #[Validate('required|date|after:today')]
+    #[Validate('required|date')]
     public ?string $dateAssessed;
 
-    #[Validate('nullable|string|max:10000')]
-    public ?string $existingSolution = null;
+    public ?string $existingSolutionStatus = null;
 
-    #[Validate('nullable|string|max:10000')]
-    public ?string $offTheShelfSolution = null;
+    public ?string $existingSolutionNotes = null;
+
+    public ?string $offTheShelfSolutionStatus = null;
+
+    public ?string $offTheShelfSolutionNotes = null;
 
     #[Validate('nullable|string|max:5000')]
     public ?string $rejectReason = null;
 
     #[Validate('in:pending,approved,rejected')]
     public string $approvalStatus = 'pending';
+
+    public function rules(): array
+    {
+        $rules = [
+            'existingSolutionStatus' => 'nullable|in:yes,no,yes_not_practical',
+            'existingSolutionNotes' => 'nullable|string|max:10000',
+            'offTheShelfSolutionStatus' => 'nullable|in:yes,no,yes_not_practical',
+            'offTheShelfSolutionNotes' => 'nullable|string|max:10000',
+        ];
+
+        if ($this->existingSolutionStatus === 'yes_not_practical') {
+            $rules['existingSolutionNotes'] = 'required|string|max:10000';
+        }
+
+        if ($this->offTheShelfSolutionStatus === 'yes_not_practical') {
+            $rules['offTheShelfSolutionNotes'] = 'required|string|max:10000';
+        }
+
+        return $rules;
+    }
 
     public function setProject(Project $project)
     {
@@ -53,14 +75,18 @@ class FeasibilityForm extends Form
         $this->dependenciesPrerequisites = $project->feasibility->dependencies_prerequisites;
         $this->deadlinesAchievable = $project->feasibility->deadlines_achievable ? 'yes' : 'no';
         $this->alternativeProposal = $project->feasibility->alternative_proposal;
-        $this->existingSolution = $project->feasibility->existing_solution;
-        $this->offTheShelfSolution = $project->feasibility->off_the_shelf_solution;
+        $this->existingSolutionStatus = $project->feasibility->existing_solution_status;
+        $this->existingSolutionNotes = $project->feasibility->existing_solution_notes;
+        $this->offTheShelfSolutionStatus = $project->feasibility->off_the_shelf_solution_status;
+        $this->offTheShelfSolutionNotes = $project->feasibility->off_the_shelf_solution_notes;
         $this->rejectReason = $project->feasibility->reject_reason;
         $this->approvalStatus = $project->feasibility->approval_status ?? 'pending';
     }
 
     public function save()
     {
+        $this->validate();
+
         $this->project->feasibility->update([
             'assessed_by' => $this->assessedBy,
             'date_assessed' => $this->dateAssessed,
@@ -69,8 +95,10 @@ class FeasibilityForm extends Form
             'dependencies_prerequisites' => $this->dependenciesPrerequisites,
             'deadlines_achievable' => $this->deadlinesAchievable === 'yes',
             'alternative_proposal' => $this->alternativeProposal,
-            'existing_solution' => $this->existingSolution,
-            'off_the_shelf_solution' => $this->offTheShelfSolution,
+            'existing_solution_status' => $this->existingSolutionStatus,
+            'existing_solution_notes' => $this->existingSolutionNotes,
+            'off_the_shelf_solution_status' => $this->offTheShelfSolutionStatus,
+            'off_the_shelf_solution_notes' => $this->offTheShelfSolutionNotes,
             'reject_reason' => $this->rejectReason,
             'approval_status' => $this->approvalStatus,
         ]);
@@ -78,6 +106,23 @@ class FeasibilityForm extends Form
 
     public function approve(): void
     {
+        $this->validate([
+            'existingSolutionStatus' => [
+                function ($attribute, $value, $fail) {
+                    if ($value === 'yes') {
+                        $fail('Cannot approve when an existing UoG solution has been identified.');
+                    }
+                },
+            ],
+            'offTheShelfSolutionStatus' => [
+                function ($attribute, $value, $fail) {
+                    if ($value === 'yes') {
+                        $fail('Cannot approve when an off-the-shelf solution has been identified.');
+                    }
+                },
+            ],
+        ]);
+
         $this->project->feasibility->update([
             'approval_status' => 'approved',
             'approved_at' => now(),

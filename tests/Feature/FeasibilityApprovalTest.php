@@ -30,7 +30,8 @@ describe('Feasibility Approval Workflow', function () {
 
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('feasibilityForm.existingSolution', null)
+            ->set('feasibilityForm.existingSolutionStatus', 'no')
+            ->set('feasibilityForm.offTheShelfSolutionStatus', 'no')
             ->call('approveFeasibility')
             ->assertHasNoErrors();
 
@@ -41,22 +42,49 @@ describe('Feasibility Approval Workflow', function () {
             ->and($project->feasibility->actioned_by)->toBe($user->id);
     });
 
-    it('prevents approval when existing solution is identified', function () {
+    it('prevents approval when existing UoG solution is identified', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
         $project = Project::factory()->create();
         $this->actingAs($user);
 
-        // Act & Assert
+        // Set existing solution to 'yes' (approve button should be disabled)
+        $project->feasibility->update([
+            'existing_solution_status' => 'yes',
+            'existing_solution_notes' => 'We already have System X',
+        ]);
+
+        // Act - try to call approve (should not work since button would be disabled in UI)
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('feasibilityForm.existingSolution', 'We already have System X')
             ->call('approveFeasibility');
 
         // Assert approval did not happen
         $project->refresh();
         expect($project->feasibility->approval_status)->toBe('pending')
             ->and($project->feasibility->approved_at)->toBeNull();
-    })->skip('TODO: Refactor feasibility form to use explicit yes/no with notes pattern (like other forms) - UI should prevent invalid approvals');
+    });
+
+    it('prevents approval when off-the-shelf solution is identified', function () {
+        // Arrange
+        $user = User::factory()->create(['is_admin' => true]);
+        $project = Project::factory()->create();
+        $this->actingAs($user);
+
+        // Set off-the-shelf solution to 'yes' (approve button should be disabled)
+        $project->feasibility->update([
+            'off_the_shelf_solution_status' => 'yes',
+            'off_the_shelf_solution_notes' => 'Product XYZ is available',
+        ]);
+
+        // Act - try to call approve (should not work since button would be disabled in UI)
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->call('approveFeasibility');
+
+        // Assert approval did not happen
+        $project->refresh();
+        expect($project->feasibility->approval_status)->toBe('pending')
+            ->and($project->feasibility->approved_at)->toBeNull();
+    });
 
     it('requires reject reason when rejecting', function () {
         // Arrange
@@ -104,7 +132,8 @@ describe('Feasibility Approval Workflow', function () {
 
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('feasibilityForm.existingSolution', null)
+            ->set('feasibilityForm.existingSolutionStatus', 'no')
+            ->set('feasibilityForm.offTheShelfSolutionStatus', 'no')
             ->call('approveFeasibility');
 
         // Assert
@@ -271,15 +300,19 @@ describe('Feasibility Approval Workflow', function () {
             ->set('feasibilityForm.alternativeProposal', 'No alternatives')
             ->set('feasibilityForm.assessedBy', $assessor->id)
             ->set('feasibilityForm.dateAssessed', now()->addDay()->format('Y-m-d'))
-            ->set('feasibilityForm.existingSolution', 'Legacy System ABC')
-            ->set('feasibilityForm.offTheShelfSolution', 'Product XYZ is available')
+            ->set('feasibilityForm.existingSolutionStatus', 'yes')
+            ->set('feasibilityForm.existingSolutionNotes', 'Legacy System ABC exists')
+            ->set('feasibilityForm.offTheShelfSolutionStatus', 'no')
+            ->set('feasibilityForm.offTheShelfSolutionNotes', null)
             ->call('save', 'feasibility')
             ->assertHasNoErrors();
 
         // Assert
         $project->refresh();
-        expect($project->feasibility->existing_solution)->toBe('Legacy System ABC')
-            ->and($project->feasibility->off_the_shelf_solution)->toBe('Product XYZ is available');
+        expect($project->feasibility->existing_solution_status)->toBe('yes')
+            ->and($project->feasibility->existing_solution_notes)->toBe('Legacy System ABC exists')
+            ->and($project->feasibility->off_the_shelf_solution_status)->toBe('no')
+            ->and($project->feasibility->off_the_shelf_solution_notes)->toBeNull();
     });
 
     it('does not show approve/reject buttons when form is incomplete', function () {
@@ -307,14 +340,14 @@ describe('Feasibility Approval Workflow', function () {
             ->assertDontSeeHtml('data-test="reject-feasibility-button"');
     });
 
-    it('shows approve/reject buttons when form is complete', function () {
+    it('shows approve/reject buttons when form is complete and solution assessment provided', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
         $assessor = User::factory()->create();
         $project = Project::factory()->create();
         $this->actingAs($user);
 
-        // Fill in all required fields
+        // Fill in all required fields AND solution assessment
         $project->feasibility->update([
             'assessed_by' => $assessor->id,
             'date_assessed' => now()->addDay(),
@@ -322,6 +355,7 @@ describe('Feasibility Approval Workflow', function () {
             'cost_benefit_case' => 'Good ROI',
             'dependencies_prerequisites' => 'None',
             'alternative_proposal' => 'No alternatives',
+            'existing_solution_status' => 'no',
         ]);
 
         // Act & Assert - buttons should exist
@@ -367,5 +401,84 @@ describe('Feasibility Approval Workflow', function () {
 
         // Assert - now ready
         expect($project->feasibility->isReadyForApproval())->toBeTrue();
+    });
+
+    it('requires notes when yes_not_practical is selected for existing solution', function () {
+        // Arrange
+        $user = User::factory()->create(['is_admin' => true]);
+        $project = Project::factory()->create();
+        $this->actingAs($user);
+
+        // Act & Assert - should have validation error
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->set('feasibilityForm.existingSolutionStatus', 'yes_not_practical')
+            ->set('feasibilityForm.existingSolutionNotes', null)
+            ->call('save', 'feasibility')
+            ->assertHasErrors('feasibilityForm.existingSolutionNotes');
+    });
+
+    it('requires notes when yes_not_practical is selected for off-the-shelf solution', function () {
+        // Arrange
+        $user = User::factory()->create(['is_admin' => true]);
+        $project = Project::factory()->create();
+        $this->actingAs($user);
+
+        // Act & Assert - should have validation error
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->set('feasibilityForm.offTheShelfSolutionStatus', 'yes_not_practical')
+            ->set('feasibilityForm.offTheShelfSolutionNotes', null)
+            ->call('save', 'feasibility')
+            ->assertHasErrors('feasibilityForm.offTheShelfSolutionNotes');
+    });
+
+    it('allows yes_not_practical when notes are provided', function () {
+        // Arrange
+        $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
+        $project = Project::factory()->create();
+        $this->actingAs($user);
+
+        // Act & Assert - should save successfully
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->set('feasibilityForm.assessedBy', $assessor->id)
+            ->set('feasibilityForm.dateAssessed', now()->addDay()->format('Y-m-d'))
+            ->set('feasibilityForm.technicalCredence', 'Technically feasible')
+            ->set('feasibilityForm.costBenefitCase', 'Good ROI')
+            ->set('feasibilityForm.dependenciesPrerequisites', 'None')
+            ->set('feasibilityForm.alternativeProposal', 'No alternatives')
+            ->set('feasibilityForm.existingSolutionStatus', 'yes_not_practical')
+            ->set('feasibilityForm.existingSolutionNotes', 'Too expensive for academic budget')
+            ->call('save', 'feasibility')
+            ->assertHasNoErrors();
+
+        // Assert
+        $project->refresh();
+        expect($project->feasibility->existing_solution_status)->toBe('yes_not_practical')
+            ->and($project->feasibility->existing_solution_notes)->toBe('Too expensive for academic budget');
+    });
+
+    it('does not show buttons when solution assessment is missing', function () {
+        // Arrange
+        $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
+        $project = Project::factory()->create();
+        $this->actingAs($user);
+
+        // Fill in all required fields but NO solution assessment
+        $project->feasibility->update([
+            'assessed_by' => $assessor->id,
+            'date_assessed' => now()->addDay(),
+            'technical_credence' => 'Technically sound',
+            'cost_benefit_case' => 'Good ROI',
+            'dependencies_prerequisites' => 'None',
+            'alternative_proposal' => 'No alternatives',
+            'existing_solution_status' => null,
+            'off_the_shelf_solution_status' => null,
+        ]);
+
+        // Act & Assert - buttons should NOT exist
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->assertDontSeeHtml('data-test="approve-feasibility-button"')
+            ->assertDontSeeHtml('data-test="reject-feasibility-button"');
     });
 });

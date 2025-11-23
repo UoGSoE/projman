@@ -27,6 +27,34 @@ class FeasibilityFactory extends Factory
             'dependencies_prerequisites' => fake()->paragraph(),
             'deadlines_achievable' => fake()->boolean(),
             'alternative_proposal' => fake()->paragraph(),
+            'existing_solution_status' => null,
+            'existing_solution_notes' => null,
+            'off_the_shelf_solution_status' => null,
+            'off_the_shelf_solution_notes' => null,
         ];
+    }
+
+    public function withExistingSolution(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'existing_solution_status' => 'yes',
+            'existing_solution_notes' => fake()->paragraph(),
+        ]);
+    }
+
+    public function withOffTheShelfSolution(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'off_the_shelf_solution_status' => 'yes',
+            'off_the_shelf_solution_notes' => fake()->paragraph(),
+        ]);
+    }
+
+    public function withNoExistingSolution(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'existing_solution_status' => 'no',
+            'off_the_shelf_solution_status' => 'no',
+        ]);
     }
 }
