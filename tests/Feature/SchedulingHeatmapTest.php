@@ -85,7 +85,7 @@ describe('Scheduling Heatmap Integration', function () {
 
     it('shows all staff alphabetically when no staff are assigned', function () {
         // Arrange
-        $user = User::factory()->create(['is_admin' => true]);
+        $user = User::factory()->create(['is_admin' => true, 'surname' => 'TestAdmin']);
         $project = Project::factory()->create();
 
         // Create staff with known surnames

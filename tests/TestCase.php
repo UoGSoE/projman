@@ -46,13 +46,22 @@ abstract class TestCase extends BaseTestCase
 
         // Create dummy users and assign to key roles
         // (prevents "No recipients found" exceptions)
-        $adminUser = \App\Models\User::factory()->create();
+        $adminUser = \App\Models\User::factory()->create([
+            'forenames' => 'Test',
+            'surname' => 'FakeNotificationsUser',
+        ]);
         $adminUser->roles()->attach($adminRole);
 
-        $assessorUser = \App\Models\User::factory()->create();
+        $assessorUser = \App\Models\User::factory()->create([
+            'forenames' => 'Test',
+            'surname' => 'FakeNotificationsUser',
+        ]);
         $assessorUser->roles()->attach($assessorRole);
 
-        $serviceLeadUser = \App\Models\User::factory()->create();
+        $serviceLeadUser = \App\Models\User::factory()->create([
+            'forenames' => 'Test',
+            'surname' => 'FakeNotificationsUser',
+        ]);
         $serviceLeadUser->roles()->attach($serviceLeadRole);
     }
 
@@ -97,7 +106,10 @@ abstract class TestCase extends BaseTestCase
 
         // Ensure at least one user is assigned to avoid empty recipient errors
         if ($adminRole->users()->count() === 0) {
-            $adminUser = \App\Models\User::factory()->create();
+            $adminUser = \App\Models\User::factory()->create([
+                'forenames' => 'Test',
+                'surname' => 'FakeNotificationsUser',
+            ]);
             $adminUser->roles()->attach($adminRole);
         }
     }
