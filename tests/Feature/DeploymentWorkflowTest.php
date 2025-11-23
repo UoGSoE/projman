@@ -75,7 +75,7 @@ describe('Service Acceptance Workflow', function () {
         // Act & Assert
         livewire(ProjectEditor::class, ['project' => $project])
             ->call('acceptDeploymentService')
-            ->assertHasErrors('deployed');
+            ->assertHasErrors('deployedForm.deploymentLeadId');
 
         // Assert service acceptance did not happen
         $project->refresh();
@@ -219,7 +219,7 @@ describe('Deployment Approval Workflow', function () {
         // Act & Assert
         livewire(ProjectEditor::class, ['project' => $project])
             ->call('approveDeployment')
-            ->assertHasErrors('deployed');
+            ->assertHasErrors('deployedForm.serviceOperationsApproval');
 
         // Assert approval did not happen
         $project->refresh();

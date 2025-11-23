@@ -164,110 +164,32 @@ class ProjectEditor extends Component
 
     public function requestUAT(): void
     {
-        // Validate UAT Tester is assigned
-        if (empty($this->testingForm->uatTesterId)) {
-            $this->addError('testingForm.uatTesterId', 'UAT Tester must be assigned before requesting UAT.');
-
-            return;
-        }
-
-        $this->project->testing->update([
-            'uat_tester_id' => $this->testingForm->uatTesterId,
-            'uat_requested_at' => now(),
-        ]);
-
-        $this->testingForm->setProject($this->project->fresh());
-
-        $this->project->addHistory(Auth::user(), 'Requested UAT testing');
-
-        event(new \App\Events\UATRequested($this->project->fresh()));
-
+        $this->testingForm->requestUAT();
         Flux::toast('UAT testing requested - UAT Tester has been notified', variant: 'success');
     }
 
     public function requestServiceAcceptance(): void
     {
-        // Validate User Acceptance is approved
-        if ($this->testingForm->userAcceptance !== 'approved') {
-            $this->addError('testingForm.userAcceptance', 'User Acceptance must be approved before requesting Service Acceptance.');
-
-            return;
-        }
-
-        $this->project->testing->update([
-            'service_acceptance_requested_at' => now(),
-        ]);
-
-        $this->testingForm->setProject($this->project->fresh());
-
-        $this->project->addHistory(Auth::user(), 'Requested Service Acceptance');
-
-        event(new \App\Events\ServiceAcceptanceRequested($this->project));
-
+        $this->testingForm->requestServiceAcceptance();
         Flux::toast('Service Acceptance requested - Service Leads have been notified', variant: 'success');
     }
 
     public function submitTesting(): void
     {
-        // Validate all 5 sign-offs are approved
-        if (! $this->project->testing->isReadyForSubmit()) {
-            $this->addError('testing', 'All sign-offs must be approved before submitting.');
-
-            return;
-        }
-
-        $this->project->addHistory(Auth::user(), 'Submitted testing - advancing to Deployed stage');
-
+        $this->testingForm->submit();
         $this->advanceToNextStage();
-
         Flux::toast('Testing complete - project advanced to Deployed stage', variant: 'success');
     }
 
     public function acceptDeploymentService(): void
     {
-        // Validate all required fields are completed
-        if (! $this->project->deployed->isReadyForServiceAcceptance()) {
-            $this->addError('deployed', 'All required fields must be completed before Service Acceptance.');
-
-            return;
-        }
-
-        $this->project->deployed->update([
-            'service_accepted_at' => now(),
-        ]);
-
-        $this->deployedForm->setProject($this->project->fresh());
-
-        $this->project->addHistory(Auth::user(), 'Service Acceptance submitted');
-
-        event(new \App\Events\DeploymentServiceAccepted($this->project));
-
+        $this->deployedForm->acceptService();
         Flux::toast('Service Acceptance submitted - Service Leads have been notified', variant: 'success');
     }
 
     public function approveDeployment(): void
     {
-        // Validate all 3 Service Handover approvals are received
-        if (! $this->project->deployed->isReadyForApproval()) {
-            $this->addError('deployed', 'All Service Handover approvals must be received before final approval.');
-
-            return;
-        }
-
-        $this->project->deployed->update([
-            'deployment_approved_at' => now(),
-        ]);
-
-        $this->project->update([
-            'status' => ProjectStatus::COMPLETED,
-        ]);
-
-        $this->deployedForm->setProject($this->project->fresh());
-
-        $this->project->addHistory(Auth::user(), 'Deployment approved - project completed');
-
-        event(new \App\Events\DeploymentApproved($this->project));
-
+        $this->deployedForm->approve();
         Flux::toast('Deployment approved - project status set to Completed', variant: 'success');
     }
 

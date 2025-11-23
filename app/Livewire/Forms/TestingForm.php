@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Forms;
 
+use App\Events\ProjectUpdated;
+use App\Events\ServiceAcceptanceRequested;
+use App\Events\UATRequested;
 use App\Models\Project;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
@@ -120,5 +123,51 @@ class TestingForm extends Form
             'service_resilience_sign_off' => $this->serviceResilienceSignOff,
             'service_resilience_sign_off_notes' => $this->serviceResilienceSignOffNotes,
         ]);
+    }
+
+    public function requestUAT(): void
+    {
+        $this->validate([
+            'uatTesterId' => 'required|integer|exists:users,id',
+        ]);
+
+        $this->project->testing->update([
+            'uat_tester_id' => $this->uatTesterId,
+            'uat_requested_at' => now(),
+        ]);
+
+        $this->setProject($this->project->fresh());
+
+        event(new UATRequested($this->project->fresh()));
+        event(new ProjectUpdated($this->project, 'Requested UAT testing'));
+    }
+
+    public function requestServiceAcceptance(): void
+    {
+        $this->validate([
+            'userAcceptance' => 'required|in:approved',
+        ]);
+
+        $this->project->testing->update([
+            'service_acceptance_requested_at' => now(),
+        ]);
+
+        $this->setProject($this->project->fresh());
+
+        event(new ServiceAcceptanceRequested($this->project));
+        event(new ProjectUpdated($this->project, 'Requested Service Acceptance'));
+    }
+
+    public function submit(): void
+    {
+        $this->validate([
+            'testingSignOff' => 'required|in:approved',
+            'userAcceptance' => 'required|in:approved',
+            'testingLeadSignOff' => 'required|in:approved',
+            'serviceDeliverySignOff' => 'required|in:approved',
+            'serviceResilienceSignOff' => 'required|in:approved',
+        ]);
+
+        event(new ProjectUpdated($this->project, 'Submitted testing - advancing to Deployed stage'));
     }
 }

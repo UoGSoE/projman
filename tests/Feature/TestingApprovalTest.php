@@ -398,7 +398,7 @@ describe('Submit Testing Workflow', function () {
         // Act & Assert
         livewire(ProjectEditor::class, ['project' => $project])
             ->call('submitTesting')
-            ->assertHasErrors('testing');
+            ->assertHasErrors('testingForm.testingLeadSignOff');
 
         // Assert stage did not advance
         $project->refresh();
@@ -421,7 +421,7 @@ describe('Submit Testing Workflow', function () {
         // Act & Assert
         livewire(ProjectEditor::class, ['project' => $project])
             ->call('submitTesting')
-            ->assertHasErrors('testing');
+            ->assertHasErrors('testingForm.serviceDeliverySignOff');
 
         // Assert stage did not advance
         $project->refresh();
