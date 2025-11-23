@@ -75,4 +75,40 @@ class FeasibilityForm extends Form
             'approval_status' => $this->approvalStatus,
         ]);
     }
+
+    public function approve(): void
+    {
+        $this->project->feasibility->update([
+            'approval_status' => 'approved',
+            'approved_at' => now(),
+            'actioned_by' => \Illuminate\Support\Facades\Auth::id(),
+        ]);
+
+        $this->approvalStatus = 'approved';
+
+        $this->setProject($this->project->fresh());
+
+        event(new \App\Events\FeasibilityApproved($this->project));
+        event(new \App\Events\ProjectUpdated($this->project, 'Approved feasibility'));
+    }
+
+    public function reject(): void
+    {
+        $this->validate([
+            'rejectReason' => 'required|string|max:5000',
+        ]);
+
+        $this->project->feasibility->update([
+            'approval_status' => 'rejected',
+            'reject_reason' => $this->rejectReason,
+            'actioned_by' => \Illuminate\Support\Facades\Auth::id(),
+        ]);
+
+        $this->approvalStatus = 'rejected';
+
+        $this->setProject($this->project->fresh());
+
+        event(new \App\Events\FeasibilityRejected($this->project));
+        event(new \App\Events\ProjectUpdated($this->project, 'Rejected feasibility'));
+    }
 }

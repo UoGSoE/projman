@@ -87,4 +87,12 @@ class ScopingForm extends Form
             'requires_software_dev' => $this->requiresSoftwareDev,
         ]);
     }
+
+    public function submit(): void
+    {
+        $this->validate();
+
+        event(new \App\Events\ScopingSubmitted($this->project));
+        event(new \App\Events\ProjectUpdated($this->project, 'Submitted scoping for review'));
+    }
 }

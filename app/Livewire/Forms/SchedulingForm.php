@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use App\Enums\ChangeBoardOutcome;
 use App\Models\Project;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
@@ -112,5 +113,41 @@ class SchedulingForm extends Form
             'priority' => $this->priority,
             // 'team_assignment' => $this->teamAssignment,
         ]);
+    }
+
+    public function submitToDCGG(): void
+    {
+        $this->validate();
+
+        $this->submittedToDcggAt = now();
+        $this->submittedToDcggBy = Auth::id();
+
+        $this->project->scheduling->update([
+            'submitted_to_dcgg_at' => $this->submittedToDcggAt,
+            'submitted_to_dcgg_by' => $this->submittedToDcggBy,
+        ]);
+
+        $this->setProject($this->project->fresh());
+
+        event(new \App\Events\SchedulingSubmittedToDCGG($this->project));
+        event(new \App\Events\ProjectUpdated($this->project, 'Submitted scheduling to DCGG for approval'));
+    }
+
+    public function schedule(): void
+    {
+        $this->validate([
+            'changeBoardDate' => 'required|date',
+        ]);
+
+        $this->scheduledAt = now();
+
+        $this->project->scheduling->update([
+            'scheduled_at' => $this->scheduledAt,
+        ]);
+
+        $this->setProject($this->project->fresh());
+
+        event(new \App\Events\SchedulingScheduled($this->project));
+        event(new \App\Events\ProjectUpdated($this->project, 'Scheduling approved and scheduled'));
     }
 }

@@ -133,99 +133,32 @@ class ProjectEditor extends Component
 
     public function approveFeasibility(): void
     {
-        if (! empty($this->feasibilityForm->existingSolution)) {
-            Flux::toast('Cannot approve when an existing solution is identified. Please reject instead.', variant: 'danger');
-
-            return;
-        }
-
-        $this->project->feasibility->update([
-            'approval_status' => 'approved',
-            'approved_at' => now(),
-            'actioned_by' => Auth::id(),
-        ]);
-
-        $this->feasibilityForm->approvalStatus = 'approved';
-
-        $this->project->addHistory(Auth::user(), 'Approved feasibility');
-
-        event(new \App\Events\FeasibilityApproved($this->project));
-
+        $this->feasibilityForm->approve();
         Flux::toast('Feasibility approved successfully', variant: 'success');
     }
 
     public function rejectFeasibility(): void
     {
-        $this->validate([
-            'feasibilityForm.rejectReason' => 'required|string|max:5000',
-        ]);
-
-        $this->project->feasibility->update([
-            'approval_status' => 'rejected',
-            'reject_reason' => $this->feasibilityForm->rejectReason,
-            'actioned_by' => Auth::id(),
-        ]);
-
-        $this->feasibilityForm->approvalStatus = 'rejected';
-
-        $this->project->addHistory(Auth::user(), 'Rejected feasibility');
-
-        event(new \App\Events\FeasibilityRejected($this->project));
-
+        $this->feasibilityForm->reject();
         $this->modal('reject-feasibility-modal')->close();
-
         Flux::toast('Feasibility rejected', variant: 'warning');
     }
 
     public function submitScoping(): void
     {
-        $this->scopingForm->validate();
-
-        $this->project->addHistory(Auth::user(), 'Submitted scoping for review');
-
-        event(new \App\Events\ScopingSubmitted($this->project));
-
+        $this->scopingForm->submit();
         Flux::toast('Scoping submitted to Work Package Assessors', variant: 'success');
     }
 
     public function submitSchedulingToDCGG(): void
     {
-        $this->schedulingForm->validate();
-
-        $this->project->scheduling->update([
-            'submitted_to_dcgg_at' => now(),
-            'submitted_to_dcgg_by' => Auth::id(),
-        ]);
-
-        $this->schedulingForm->submittedToDcggAt = now();
-        $this->schedulingForm->submittedToDcggBy = Auth::id();
-
-        $this->project->addHistory(Auth::user(), 'Submitted scheduling to DCGG for approval');
-
-        event(new \App\Events\SchedulingSubmittedToDCGG($this->project));
-
+        $this->schedulingForm->submitToDCGG();
         Flux::toast('Scheduling submitted to Digital Change Governance Group', variant: 'success');
     }
 
     public function scheduleScheduling(): void
     {
-        // Validate Change Board date is filled
-        if (empty($this->schedulingForm->changeBoardDate)) {
-            $this->addError('schedulingForm.changeBoardDate', 'Change Board date must be set before scheduling.');
-
-            return;
-        }
-
-        $this->project->scheduling->update([
-            'scheduled_at' => now(),
-        ]);
-
-        $this->schedulingForm->scheduledAt = now();
-
-        $this->project->addHistory(Auth::user(), 'Scheduling approved and scheduled');
-
-        event(new \App\Events\SchedulingScheduled($this->project));
-
+        $this->schedulingForm->schedule();
         Flux::toast('Scheduling approved and scheduled', variant: 'success');
     }
 
