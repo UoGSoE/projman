@@ -11,6 +11,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/project/{project}', \App\Livewire\ProjectViewer::class)->name('project.show');
     Route::get('/project/{project}/edit', \App\Livewire\ProjectEditor::class)->name('project.edit');
     Route::get('/staff/heatmap', \App\Livewire\HeatMapViewer::class)->name('project.heatmap');
+
+    Route::get('/portfolio/backlog', \App\Livewire\BacklogList::class)->name('portfolio.backlog');
+    Route::get('/portfolio/change-on-a-page/{project}', \App\Livewire\ChangeOnAPage::class)->name('portfolio.change-on-a-page');
+    Route::get('/portfolio/roadmap', \App\Livewire\RoadmapView::class)->name('portfolio.roadmap');
+
     Route::get('/profile', \App\Livewire\Profile::class)->name('profile');
 
     Route::middleware(['admin'])->group(function () {

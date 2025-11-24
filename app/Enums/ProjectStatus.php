@@ -26,6 +26,23 @@ enum ProjectStatus: string
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
 
+    public function label(): string
+    {
+        return match ($this) {
+            self::IDEATION => 'Ideation',
+            self::FEASIBILITY => 'Feasibility',
+            self::SCOPING => 'Scoping',
+            self::SCHEDULING => 'Scheduling',
+            self::DETAILED_DESIGN => 'Detailed Design',
+            self::DEVELOPMENT => 'Development',
+            self::TESTING => 'Testing',
+            self::DEPLOYED => 'Deployed',
+            self::BUILD => 'Build',
+            self::COMPLETED => 'Completed',
+            self::CANCELLED => 'Cancelled',
+        };
+    }
+
     public function colour(): string
     {
         return match ($this) {

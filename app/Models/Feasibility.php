@@ -56,6 +56,34 @@ class Feasibility extends Model
         return $this->belongsTo(User::class, 'actioned_by');
     }
 
+    public function getRecommendationAttribute(): string
+    {
+        return match ($this->approval_status) {
+            'approved' => 'Approved for progression to next stage',
+            'rejected' => $this->formatRejectionRecommendation(),
+            default => 'Pending feasibility assessment',
+        };
+    }
+
+    private function formatRejectionRecommendation(): string
+    {
+        $parts = ['Project rejected'];
+
+        if ($this->reject_reason) {
+            $parts[] = "Reason: {$this->reject_reason}";
+        }
+
+        if ($this->existing_solution_notes) {
+            $parts[] = "Existing solution: {$this->existing_solution_notes}";
+        }
+
+        if ($this->off_the_shelf_solution_notes) {
+            $parts[] = "Off-the-shelf solution: {$this->off_the_shelf_solution_notes}";
+        }
+
+        return implode('. ', $parts);
+    }
+
     public function isReadyForApproval(): bool
     {
         return filled($this->assessed_by)
