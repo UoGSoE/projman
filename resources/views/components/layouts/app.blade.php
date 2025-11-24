@@ -33,6 +33,11 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')"
                     wire:navigate>Staff heatmap</flux:sidebar.item>
+                <flux:separator class="my-2" />
+                <flux:sidebar.item icon="queue-list" href="/portfolio/backlog" :current="request()->routeIs('portfolio.backlog')"
+                    wire:navigate>Portfolio backlog</flux:sidebar.item>
+                <flux:sidebar.item icon="calendar" href="/portfolio/roadmap" :current="request()->routeIs('portfolio.roadmap')"
+                    wire:navigate>Portfolio roadmap</flux:sidebar.item>
                 @if (auth()->user()->is_admin)
                     <flux:sidebar.item icon="users" href="/staff" :current="request()->routeIs('users.list')"
                         wire:navigate>Staff</flux:sidebar.item>

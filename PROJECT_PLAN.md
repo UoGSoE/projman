@@ -14,8 +14,9 @@
 - ✅ Features 1-5 complete (Feasibility, Scoping, Scheduling, Testing, Deployment approvals)
 - ✅ Software Development vs Build toggle complete
 - ✅ ProjectEditor architectural refactoring complete (Manager Delegation Pattern)
-- ✅ 419 tests passing (1,369 assertions)
-- ⏳ Feature 6 remaining (Portfolio outputs)
+- ✅ Feature 6 Phase 4 complete (Portfolio Roadmap View)
+- ✅ 435 tests passing (1,410 assertions)
+- ⏳ Feature 6 remaining phases (Backlog optimizations, Planning Heatmap)
 
 **Tech Stack**:
 - Laravel 12 with streamlined structure
@@ -591,7 +592,54 @@ Run: `lando artisan test --filter=Deployed`
 
 ---
 
-### Feature 6: Portfolio Outputs
+### Feature 6 Phase 4: Portfolio Roadmap View ✅
+**Date Completed**: 2025-01-24
+
+**Timeline Visualization:**
+- Projects displayed on horizontal timeline grouped by service function (5 swim lanes)
+- Smart vertical stacking algorithm prevents project bar overlap
+- Month-based timeline spanning full project portfolio
+- CSS Grid layout for precise positioning
+
+**BRAG Status Indicators:**
+- **B**lack = Completed projects
+- **R**ed = Overdue (past deadline)
+- **A**mber = At Risk (within 14 days of deadline)
+- **G**reen = On Track (everything else)
+- Color-coded bars with automatic calculation
+
+**Performance Optimization:**
+- Initial implementation: 3,000 database queries
+- Final optimized: 5 queries (99.83% reduction)
+- Cached computed properties to eliminate N+1 issues
+- Direct data passing to view to prevent re-computation
+
+**Key Technical Wins:**
+- Fixed Carbon v3 breaking change (`diffInMonths()` returns signed values, wrapped with `abs()`)
+- Updated TestDataSeeder to spread projects across 12 months (was 2.5 months)
+- Added CSS buffer to prevent bars overlapping sticky service function column
+- Created separate calculation methods to work with cached data
+
+**Files Created:**
+- `app/Livewire/RoadmapView.php` (~250 lines)
+- `resources/views/livewire/roadmap-view.blade.php` (~115 lines)
+- `tests/Feature/RoadmapViewTest.php` (16 tests, 41 assertions)
+
+**Testing:**
+- 16 comprehensive tests covering rendering, grouping, BRAG calculation, timeline math, UI links
+- All 435 tests passing (1,410 assertions total)
+- No regressions in existing features
+
+**Navigation:**
+- Added sidebar links for Portfolio Backlog and Portfolio Roadmap
+- Routes: `/portfolio/backlog` and `/portfolio/roadmap`
+- Livewire `wire:navigate` for SPA experience
+
+**Btw**: Debugging the query optimization from 3,000 → 5 was a masterclass in Laravel query performance. The key insight was that `#[Computed]` properties don't share caches across multiple computed properties that depend on the same data - had to explicitly cache `projects()` once and pass it through all dependent calculations.
+
+---
+
+### Feature 6: Portfolio Outputs (Remaining)
 
 **New Components to Create:**
 
@@ -1382,6 +1430,6 @@ After completing each feature:
 
 ---
 
-**Document Version**: 2.4
-**Last Updated**: 2025-01-23
-**Status**: 419 tests passing (1,369 assertions) - Features 1-5 complete + ProjectEditor architectural refactoring complete
+**Document Version**: 2.5
+**Last Updated**: 2025-01-24
+**Status**: 435 tests passing (1,410 assertions) - Features 1-5 complete + ProjectEditor refactoring complete + Feature 6 Phase 4 (Roadmap View) complete
