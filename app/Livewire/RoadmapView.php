@@ -13,25 +13,24 @@ class RoadmapView extends Component
 {
     public function render()
     {
+        // Cache projects once to prevent duplicate queries
+        $allProjects = $this->projects();
+        $timelineStart = $this->calculateTimelineStart($allProjects);
+        $timelineEnd = $this->calculateTimelineEnd($allProjects);
+
         return view('livewire.roadmap-view', [
-            'roadmapData' => $this->prepareRoadmapData(),
-            'monthColumns' => $this->monthColumns(),
+            'roadmapData' => $this->prepareRoadmapDataFromCached($allProjects, $timelineStart, $timelineEnd),
+            'monthColumns' => $this->calculateMonthColumns($timelineStart, $timelineEnd),
             'unscheduledProjects' => $this->unscheduledProjects(),
         ]);
     }
 
     /**
-     * Prepare all data needed for the roadmap view.
+     * Prepare all data needed for the roadmap view using cached data.
      * Keeps the view clean and simple.
      */
-    private function prepareRoadmapData(): array
+    private function prepareRoadmapDataFromCached(Collection $allProjects, ?Carbon $timelineStart, ?Carbon $timelineEnd): array
     {
-        // Cache projects() once to prevent duplicate queries across multiple computed properties
-        $allProjects = $this->projects();
-
-        // Calculate timeline bounds from cached projects
-        $timelineStart = $this->calculateTimelineStart($allProjects);
-        $timelineEnd = $this->calculateTimelineEnd($allProjects);
         $totalMonths = $this->calculateMonthColumns($timelineStart, $timelineEnd)->count();
 
         // Group projects by service function
