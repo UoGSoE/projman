@@ -15,6 +15,8 @@ class RoadmapView extends Component
     {
         return view('livewire.roadmap-view', [
             'roadmapData' => $this->prepareRoadmapData(),
+            'monthColumns' => $this->monthColumns(),
+            'unscheduledProjects' => $this->unscheduledProjects(),
         ]);
     }
 
@@ -24,22 +26,35 @@ class RoadmapView extends Component
      */
     private function prepareRoadmapData(): array
     {
+        // Cache projects() once to prevent duplicate queries across multiple computed properties
+        $allProjects = $this->projects();
+
+        // Calculate timeline bounds from cached projects
+        $timelineStart = $this->calculateTimelineStart($allProjects);
+        $timelineEnd = $this->calculateTimelineEnd($allProjects);
+        $totalMonths = $this->calculateMonthColumns($timelineStart, $timelineEnd)->count();
+
+        // Group projects by service function
+        $projectsByFunction = $allProjects
+            ->groupBy(fn (Project $project) => $project->user->service_function?->label() ?? 'Unassigned')
+            ->sortKeys();
+
         $data = [];
 
-        foreach ($this->projectsByServiceFunction() as $serviceFunction => $projects) {
-            $verticalPositions = $this->calculateVerticalPositions($projects);
+        foreach ($projectsByFunction as $serviceFunction => $projects) {
+            $verticalPositions = $this->calculateVerticalPositions($projects, $timelineStart);
             $maxLane = collect($verticalPositions)->max('lane') ?? 0;
             $rowHeight = ($maxLane + 1) * 50 + 16;
 
             $projectData = [];
             foreach ($projects as $project) {
-                $position = $this->calculateProjectPosition($project);
+                $position = $this->calculateProjectPosition($project, $timelineStart);
                 $verticalPos = $verticalPositions[$project->id];
                 $bragStatus = $this->calculateBRAG($project);
 
-                $totalMonths = $this->monthColumns()->count();
-                $leftPercent = (($position['start'] - 2) / $totalMonths) * 100;
-                $widthPercent = (($position['end'] - $position['start']) / $totalMonths) * 100;
+                // Add 1% left buffer to prevent visual overlap with sticky column
+                $leftPercent = (($position['start'] - 2) / $totalMonths) * 100 + 0.5;
+                $widthPercent = (($position['end'] - $position['start']) / $totalMonths) * 100 - 0.5;
 
                 $projectData[] = [
                     'project' => $project,
@@ -78,14 +93,6 @@ class RoadmapView extends Component
     }
 
     #[Computed]
-    public function projectsByServiceFunction(): Collection
-    {
-        return $this->projects()
-            ->groupBy(fn (Project $project) => $project->user->service_function?->label() ?? 'Unassigned')
-            ->sortKeys();
-    }
-
-    #[Computed]
     public function unscheduledProjects(): Collection
     {
         return Project::query()
@@ -98,37 +105,43 @@ class RoadmapView extends Component
             ->get();
     }
 
-    #[Computed]
-    public function timelineStart(): ?Carbon
+    /**
+     * Calculate timeline start from a projects collection (avoids duplicate queries).
+     */
+    private function calculateTimelineStart(Collection $projects): ?Carbon
     {
-        $dates = $this->projects()
+        $dates = $projects
             ->pluck('scheduling.estimated_start_date')
             ->filter();
 
         return $dates->isEmpty() ? null : $dates->min()->startOfMonth();
     }
 
-    #[Computed]
-    public function timelineEnd(): ?Carbon
+    /**
+     * Calculate timeline end from a projects collection (avoids duplicate queries).
+     */
+    private function calculateTimelineEnd(Collection $projects): ?Carbon
     {
-        $dates = $this->projects()
+        $dates = $projects
             ->pluck('scheduling.estimated_completion_date')
             ->filter();
 
         return $dates->isEmpty() ? null : $dates->max()->endOfMonth();
     }
 
-    #[Computed]
-    public function monthColumns(): Collection
+    /**
+     * Calculate month columns from timeline bounds (avoids duplicate queries).
+     */
+    private function calculateMonthColumns(?Carbon $timelineStart, ?Carbon $timelineEnd): Collection
     {
-        if (! $this->timelineStart() || ! $this->timelineEnd()) {
+        if (! $timelineStart || ! $timelineEnd) {
             return collect();
         }
 
         $months = collect();
-        $current = $this->timelineStart()->copy();
+        $current = $timelineStart->copy();
 
-        while ($current->lte($this->timelineEnd())) {
+        while ($current->lte($timelineEnd)) {
             $months->push([
                 'date' => $current->copy(),
                 'label' => $current->format('M Y'),
@@ -139,9 +152,29 @@ class RoadmapView extends Component
         return $months;
     }
 
-    public function calculateProjectPosition(Project $project): array
+    #[Computed]
+    public function timelineStart(): ?Carbon
     {
-        if (! $this->timelineStart()) {
+        return $this->calculateTimelineStart($this->projects());
+    }
+
+    #[Computed]
+    public function timelineEnd(): ?Carbon
+    {
+        return $this->calculateTimelineEnd($this->projects());
+    }
+
+    #[Computed]
+    public function monthColumns(): Collection
+    {
+        return $this->calculateMonthColumns($this->timelineStart(), $this->timelineEnd());
+    }
+
+    public function calculateProjectPosition(Project $project, ?Carbon $timelineStart = null): array
+    {
+        $timelineStart = $timelineStart ?? $this->timelineStart();
+
+        if (! $timelineStart) {
             return ['start' => 2, 'end' => 3];
         }
 
@@ -149,8 +182,9 @@ class RoadmapView extends Component
         $endDate = $project->scheduling->estimated_completion_date;
 
         // Calculate month offset from timeline start
-        $startCol = $startDate->diffInMonths($this->timelineStart()) + 2; // +2 for label column
-        $endCol = $endDate->diffInMonths($this->timelineStart()) + 3; // +3 because grid is exclusive
+        // Carbon v3: diffInMonths() returns signed values - use abs() for correct positioning
+        $startCol = abs($timelineStart->diffInMonths($startDate)) + 2; // +2 for label column
+        $endCol = abs($timelineStart->diffInMonths($endDate)) + 3; // +3 because grid is exclusive
 
         return [
             'start' => $startCol,
@@ -162,7 +196,7 @@ class RoadmapView extends Component
      * Calculate vertical positions for projects to prevent overlap.
      * Think of it like parking cars - find the first available lane.
      */
-    public function calculateVerticalPositions(Collection $projects): array
+    public function calculateVerticalPositions(Collection $projects, ?Carbon $timelineStart = null): array
     {
         $positions = [];
         $lanes = []; // Track occupied time ranges per vertical lane

@@ -251,8 +251,11 @@ class TestDataSeeder extends Seeder
                     $attributes['key_skills'] = $this->skillNamesFor($requiredSkillIds);
                     $teamSize = random_int(1, 4);
                     $attributes['cose_it_staff'] = $this->randomStaffIds($staffMembers, $teamSize, [$assignee->id, $project->user_id]);
-                    $attributes['estimated_start_date'] = Carbon::now()->addDays(random_int(10, 30));
-                    $attributes['estimated_completion_date'] = Carbon::now()->addDays(random_int(40, 80));
+                    // Spread projects across 12 months for better roadmap visualization
+                    $startOffset = random_int(-60, 180); // Start: 2 months ago to 6 months ahead
+                    $duration = random_int(30, 120); // Duration: 1-4 months
+                    $attributes['estimated_start_date'] = Carbon::now()->addDays($startOffset);
+                    $attributes['estimated_completion_date'] = Carbon::now()->addDays($startOffset + $duration);
                     $attributes['change_board_date'] = Carbon::now()->addDays(random_int(15, 45));
                     $attributes['priority'] = $faker->randomElement(['low', 'medium', 'high', 'critical']);
                     $attributes['team_assignment'] = $faker->words(2, true);
@@ -422,8 +425,11 @@ class TestDataSeeder extends Seeder
             },
             ProjectStatus::SCHEDULING => function () use ($faker, $staffMembers, $project) {
                 $assigned = $this->pickStaffId($staffMembers, [$project->user_id]);
-                $start = Carbon::now()->addDays(random_int(10, 40));
-                $completion = $start->copy()->addDays(random_int(20, 60));
+                // Spread projects across 12 months for better roadmap visualization
+                $startOffset = random_int(-60, 180); // Start: 2 months ago to 6 months ahead
+                $duration = random_int(30, 120); // Duration: 1-4 months
+                $start = Carbon::now()->addDays($startOffset);
+                $completion = $start->copy()->addDays($duration);
                 $existingSkills = collect(optional($project->scoping)->skills_required ?? []);
 
                 if ($existingSkills->isEmpty()) {

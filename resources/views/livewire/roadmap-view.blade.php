@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    @if($this->monthColumns()->isEmpty())
+    @if($monthColumns->isEmpty())
         <flux:callout icon="calendar" variant="secondary">
             No scheduled projects yet. Projects need start and end dates to appear on the roadmap.
         </flux:callout>
@@ -36,13 +36,13 @@
         {{-- Timeline Grid --}}
         <div class="overflow-x-auto">
             <div class="inline-grid min-w-full"
-                 style="grid-template-columns: 200px repeat({{ $this->monthColumns()->count() }}, minmax(120px, 1fr));">
+                 style="grid-template-columns: 200px repeat({{ $monthColumns->count() }}, minmax(120px, 1fr));">
 
                 {{-- Month Headers --}}
                 <div class="sticky left-0 bg-white dark:bg-zinc-900 border-b-2 border-zinc-200 dark:border-zinc-700 p-3 font-semibold z-10">
                     Service Function
                 </div>
-                @foreach($this->monthColumns() as $month)
+                @foreach($monthColumns as $month)
                     <div class="border-b-2 border-zinc-200 dark:border-zinc-700 p-3 text-center text-sm font-medium">
                         {{ $month['label'] }}
                     </div>
@@ -57,7 +57,7 @@
                     </div>
 
                     {{-- Timeline Area --}}
-                    <div class="relative border-b border-zinc-200 dark:border-zinc-700"
+                    <div class="relative border-b border-zinc-200 dark:border-zinc-700 pl-2"
                          style="grid-column: 2 / -1; min-height: {{ $row['rowHeight'] }}px;">
                         @foreach($row['projects'] as $projectData)
                             <div class="absolute rounded px-3 py-2 text-xs shadow-sm cursor-pointer hover:shadow-md transition-shadow {{ $projectData['colorClasses'] }}"
@@ -81,7 +81,7 @@
     @endif
 
     {{-- Unscheduled Projects Section --}}
-    @if($this->unscheduledProjects()->isNotEmpty())
+    @if($unscheduledProjects->isNotEmpty())
         <div class="mt-8">
             <flux:heading size="lg">Unscheduled Projects</flux:heading>
             <flux:text class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
@@ -89,7 +89,7 @@
             </flux:text>
 
             <div class="mt-4 grid gap-2">
-                @foreach($this->unscheduledProjects() as $project)
+                @foreach($unscheduledProjects as $project)
                     <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded">
                         <div class="flex items-center justify-between">
                             <div>
