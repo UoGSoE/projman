@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->setupBaseNotificationRoles();
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create(['is_admin' => true]);
     $this->actingAs($this->user);
 });
 
@@ -141,7 +141,7 @@ test('displays priority, effort, and start date in pink section', function () {
     $project = Project::factory()->create();
 
     $project->scheduling->update([
-        'priority' => 'High',
+        'priority' => \App\Enums\Priority::PRIORITY_2->value,
         'estimated_start_date' => now()->addDays(10),
     ]);
 
@@ -150,7 +150,7 @@ test('displays priority, effort, and start date in pink section', function () {
     ]);
 
     livewire(ChangeOnAPage::class, ['project' => $project])
-        ->assertSee('High')
+        ->assertSee('Priority 2')
         ->assertSee('Large')
         ->assertSee(now()->addDays(10)->format('d/m/Y'));
 });
@@ -258,7 +258,7 @@ test('shows all stage data correctly in comprehensive view', function () {
 
     // Scheduling stage
     $project->scheduling->update([
-        'priority' => 'Critical',
+        'priority' => \App\Enums\Priority::PRIORITY_1->value,
         'assigned_to' => $technicalOwner->id,
         'estimated_start_date' => now()->addDays(7),
         'estimated_completion_date' => now()->addDays(45),
@@ -281,7 +281,7 @@ test('shows all stage data correctly in comprehensive view', function () {
         // Purple section
         ->assertSee('Approved for progression to next stage')
         // Pink section
-        ->assertSee('Critical')
+        ->assertSee('Priority 1')
         ->assertSee('X-Large')
         ->assertSee(now()->addDays(7)->format('d/m/Y'))
         // Gray section

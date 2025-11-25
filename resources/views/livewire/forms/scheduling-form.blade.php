@@ -15,9 +15,9 @@
             disabled /> --}}
         <flux:select label="Priority" wire:model="schedulingForm.priority">
             <flux:select.option value="">– Select –</flux:select.option>
-            @foreach ($schedulingForm->availablePriorities as $id => $label)
-                <flux:select.option value="{{ $id }}">
-                    {{ $label }}
+            @foreach (\App\Enums\Priority::cases() as $priority)
+                <flux:select.option value="{{ $priority->value }}">
+                    {{ $priority->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Priority;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,7 +27,7 @@ class SchedulingFactory extends Factory
             'estimated_completion_date' => fake()->dateTimeBetween('+3 months', '+1 year'),
             'change_board_date' => fake()->dateTimeBetween('now', '+1 month'),
             'assigned_to' => User::factory(),
-            'priority' => fake()->randomElement(['low', 'medium', 'high', 'critical']),
+            'priority' => fake()->randomElement(Priority::cases())->value,
             'team_assignment' => fake()->words(3, true),
         ];
     }

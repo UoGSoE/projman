@@ -248,7 +248,7 @@ describe('Scheduling Heatmap Integration', function () {
             ->set('schedulingForm.estimatedStartDate', now()->addDays(5)->format('Y-m-d'))
             ->set('schedulingForm.estimatedCompletionDate', now()->addDays(15)->format('Y-m-d'))
             ->set('schedulingForm.changeBoardDate', now()->addDays(3)->format('Y-m-d'))
-            ->set('schedulingForm.priority', 'high')
+            ->set('schedulingForm.priority', \App\Enums\Priority::PRIORITY_2->value)
             ->set('schedulingForm.assignedTo', $joeBlogs->id)
             ->set('schedulingForm.coseItStaff', [$jennySmith->id])
             ->call('save', 'scheduling');

@@ -32,7 +32,7 @@ describe('Skill Matching', function () {
         // dd($user5->hasSkill($skill3->id));
 
         $project = Project::factory()->create();
-        $project->scoping->skills_required = [1, 3];
+        $project->scoping->skills_required = [$skill1->id, $skill3->id];
 
         $requiredSkillIds = [3, 2];
 

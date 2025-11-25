@@ -13,12 +13,6 @@ class ScopingForm extends Form
 {
     public ?Project $project = null;
 
-    public array $availableSkills = [
-        'one' => 'Skill',
-        'two' => 'Another Skill',
-        'three' => 'Third Skill',
-    ];
-
     #[Validate('required|integer|exists:users,id')]
     public ?int $assessedBy;
 
@@ -53,6 +47,7 @@ class ScopingForm extends Form
             'outOfScope' => 'required|string|max:2048',
             'assumptions' => 'required|string|max:2048',
             'skillsRequired' => 'required|array|min:1',
+            'skillsRequired.*' => 'exists:skills,id',
             'requiresSoftwareDev' => 'boolean',
         ];
     }

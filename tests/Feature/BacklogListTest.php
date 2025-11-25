@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->setupBaseNotificationRoles();
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create(['is_admin' => true]);
     $this->actingAs($this->user);
 });
 

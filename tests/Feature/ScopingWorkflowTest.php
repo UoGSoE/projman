@@ -5,6 +5,7 @@ use App\Events\ScopingSubmitted;
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
 use App\Models\Role;
+use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -18,6 +19,10 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
     beforeEach(function () {
         // Fake notifications for this test suite (doesn't test notification behavior)
         $this->fakeNotifications();
+
+        // Create some skills for testing
+        $this->skill1 = Skill::factory()->create(['name' => 'PHP']);
+        $this->skill2 = Skill::factory()->create(['name' => 'Laravel']);
     });
 
     it('saves effort scale enum correctly', function () {
@@ -34,7 +39,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             ->set('scopingForm.inScope', 'Build new feature')
             ->set('scopingForm.outOfScope', 'Legacy system migration')
             ->set('scopingForm.assumptions', 'Team available full-time')
-            ->set('scopingForm.skillsRequired', [1, 2])
+            ->set('scopingForm.skillsRequired', [$this->skill1->id, $this->skill2->id])
             ->call('save', 'scoping')
             ->assertHasNoErrors();
 
@@ -57,7 +62,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             ->set('scopingForm.inScope', 'Build new feature')
             ->set('scopingForm.outOfScope', 'Legacy system migration')
             ->set('scopingForm.assumptions', 'Team available full-time')
-            ->set('scopingForm.skillsRequired', [1, 2])
+            ->set('scopingForm.skillsRequired', [$this->skill1->id])
             ->call('submitScoping')
             ->assertHasErrors('scopingForm.estimatedEffort');
     });
@@ -73,7 +78,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             'in_scope' => 'Feature A',
             'out_of_scope' => 'Feature B',
             'assumptions' => 'None',
-            'skills_required' => [1],
+            'skills_required' => [$this->skill1->id],
         ]);
         $this->actingAs($user);
 
@@ -98,7 +103,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             'in_scope' => 'Feature',
             'out_of_scope' => 'None',
             'assumptions' => 'None',
-            'skills_required' => [1],
+            'skills_required' => [$this->skill1->id],
         ]);
         $this->actingAs($user);
 
@@ -128,7 +133,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             'in_scope' => 'Feature',
             'out_of_scope' => 'None',
             'assumptions' => 'None',
-            'skills_required' => [1],
+            'skills_required' => [$this->skill1->id],
         ]);
         $this->actingAs($user);
 
@@ -152,7 +157,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             'in_scope' => 'Feature',
             'out_of_scope' => 'None',
             'assumptions' => 'None',
-            'skills_required' => [1],
+            'skills_required' => [$this->skill1->id],
         ]);
         $historyCountBefore = $project->history()->count();
         $this->actingAs($user);
@@ -181,7 +186,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             'in_scope' => 'Feature',
             'out_of_scope' => 'None',
             'assumptions' => 'None',
-            'skills_required' => [1],
+            'skills_required' => [$this->skill1->id],
         ]);
         $otherProject = Project::factory()->create();
         $historyCountOther = $otherProject->history()->count();

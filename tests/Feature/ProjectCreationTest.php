@@ -1,9 +1,11 @@
 <?php
 
 use App\Enums\EffortScale;
+use App\Enums\Priority;
 use App\Livewire\ProjectCreator;
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
+use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -49,6 +51,10 @@ describe('Project Editing', function () {
     beforeEach(function () {
         // Fake notifications for this test suite (doesn't test notification behavior)
         $this->fakeNotifications();
+
+        // Create test skills
+        $this->skill1 = Skill::factory()->create(['name' => 'PHP']);
+        $this->skill2 = Skill::factory()->create(['name' => 'Laravel']);
 
         // Create a test admin user
         $this->user = User::factory()->create(['is_admin' => true]);
@@ -191,7 +197,7 @@ describe('Project Editing', function () {
                 ->set('scopingForm.inScope', 'Test In Scope')
                 ->set('scopingForm.outOfScope', 'Test Out of Scope')
                 ->set('scopingForm.assumptions', 'Test Assumptions')
-                ->set('scopingForm.skillsRequired', ['one'])
+                ->set('scopingForm.skillsRequired', [$this->skill1->id])
                 ->call('save', 'scoping')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -200,7 +206,7 @@ describe('Project Editing', function () {
             expect($this->project->scoping->in_scope)->toBe('Test In Scope');
             expect($this->project->scoping->out_of_scope)->toBe('Test Out of Scope');
             expect($this->project->scoping->assumptions)->toBe('Test Assumptions');
-            expect($this->project->scoping->skills_required)->toBe(['one']);
+            expect($this->project->scoping->skills_required)->toBe([$this->skill1->id]);
         });
 
         it('validates required fields for scoping form', function () {
@@ -229,7 +235,7 @@ describe('Project Editing', function () {
                 ->set('schedulingForm.estimatedCompletionDate', $dayAfterTomorrow)
                 ->set('schedulingForm.changeBoardDate', $tomorrow)
                 ->set('schedulingForm.assignedTo', $this->testLead->id)
-                ->set('schedulingForm.priority', 'high')
+                ->set('schedulingForm.priority', Priority::PRIORITY_2->value)
                 ->call('save', 'scheduling')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -239,7 +245,7 @@ describe('Project Editing', function () {
             expect($this->project->scheduling->estimated_completion_date->format('Y-m-d'))->toBe($dayAfterTomorrow);
             expect($this->project->scheduling->change_board_date->format('Y-m-d'))->toBe($tomorrow);
             expect($this->project->scheduling->assigned_to)->toBe($this->testLead->id);
-            expect($this->project->scheduling->priority)->toBe('high');
+            expect($this->project->scheduling->priority)->toBe(Priority::PRIORITY_2);
         });
 
         it('validates required fields for scheduling form', function () {

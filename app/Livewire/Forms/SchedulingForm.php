@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Enums\ChangeBoardOutcome;
+use App\Enums\Priority;
 use App\Models\Project;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +19,6 @@ class SchedulingForm extends Form
         '1' => 'Jenny',
         '2' => 'John',
         '3' => 'Sarah',
-    ];
-
-    public array $availablePriorities = [
-        'low' => 'Low',
-        'medium' => 'Medium',
-        'high' => 'High',
     ];
 
     public array $availableTeams = [
@@ -47,8 +42,8 @@ class SchedulingForm extends Form
     #[Validate('required|date|after:today')]
     public ?string $changeBoardDate;
 
-    #[Validate('required|string|max:255')]
-    public ?string $priority;
+    #[Validate]
+    public ?Priority $priority = null;
 
     #[Validate('required|integer|exists:users,id')]
     public ?int $assignedTo = null;
@@ -75,6 +70,7 @@ class SchedulingForm extends Form
     {
         return [
             'changeBoardOutcome' => ['nullable', Rule::enum(ChangeBoardOutcome::class)],
+            'priority' => ['required', Rule::enum(Priority::class)],
         ];
     }
 
@@ -110,7 +106,7 @@ class SchedulingForm extends Form
             'technical_lead_id' => $this->technicalLeadId,
             'change_champion_id' => $this->changeChampionId,
             'change_board_outcome' => $this->changeBoardOutcome?->value,
-            'priority' => $this->priority,
+            'priority' => $this->priority?->value,
             // 'team_assignment' => $this->teamAssignment,
         ]);
     }

@@ -60,7 +60,7 @@
         <div class="grid grid-cols-3 gap-6">
             <div>
                 <flux:heading size="sm" class="mb-2">Priority</flux:heading>
-                <flux:text>{{ $project->scheduling?->priority ?? 'Not set' }}</flux:text>
+                <flux:text>{{ $project->scheduling?->priority?->label() ?? 'Not set' }}</flux:text>
             </div>
             <div>
                 <flux:heading size="sm" class="mb-2">Estimated Effort</flux:heading>

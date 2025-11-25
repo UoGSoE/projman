@@ -57,14 +57,6 @@ class ProjectEditor extends Component
 
     public ?string $projectName = null;
 
-    public $skills = [
-        'one' => 'Skill',
-    ];
-
-    public $users = [
-        '1' => 'Jenny',
-    ];
-
     public Collection $availableSkills;
 
     public bool $showHeatmap = false;

@@ -2,6 +2,7 @@
 
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
+use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -12,6 +13,10 @@ uses(RefreshDatabase::class);
 describe('Software Development vs Build Toggle', function () {
     beforeEach(function () {
         $this->fakeNotifications();
+
+        // Create test skills
+        $this->skill1 = Skill::factory()->create(['name' => 'PHP']);
+        $this->skill2 = Skill::factory()->create(['name' => 'Laravel']);
 
         $this->user = User::factory()->create(['is_admin' => true]);
         $this->actingAs($this->user);
@@ -24,7 +29,7 @@ describe('Software Development vs Build Toggle', function () {
                 'in_scope' => 'Test scope',
                 'out_of_scope' => 'Out of scope',
                 'assumptions' => 'Test assumptions',
-                'skills_required' => [1, 2],
+                'skills_required' => [$this->skill1->id, $this->skill2->id],
             ]);
         };
     });

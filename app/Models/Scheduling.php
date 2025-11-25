@@ -40,6 +40,7 @@ class Scheduling extends Model
         'change_board_date' => 'date',
         'cose_it_staff' => 'array',
         'change_board_outcome' => \App\Enums\ChangeBoardOutcome::class,
+        'priority' => \App\Enums\Priority::class,
         'fields_locked' => 'boolean',
         'submitted_to_dcgg_at' => 'datetime',
         'scheduled_at' => 'datetime',
