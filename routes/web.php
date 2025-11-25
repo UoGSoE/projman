@@ -12,9 +12,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/project/{project}/edit', \App\Livewire\ProjectEditor::class)->name('project.edit');
     Route::get('/staff/heatmap', \App\Livewire\HeatMapViewer::class)->name('project.heatmap');
 
-    Route::get('/portfolio/backlog', \App\Livewire\BacklogList::class)->name('portfolio.backlog');
-    Route::get('/portfolio/change-on-a-page/{project}', \App\Livewire\ChangeOnAPage::class)->name('portfolio.change-on-a-page');
-    Route::get('/portfolio/roadmap', \App\Livewire\RoadmapView::class)->name('portfolio.roadmap');
 
     Route::get('/profile', \App\Livewire\Profile::class)->name('profile');
 
@@ -23,5 +20,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/roles', \App\Livewire\RolesList::class)->name('roles.list');
         Route::get('/skills', \App\Livewire\SkillsManager::class)->name('skills.manage');
         Route::get('/user/{user}', \App\Livewire\UserViewer::class)->name('user.show');
+        Route::get('/portfolio/backlog', \App\Livewire\BacklogList::class)->name('portfolio.backlog');
+        Route::get('/portfolio/change-on-a-page/{project}', \App\Livewire\ChangeOnAPage::class)->name('portfolio.change-on-a-page');
+        Route::get('/portfolio/roadmap', \App\Livewire\RoadmapView::class)->name('portfolio.roadmap');
     });
 });
