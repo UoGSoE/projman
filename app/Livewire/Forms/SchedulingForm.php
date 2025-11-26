@@ -78,7 +78,6 @@ class SchedulingForm extends Form
     {
         $this->project = $project;
         $this->keySkills = $project->scheduling->key_skills;
-        // dd($project->scheduling->cose_it_staff);
         $this->coseItStaff = $project->scheduling->cose_it_staff ?? [];
         $this->estimatedStartDate = $project->scheduling->estimated_start_date?->format('Y-m-d');
         $this->estimatedCompletionDate = $project->scheduling->estimated_completion_date?->format('Y-m-d');
@@ -91,7 +90,6 @@ class SchedulingForm extends Form
         $this->submittedToDcggAt = $project->scheduling->submitted_to_dcgg_at;
         $this->submittedToDcggBy = $project->scheduling->submitted_to_dcgg_by;
         $this->scheduledAt = $project->scheduling->scheduled_at;
-        // $this->teamAssignment = $project->scheduling->team_assignment;
     }
 
     public function save()
