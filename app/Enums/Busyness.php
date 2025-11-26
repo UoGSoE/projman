@@ -28,4 +28,19 @@ enum Busyness: int
             default => 'bg-red-500',
         };
     }
+
+    /**
+     * Calculate busyness level from active project count.
+     *
+     * Thresholds: 0=UNKNOWN, 1-2=LOW, 3-4=MEDIUM, 5+=HIGH
+     */
+    public static function fromProjectCount(int $count): self
+    {
+        return match (true) {
+            $count >= 5 => self::HIGH,
+            $count >= 3 => self::MEDIUM,
+            $count >= 1 => self::LOW,
+            default => self::UNKNOWN,
+        };
+    }
 }

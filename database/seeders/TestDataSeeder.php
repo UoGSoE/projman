@@ -257,7 +257,7 @@ class TestDataSeeder extends Seeder
                     $attributes['estimated_start_date'] = Carbon::now()->addDays($startOffset);
                     $attributes['estimated_completion_date'] = Carbon::now()->addDays($startOffset + $duration);
                     $attributes['change_board_date'] = Carbon::now()->addDays(random_int(15, 45));
-                    $attributes['priority'] = $faker->randomElement(['low', 'medium', 'high', 'critical']);
+                    $attributes['priority'] = $faker->randomElement(\App\Enums\Priority::cases())->value;
                     $attributes['team_assignment'] = $faker->words(2, true);
                     break;
                 case ProjectStatus::DETAILED_DESIGN:
@@ -445,7 +445,7 @@ class TestDataSeeder extends Seeder
                     'estimated_start_date' => $start,
                     'estimated_completion_date' => $completion,
                     'change_board_date' => Carbon::now()->addDays(random_int(5, 25)),
-                    'priority' => $faker->randomElement(['low', 'medium', 'high', 'critical']),
+                    'priority' => $faker->randomElement(\App\Enums\Priority::cases())->value,
                     'team_assignment' => $faker->words(2, true),
                 ];
             },

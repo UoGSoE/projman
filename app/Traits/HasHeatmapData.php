@@ -12,13 +12,25 @@ trait HasHeatmapData
 {
     /**
      * Determine the busyness enum for the given user/day index.
+     *
+     * If adjustment is non-zero, calculates projected busyness from actual
+     * project count plus adjustment (for live preview of staff changes).
      */
-    public function busynessForDay(User $user, int $dayIndex): Busyness
+    public function busynessForDay(User $user, int $dayIndex, int $adjustment = 0): Busyness
     {
-        return match (intdiv($dayIndex, 5)) {
-            0 => $user->busyness_week_1 ?? Busyness::UNKNOWN,
-            default => $user->busyness_week_2 ?? Busyness::UNKNOWN,
-        };
+        // Fast path: no adjustment, return stored value
+        if ($adjustment === 0) {
+            return match (intdiv($dayIndex, 5)) {
+                0 => $user->busyness_week_1 ?? Busyness::UNKNOWN,
+                default => $user->busyness_week_2 ?? Busyness::UNKNOWN,
+            };
+        }
+
+        // With adjustment: calculate from actual project count
+        $baseCount = $user->activeAssignedProjectCount();
+        $adjustedCount = max(0, $baseCount + $adjustment);
+
+        return Busyness::fromProjectCount($adjustedCount);
     }
 
     /**
@@ -49,8 +61,10 @@ trait HasHeatmapData
 
     /**
      * Staff members represented in the heatmap with per-day busyness.
+     *
+     * @param  array  $busynessAdjustments  Array of user_id => adjustment for live preview
      */
-    protected function staffWithBusyness(array $days, ?array $assignedUserIds = null): Collection
+    protected function staffWithBusyness(array $days, ?array $assignedUserIds = null, array $busynessAdjustments = []): Collection
     {
         $staff = User::query()
             ->where('is_staff', true)
@@ -65,10 +79,12 @@ trait HasHeatmapData
 
         $dayCount = count($days);
 
-        return $staff->map(function (User $user) use ($dayCount) {
+        return $staff->map(function (User $user) use ($dayCount, $busynessAdjustments) {
+            $adjustment = $busynessAdjustments[$user->id] ?? 0;
+
             return [
                 'user' => $user,
-                'busyness' => $this->busynessSeries($user, $dayCount),
+                'busyness' => $this->busynessSeries($user, $dayCount, $adjustment),
             ];
         });
     }
@@ -112,9 +128,12 @@ trait HasHeatmapData
      *
      * @return array<int, Busyness>
      */
-    protected function busynessSeries(User $user, int $dayCount): array
+    protected function busynessSeries(User $user, int $dayCount, int $adjustment = 0): array
     {
-        return array_map(fn ($index) => $this->busynessForDay($user, $index), range(0, $dayCount - 1));
+        return array_map(
+            fn ($index) => $this->busynessForDay($user, $index, $adjustment),
+            range(0, $dayCount - 1)
+        );
     }
 
     /**

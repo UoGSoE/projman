@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Busyness;
+use App\Enums\ProjectStatus;
 use App\Enums\ServiceFunction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -198,5 +199,27 @@ class User extends Authenticatable
     public function setBusynessWeek2Attribute($value): void
     {
         $this->attributes['busyness_week_2'] = $value instanceof Busyness ? $value->value : $value;
+    }
+
+    /**
+     * Count active projects this user is assigned to work on.
+     *
+     * Checks all assignment fields: assigned_to, technical_lead_id,
+     * change_champion_id, and cose_it_staff JSON array.
+     */
+    public function activeAssignedProjectCount(): int
+    {
+        return Project::query()
+            ->whereNotIn('status', [
+                ProjectStatus::COMPLETED->value,
+                ProjectStatus::CANCELLED->value,
+            ])
+            ->whereHas('scheduling', function ($query) {
+                $query->where('assigned_to', $this->id)
+                    ->orWhere('technical_lead_id', $this->id)
+                    ->orWhere('change_champion_id', $this->id)
+                    ->orWhereJsonContains('cose_it_staff', $this->id);
+            })
+            ->count();
     }
 }

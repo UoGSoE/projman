@@ -37,7 +37,7 @@
 
     {{-- Technical Lead / Change Champion / Board Outcome --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <flux:select label="Technical Lead" wire:model="schedulingForm.technicalLeadId" data-test="technical-lead-select">
+        <flux:select label="Technical Lead" wire:model.live="schedulingForm.technicalLeadId" data-test="technical-lead-select">
             <flux:select.option value="">– Select –</flux:select.option>
             @foreach ($this->availableUsers as $user)
                 <flux:select.option value="{{ $user->id }}">
@@ -46,7 +46,7 @@
             @endforeach
         </flux:select>
 
-        <flux:select label="Change Champion" wire:model="schedulingForm.changeChampionId" data-test="change-champion-select">
+        <flux:select label="Change Champion" wire:model.live="schedulingForm.changeChampionId" data-test="change-champion-select">
             <flux:select.option value="">– Select –</flux:select.option>
             @foreach ($this->availableUsers as $user)
                 <flux:select.option value="{{ $user->id }}">
@@ -67,7 +67,7 @@
 
     {{-- Assigned To / Priority --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <flux:select label="Assigned To (Skill Score)" wire:model="schedulingForm.assignedTo">
+        <flux:select label="Assigned To (Skill Score)" wire:model.live="schedulingForm.assignedTo">
             {{--  TODO: this should allow for multiple users --}}
             @if ($this->skillMatchedUsers->isNotEmpty())
                 @php

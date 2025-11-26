@@ -61,6 +61,8 @@ class ProjectEditor extends Component
 
     public bool $showHeatmap = false;
 
+    public array $originalAssignedStaffIds = [];
+
     public function mount(Project $project)
     {
         $project->load([
@@ -84,6 +86,9 @@ class ProjectEditor extends Component
         }
 
         $this->availableSkills = Skill::orderBy('name')->get();
+
+        // Store original staff IDs for live busyness preview comparison
+        $this->originalAssignedStaffIds = $this->collectSavedStaffIds();
 
         // Update the CoSE IT staff field with skill-matched users
         // $this->updateCoseItStaffField();
@@ -198,7 +203,10 @@ class ProjectEditor extends Component
         // Collect assigned user IDs from scheduling form
         $assignedUserIds = $this->getAssignedStaffIds();
 
-        $staff = $this->staffWithBusyness($days, $assignedUserIds);
+        // Calculate busyness adjustments for live preview
+        $adjustments = $this->calculateBusynessAdjustments();
+
+        $staff = $this->staffWithBusyness($days, $assignedUserIds, $adjustments);
         $projects = $this->activeProjects();
 
         return [
@@ -222,6 +230,56 @@ class ProjectEditor extends Component
             ->unique()
             ->values()
             ->all();
+    }
+
+    /**
+     * Collect staff IDs from the saved scheduling record.
+     */
+    protected function collectSavedStaffIds(): array
+    {
+        if (! $this->project->scheduling) {
+            return [];
+        }
+
+        return collect([
+            $this->project->scheduling->assigned_to,
+            $this->project->scheduling->technical_lead_id,
+            $this->project->scheduling->change_champion_id,
+        ])
+            ->merge($this->project->scheduling->cose_it_staff ?? [])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Calculate busyness adjustments for live preview.
+     *
+     * Returns array of user_id => adjustment (+1 for newly selected, -1 for deselected).
+     */
+    protected function calculateBusynessAdjustments(): array
+    {
+        $currentIds = collect($this->getAssignedStaffIds());
+        $originalIds = collect($this->originalAssignedStaffIds);
+
+        // Newly selected (not in original): +1
+        $newlySelected = $currentIds->diff($originalIds)->values();
+
+        // Deselected (was in original, not in current): -1
+        $deselected = $originalIds->diff($currentIds)->values();
+
+        $adjustments = [];
+
+        foreach ($newlySelected as $userId) {
+            $adjustments[$userId] = 1;
+        }
+
+        foreach ($deselected as $userId) {
+            $adjustments[$userId] = -1;
+        }
+
+        return $adjustments;
     }
 
     #[Computed]
