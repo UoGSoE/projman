@@ -43,4 +43,29 @@ enum Busyness: int
             default => self::UNKNOWN,
         };
     }
+
+    /**
+     * Shift busyness level by the given adjustment.
+     *
+     * Positive adjustment increases busyness (toward HIGH).
+     * Negative adjustment decreases busyness (toward LOW).
+     * If UNKNOWN and adding to a project, shows LOW (they now have work).
+     */
+    public function adjustedBy(int $adjustment): self
+    {
+        if ($this === self::UNKNOWN) {
+            return $adjustment > 0 ? self::LOW : self::UNKNOWN;
+        }
+
+        $levels = [self::LOW, self::MEDIUM, self::HIGH];
+        $currentIndex = array_search($this, $levels, true);
+
+        if ($currentIndex === false) {
+            return $this;
+        }
+
+        $newIndex = max(0, min(count($levels) - 1, $currentIndex + $adjustment));
+
+        return $levels[$newIndex];
+    }
 }

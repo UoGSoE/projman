@@ -13,24 +13,21 @@ trait HasHeatmapData
     /**
      * Determine the busyness enum for the given user/day index.
      *
-     * If adjustment is non-zero, calculates projected busyness from actual
-     * project count plus adjustment (for live preview of staff changes).
+     * If adjustment is non-zero, shifts the stored busyness level
+     * (for live preview of staff assignment changes).
      */
     public function busynessForDay(User $user, int $dayIndex, int $adjustment = 0): Busyness
     {
-        // Fast path: no adjustment, return stored value
+        $baseBusyness = match (intdiv($dayIndex, 5)) {
+            0 => $user->busyness_week_1 ?? Busyness::UNKNOWN,
+            default => $user->busyness_week_2 ?? Busyness::UNKNOWN,
+        };
+
         if ($adjustment === 0) {
-            return match (intdiv($dayIndex, 5)) {
-                0 => $user->busyness_week_1 ?? Busyness::UNKNOWN,
-                default => $user->busyness_week_2 ?? Busyness::UNKNOWN,
-            };
+            return $baseBusyness;
         }
 
-        // With adjustment: calculate from actual project count
-        $baseCount = $user->activeAssignedProjectCount();
-        $adjustedCount = max(0, $baseCount + $adjustment);
-
-        return Busyness::fromProjectCount($adjustedCount);
+        return $baseBusyness->adjustedBy($adjustment);
     }
 
     /**

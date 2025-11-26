@@ -4,7 +4,6 @@ use App\Enums\Busyness;
 use App\Enums\ProjectStatus;
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
-use App\Models\Scheduling;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -36,6 +35,45 @@ describe('Busyness::fromProjectCount()', function () {
         expect(Busyness::fromProjectCount(5))->toBe(Busyness::HIGH);
         expect(Busyness::fromProjectCount(10))->toBe(Busyness::HIGH);
         expect(Busyness::fromProjectCount(100))->toBe(Busyness::HIGH);
+    });
+});
+
+describe('Busyness::adjustedBy()', function () {
+    it('increases LOW to MEDIUM with +1', function () {
+        expect(Busyness::LOW->adjustedBy(1))->toBe(Busyness::MEDIUM);
+    });
+
+    it('increases MEDIUM to HIGH with +1', function () {
+        expect(Busyness::MEDIUM->adjustedBy(1))->toBe(Busyness::HIGH);
+    });
+
+    it('keeps HIGH at HIGH with +1 (cannot exceed)', function () {
+        expect(Busyness::HIGH->adjustedBy(1))->toBe(Busyness::HIGH);
+    });
+
+    it('decreases HIGH to MEDIUM with -1', function () {
+        expect(Busyness::HIGH->adjustedBy(-1))->toBe(Busyness::MEDIUM);
+    });
+
+    it('decreases MEDIUM to LOW with -1', function () {
+        expect(Busyness::MEDIUM->adjustedBy(-1))->toBe(Busyness::LOW);
+    });
+
+    it('keeps LOW at LOW with -1 (cannot go below)', function () {
+        expect(Busyness::LOW->adjustedBy(-1))->toBe(Busyness::LOW);
+    });
+
+    it('returns LOW when UNKNOWN gets +1 (now has work)', function () {
+        expect(Busyness::UNKNOWN->adjustedBy(1))->toBe(Busyness::LOW);
+    });
+
+    it('keeps UNKNOWN as UNKNOWN with -1', function () {
+        expect(Busyness::UNKNOWN->adjustedBy(-1))->toBe(Busyness::UNKNOWN);
+    });
+
+    it('handles larger adjustments correctly', function () {
+        expect(Busyness::LOW->adjustedBy(2))->toBe(Busyness::HIGH);
+        expect(Busyness::HIGH->adjustedBy(-2))->toBe(Busyness::LOW);
     });
 });
 
@@ -159,13 +197,11 @@ describe('ProjectEditor busyness adjustments', function () {
     });
 
     it('calculates -1 adjustment for deselected staff', function () {
-        $staffMember = User::factory()->create(['is_staff' => true]);
-
-        // Assign staff to 3 projects so they're at MEDIUM
-        for ($i = 0; $i < 3; $i++) {
-            $otherProject = Project::factory()->create(['status' => ProjectStatus::DEVELOPMENT]);
-            $otherProject->scheduling->update(['assigned_to' => $staffMember->id]);
-        }
+        $staffMember = User::factory()->create([
+            'is_staff' => true,
+            'busyness_week_1' => Busyness::HIGH,
+            'busyness_week_2' => Busyness::HIGH,
+        ]);
 
         // Create project with this staff member assigned
         $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
@@ -184,9 +220,7 @@ describe('ProjectEditor busyness adjustments', function () {
         $heatmapData = $component->get('heatmapData');
         $staffEntry = collect($heatmapData['staff'])->firstWhere('user.id', $staffMember->id);
 
-        // They have 4 projects (3 others + this one) - 1 = 3 projects = MEDIUM
-        // Wait, actually if we deselect them from THIS project, they still have 3 other projects
-        // So 3 projects = MEDIUM
+        // HIGH - 1 adjustment = MEDIUM
         expect($staffEntry['busyness'][0])->toBe(Busyness::MEDIUM);
     });
 

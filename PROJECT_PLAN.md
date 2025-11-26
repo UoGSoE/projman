@@ -156,6 +156,7 @@ These principles guide all development decisions and prioritization:
 - Blade partial `components/heatmap-table.blade.php`
 - Refactored `HeatMapViewer` from 171 lines to 24 lines
 - Smart sorting: Assigned staff at top, others alphabetically below
+- **Live busyness preview**: When selecting/deselecting staff in scheduling form, heatmap instantly shows projected busyness (what it WOULD be if saved). Uses `Busyness::adjustedBy()` to shift displayed levels up/down without persisting until Update clicked.
 
 - Testing: 32 tests passing (115 assertions across 3 test files)
 
