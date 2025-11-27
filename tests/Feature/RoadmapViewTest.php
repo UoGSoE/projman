@@ -175,7 +175,7 @@ it('calculates timeline start from earliest project date', function () {
         ->format('Y-m')->toBe(now()->subMonths(3)->format('Y-m'));
 });
 
-it('calculates timeline end from latest project date', function () {
+it('calculates timeline end from latest project date with padding', function () {
     $user = User::factory()->create();
 
     $shortProject = Project::factory()->create(['user_id' => $user->id]);
@@ -192,9 +192,12 @@ it('calculates timeline end from latest project date', function () {
 
     $component = Livewire::test(RoadmapView::class);
 
+    // Timeline end includes 1 week padding after the latest project end date
+    $expectedEnd = now()->addMonths(6)->endOfWeek()->addWeek();
+
     expect($component->instance()->timelineEnd())
         ->toBeInstanceOf(Carbon::class)
-        ->format('Y-m')->toBe(now()->addMonths(6)->format('Y-m'));
+        ->format('Y-m')->toBe($expectedEnd->format('Y-m'));
 });
 
 it('links project bars to change on a page', function () {

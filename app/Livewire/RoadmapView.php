@@ -13,27 +13,30 @@ class RoadmapView extends Component
 {
     public function render()
     {
-        // Cache projects once to prevent duplicate queries
         $allProjects = $this->projects();
         $timelineStart = $this->calculateTimelineStart($allProjects);
         $timelineEnd = $this->calculateTimelineEnd($allProjects);
+        $totalWeeks = $timelineStart && $timelineEnd
+            ? (int) $timelineStart->diffInWeeks($timelineEnd) + 1
+            : 0;
 
         return view('livewire.roadmap-view', [
-            'roadmapData' => $this->prepareRoadmapDataFromCached($allProjects, $timelineStart, $timelineEnd),
-            'monthColumns' => $this->calculateMonthColumns($timelineStart, $timelineEnd),
+            'roadmapData' => $this->prepareRoadmapData($allProjects, $timelineStart, $totalWeeks),
+            'monthSpans' => $this->calculateMonthSpans($timelineStart, $timelineEnd),
+            'totalWeeks' => $totalWeeks,
             'unscheduledProjects' => $this->unscheduledProjects(),
         ]);
     }
 
     /**
-     * Prepare all data needed for the roadmap view using cached data.
-     * Keeps the view clean and simple.
+     * Prepare roadmap data with bin-packed lanes.
      */
-    private function prepareRoadmapDataFromCached(Collection $allProjects, ?Carbon $timelineStart, ?Carbon $timelineEnd): array
+    private function prepareRoadmapData(Collection $allProjects, ?Carbon $timelineStart, int $totalWeeks): array
     {
-        $totalMonths = $this->calculateMonthColumns($timelineStart, $timelineEnd)->count();
+        if (! $timelineStart || $totalWeeks === 0) {
+            return [];
+        }
 
-        // Group projects by service function
         $projectsByFunction = $allProjects
             ->groupBy(fn (Project $project) => $project->user->service_function?->label() ?? 'Unassigned')
             ->sortKeys();
@@ -41,38 +44,97 @@ class RoadmapView extends Component
         $data = [];
 
         foreach ($projectsByFunction as $serviceFunction => $projects) {
-            $verticalPositions = $this->calculateVerticalPositions($projects, $timelineStart);
-            $maxLane = collect($verticalPositions)->max('lane') ?? 0;
-            $rowHeight = ($maxLane + 1) * 50 + 16;
-
-            $projectData = [];
-            foreach ($projects as $project) {
-                $position = $this->calculateProjectPosition($project, $timelineStart);
-                $verticalPos = $verticalPositions[$project->id];
-                $bragStatus = $this->calculateBRAG($project);
-
-                // Add 1% left buffer to prevent visual overlap with sticky column
-                $leftPercent = (($position['start'] - 2) / $totalMonths) * 100 + 0.5;
-                $widthPercent = (($position['end'] - $position['start']) / $totalMonths) * 100 - 0.5;
-
-                $projectData[] = [
-                    'project' => $project,
-                    'top' => $verticalPos['top'],
-                    'left' => $leftPercent,
-                    'width' => $widthPercent,
-                    'colorClasses' => $this->bragColorClasses($bragStatus),
-                ];
-            }
+            // Convert projects to week-slot arrays and pack into lanes
+            $projectSlots = $this->projectsToWeekSlots($projects, $timelineStart, $totalWeeks);
+            $lanes = $this->packIntoLanes($projectSlots, $totalWeeks);
 
             $data[] = [
                 'serviceFunction' => $serviceFunction,
                 'projectCount' => $projects->count(),
-                'rowHeight' => $rowHeight,
-                'projects' => $projectData,
+                'lanes' => $lanes,
             ];
         }
 
         return $data;
+    }
+
+    /**
+     * Convert projects to week-slot data structures.
+     * Each project gets: startWeek, endWeek, span, and metadata for display.
+     */
+    private function projectsToWeekSlots(Collection $projects, Carbon $timelineStart, int $totalWeeks): array
+    {
+        $slots = [];
+
+        // Sort by start date for better packing
+        $sorted = $projects->sortBy(fn ($p) => $p->scheduling->estimated_start_date);
+
+        foreach ($sorted as $project) {
+            $startDate = $project->scheduling->estimated_start_date;
+            $endDate = $project->scheduling->estimated_completion_date;
+
+            $startWeek = max(0, (int) $timelineStart->diffInWeeks($startDate));
+            $endWeek = min($totalWeeks - 1, max(0, (int) $timelineStart->diffInWeeks($endDate)));
+            $span = max(1, $endWeek - $startWeek + 1);
+
+            $bragStatus = $this->calculateBRAG($project);
+
+            $slots[] = [
+                'project' => $project,
+                'startWeek' => $startWeek,
+                'endWeek' => $endWeek,
+                'span' => $span,
+                'colorClasses' => $this->bragColorClasses($bragStatus),
+                // Week occupancy array for collision detection
+                'weeks' => range($startWeek, $endWeek),
+            ];
+        }
+
+        return $slots;
+    }
+
+    /**
+     * Pack project slots into lanes using greedy bin-packing.
+     * Each lane contains non-overlapping projects.
+     */
+    private function packIntoLanes(array $projectSlots, int $totalWeeks): array
+    {
+        $lanes = [];
+        $remaining = $projectSlots;
+
+        while (! empty($remaining)) {
+            // Start a new lane with an empty week occupancy array
+            $lane = [];
+            $occupied = array_fill(0, $totalWeeks, false);
+            $stillRemaining = [];
+
+            foreach ($remaining as $slot) {
+                // Check if this project fits in the current lane
+                $fits = true;
+                foreach ($slot['weeks'] as $week) {
+                    if ($occupied[$week]) {
+                        $fits = false;
+                        break;
+                    }
+                }
+
+                if ($fits) {
+                    // Add to this lane and mark weeks as occupied
+                    $lane[] = $slot;
+                    foreach ($slot['weeks'] as $week) {
+                        $occupied[$week] = true;
+                    }
+                } else {
+                    // Doesn't fit, try in next lane
+                    $stillRemaining[] = $slot;
+                }
+            }
+
+            $lanes[] = $lane;
+            $remaining = $stillRemaining;
+        }
+
+        return $lanes;
     }
 
     #[Computed]
@@ -105,46 +167,51 @@ class RoadmapView extends Component
     }
 
     /**
-     * Calculate timeline start from a projects collection (avoids duplicate queries).
+     * Calculate timeline start (1 week before earliest project).
      */
     private function calculateTimelineStart(Collection $projects): ?Carbon
     {
-        $dates = $projects
-            ->pluck('scheduling.estimated_start_date')
-            ->filter();
+        $dates = $projects->pluck('scheduling.estimated_start_date')->filter();
 
-        return $dates->isEmpty() ? null : $dates->min()->startOfMonth();
+        return $dates->isEmpty() ? null : $dates->min()->copy()->startOfWeek();
     }
 
     /**
-     * Calculate timeline end from a projects collection (avoids duplicate queries).
+     * Calculate timeline end (1 week after latest project).
      */
     private function calculateTimelineEnd(Collection $projects): ?Carbon
     {
-        $dates = $projects
-            ->pluck('scheduling.estimated_completion_date')
-            ->filter();
+        $dates = $projects->pluck('scheduling.estimated_completion_date')->filter();
 
-        return $dates->isEmpty() ? null : $dates->max()->endOfMonth();
+        return $dates->isEmpty() ? null : $dates->max()->copy()->endOfWeek()->addWeek();
     }
 
     /**
-     * Calculate month columns from timeline bounds (avoids duplicate queries).
+     * Calculate month spans for headers.
      */
-    private function calculateMonthColumns(?Carbon $timelineStart, ?Carbon $timelineEnd): Collection
+    private function calculateMonthSpans(?Carbon $timelineStart, ?Carbon $timelineEnd): Collection
     {
         if (! $timelineStart || ! $timelineEnd) {
             return collect();
         }
 
         $months = collect();
-        $current = $timelineStart->copy();
+        $current = $timelineStart->copy()->startOfMonth();
 
         while ($current->lte($timelineEnd)) {
+            $monthStart = $current->copy();
+            $monthEnd = $current->copy()->endOfMonth();
+
+            // Calculate weeks this month spans in our timeline
+            $firstWeek = max(0, (int) $timelineStart->diffInWeeks($monthStart->max($timelineStart)));
+            $lastWeek = (int) $timelineStart->diffInWeeks($monthEnd->min($timelineEnd));
+            $span = max(1, $lastWeek - $firstWeek + 1);
+
             $months->push([
-                'date' => $current->copy(),
                 'label' => $current->format('M Y'),
+                'span' => $span,
             ]);
+
             $current->addMonth();
         }
 
@@ -163,109 +230,26 @@ class RoadmapView extends Component
         return $this->calculateTimelineEnd($this->projects());
     }
 
-    #[Computed]
-    public function monthColumns(): Collection
-    {
-        return $this->calculateMonthColumns($this->timelineStart(), $this->timelineEnd());
-    }
-
-    public function calculateProjectPosition(Project $project, ?Carbon $timelineStart = null): array
-    {
-        $timelineStart = $timelineStart ?? $this->timelineStart();
-
-        if (! $timelineStart) {
-            return ['start' => 2, 'end' => 3];
-        }
-
-        $startDate = $project->scheduling->estimated_start_date;
-        $endDate = $project->scheduling->estimated_completion_date;
-
-        // Calculate month offset from timeline start
-        // Carbon v3: diffInMonths() returns signed values - use abs() for correct positioning
-        $startCol = abs($timelineStart->diffInMonths($startDate)) + 2; // +2 for label column
-        $endCol = abs($timelineStart->diffInMonths($endDate)) + 3; // +3 because grid is exclusive
-
-        return [
-            'start' => $startCol,
-            'end' => $endCol,
-        ];
-    }
-
-    /**
-     * Calculate vertical positions for projects to prevent overlap.
-     * Think of it like parking cars - find the first available lane.
-     */
-    public function calculateVerticalPositions(Collection $projects, ?Carbon $timelineStart = null): array
-    {
-        $positions = [];
-        $lanes = []; // Track occupied time ranges per vertical lane
-
-        foreach ($projects as $project) {
-            $startDate = $project->scheduling->estimated_start_date;
-            $endDate = $project->scheduling->estimated_completion_date;
-
-            // Find first available lane (no time overlap)
-            $laneIndex = 0;
-            while (isset($lanes[$laneIndex]) && $this->hasTimeOverlap($startDate, $endDate, $lanes[$laneIndex])) {
-                $laneIndex++;
-            }
-
-            // Reserve this time slot in the lane
-            if (! isset($lanes[$laneIndex])) {
-                $lanes[$laneIndex] = [];
-            }
-            $lanes[$laneIndex][] = ['start' => $startDate, 'end' => $endDate];
-
-            // Store position for this project
-            $positions[$project->id] = [
-                'lane' => $laneIndex,
-                'top' => ($laneIndex * 50) + 8, // 50px per lane, 8px initial offset
-            ];
-        }
-
-        return $positions;
-    }
-
-    /**
-     * Check if a date range overlaps with any existing ranges in a lane.
-     */
-    private function hasTimeOverlap(Carbon $start, Carbon $end, array $occupiedRanges): bool
-    {
-        foreach ($occupiedRanges as $range) {
-            // Overlap if: new start is before existing end AND new end is after existing start
-            if ($start->lte($range['end']) && $end->gte($range['start'])) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public function calculateBRAG(Project $project): string
     {
-        // Black = Completed
         if ($project->status === ProjectStatus::COMPLETED) {
             return 'black';
         }
 
         $completionDate = $project->scheduling?->estimated_completion_date;
 
-        // No date = assume on track (early planning)
         if (! $completionDate) {
             return 'green';
         }
 
-        // Red = Overdue
         if ($completionDate->isPast()) {
             return 'red';
         }
 
-        // Amber = At risk (within 14 days of deadline)
         if (abs($completionDate->diffInDays(now())) < 14) {
             return 'amber';
         }
 
-        // Green = On track
         return 'green';
     }
 
