@@ -33,51 +33,54 @@
             No scheduled projects yet. Projects need start and end dates to appear on the roadmap.
         </flux:callout>
     @else
-        {{-- Timeline Grid --}}
-        <div class="overflow-x-auto">
-            <div class="grid"
-                 style="grid-template-columns: 180px repeat({{ $totalWeeks }}, minmax(20px, 1fr)); min-width: max-content;">
-
+        {{-- Timeline --}}
+        <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-lg">
+            <div style="min-width: max-content;">
                 {{-- Month Headers --}}
-                <div class="sticky left-0 z-20 bg-white dark:bg-zinc-900 border-b-2 border-zinc-200 dark:border-zinc-700 p-2 font-semibold text-sm">
-                    Service Function
-                </div>
-                @foreach($monthSpans as $month)
-                    <div class="border-b-2 border-l border-zinc-200 dark:border-zinc-700 p-2 text-center text-sm font-medium bg-zinc-50 dark:bg-zinc-800"
-                         style="grid-column: span {{ $month['span'] }};">
-                        {{ $month['label'] }}
+                <div class="flex border-b-2 border-zinc-200 dark:border-zinc-700">
+                    <div class="sticky left-0 z-20 w-44 shrink-0 bg-white dark:bg-zinc-900 p-2 font-semibold text-sm">
+                        Service Function
                     </div>
-                @endforeach
+                    <div class="flex flex-1">
+                        @foreach($monthSpans as $month)
+                            <div class="border-l border-zinc-200 dark:border-zinc-700 p-2 text-center text-sm font-medium bg-zinc-50 dark:bg-zinc-800"
+                                 style="flex: {{ $month['span'] }} {{ $month['span'] }} 0;">
+                                {{ $month['label'] }}
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
 
                 {{-- Service Function Rows --}}
                 @foreach($roadmapData as $row)
-                    {{-- Service function label spans all its lanes --}}
-                    <div class="sticky left-0 z-10 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 p-2 font-medium text-sm"
-                         style="grid-row: span {{ count($row['lanes']) }};">
-                        {{ $row['serviceFunction'] }}
-                        <span class="text-xs text-zinc-500 dark:text-zinc-400">({{ $row['projectCount'] }})</span>
-                    </div>
-
-                    {{-- Each lane is a row --}}
-                    @foreach($row['lanes'] as $laneIndex => $lane)
-                        {{-- Lane container spanning all week columns --}}
-                        <div class="relative border-b border-zinc-100 dark:border-zinc-800 h-9"
-                             style="grid-column: 2 / -1;">
-                            {{-- Projects in this lane --}}
-                            <div class="absolute inset-0 grid"
-                                 style="grid-template-columns: repeat({{ $totalWeeks }}, minmax(20px, 1fr));">
-                                @foreach($lane as $slot)
-                                    <a href="{{ route('portfolio.change-on-a-page', $slot['project']) }}"
-                                       wire:navigate
-                                       class="flex items-center rounded mx-0.5 my-0.5 px-2 text-xs shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-hidden {{ $slot['colorClasses'] }}"
-                                       style="grid-column: {{ $slot['startWeek'] + 1 }} / span {{ $slot['span'] }};"
-                                       title="#{{ $slot['project']->id }} - {{ $slot['project']->title }} ({{ $slot['project']->scheduling->estimated_start_date->format('M j') }} → {{ $slot['project']->scheduling->estimated_completion_date->format('M j') }})">
-                                        <span class="truncate">#{{ $slot['project']->id }} {{ Str::limit($slot['project']->title, 30) }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
+                    <div class="flex border-b border-zinc-200 dark:border-zinc-700">
+                        {{-- Service function label --}}
+                        <div class="sticky left-0 z-10 w-44 shrink-0 bg-white dark:bg-zinc-900 p-2 font-medium text-sm border-r border-zinc-100 dark:border-zinc-800">
+                            {{ $row['serviceFunction'] }}
+                            <span class="text-xs text-zinc-500 dark:text-zinc-400">({{ $row['projectCount'] }})</span>
                         </div>
-                    @endforeach
+
+                        {{-- Lanes container --}}
+                        <div class="flex-1">
+                            @foreach($row['lanes'] as $lane)
+                                <div class="relative h-9 border-b border-zinc-50 dark:border-zinc-800 last:border-b-0">
+                                    {{-- Projects grid for this lane --}}
+                                    <div class="absolute inset-0 grid"
+                                         style="grid-template-columns: repeat({{ $totalWeeks }}, minmax(20px, 1fr));">
+                                        @foreach($lane as $slot)
+                                            <a href="{{ route('portfolio.change-on-a-page', $slot['project']) }}"
+                                               wire:navigate
+                                               class="flex items-center rounded mx-0.5 my-0.5 px-2 text-xs shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-hidden {{ $slot['colorClasses'] }}"
+                                               style="grid-column: {{ $slot['startWeek'] + 1 }} / span {{ $slot['span'] }};"
+                                               title="#{{ $slot['project']->id }} - {{ $slot['project']->title }} ({{ $slot['project']->scheduling->estimated_start_date->format('M j') }} → {{ $slot['project']->scheduling->estimated_completion_date->format('M j') }})">
+                                                <span class="truncate">#{{ $slot['project']->id }} {{ Str::limit($slot['project']->title, 30) }}</span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 @endforeach
             </div>
         </div>
