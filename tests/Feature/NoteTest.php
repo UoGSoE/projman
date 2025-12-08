@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\NotesList;
 use App\Livewire\ProjectEditor;
 use App\Models\Build;
 use App\Models\Development;
@@ -82,15 +83,15 @@ describe('Polymorphic Notes', function () {
         });
     });
 
-    describe('Development Notes via Livewire', function () {
-        it('can add a note to development via livewire', function () {
+    describe('NotesList Component', function () {
+        it('can add a note to development via NotesList component', function () {
             $project = Project::factory()->create();
 
             expect($project->development->notes)->toHaveCount(0);
 
-            livewire(ProjectEditor::class, ['project' => $project])
-                ->set('developmentForm.newNote', 'My development progress update')
-                ->call('addDevelopmentNote')
+            livewire(NotesList::class, ['noteable' => $project->development])
+                ->set('newNote', 'My development progress update')
+                ->call('addNote')
                 ->assertHasNoErrors();
 
             $project->refresh();
@@ -99,51 +100,14 @@ describe('Polymorphic Notes', function () {
                 ->and($project->development->notes->first()->user_id)->toBe($this->user->id);
         });
 
-        it('validates note body is required', function () {
-            $project = Project::factory()->create();
-
-            livewire(ProjectEditor::class, ['project' => $project])
-                ->set('developmentForm.newNote', '')
-                ->call('addDevelopmentNote')
-                ->assertHasErrors(['developmentForm.newNote']);
-
-            expect($project->development->notes)->toHaveCount(0);
-        });
-
-        it('clears the note field after adding', function () {
-            $project = Project::factory()->create();
-
-            $component = livewire(ProjectEditor::class, ['project' => $project])
-                ->set('developmentForm.newNote', 'A note')
-                ->call('addDevelopmentNote')
-                ->assertHasNoErrors();
-
-            expect($component->get('developmentForm.newNote'))->toBe('');
-        });
-
-        it('displays notes in the development form', function () {
-            $project = Project::factory()->create();
-            $note = Note::factory()->forDevelopment($project->development)->create([
-                'user_id' => $this->user->id,
-                'body' => 'Existing development note',
-            ]);
-
-            livewire(ProjectEditor::class, ['project' => $project])
-                ->set('tab', 'development')
-                ->assertSee('Existing development note')
-                ->assertSee($this->user->full_name);
-        });
-    });
-
-    describe('Build Notes via Livewire', function () {
-        it('can add a note to build via livewire', function () {
+        it('can add a note to build via NotesList component', function () {
             $project = Project::factory()->create();
 
             expect($project->build->notes)->toHaveCount(0);
 
-            livewire(ProjectEditor::class, ['project' => $project])
-                ->set('buildForm.newNote', 'My build progress update')
-                ->call('addBuildNote')
+            livewire(NotesList::class, ['noteable' => $project->build])
+                ->set('newNote', 'My build progress update')
+                ->call('addNote')
                 ->assertHasNoErrors();
 
             $project->refresh();
@@ -152,39 +116,53 @@ describe('Polymorphic Notes', function () {
                 ->and($project->build->notes->first()->user_id)->toBe($this->user->id);
         });
 
-        it('validates build note body is required', function () {
+        it('validates note body is required', function () {
             $project = Project::factory()->create();
 
-            livewire(ProjectEditor::class, ['project' => $project])
-                ->set('buildForm.newNote', '')
-                ->call('addBuildNote')
-                ->assertHasErrors(['buildForm.newNote']);
+            livewire(NotesList::class, ['noteable' => $project->development])
+                ->set('newNote', '')
+                ->call('addNote')
+                ->assertHasErrors(['newNote']);
 
-            expect($project->build->notes)->toHaveCount(0);
+            expect($project->development->notes)->toHaveCount(0);
         });
 
-        it('clears the build note field after adding', function () {
+        it('clears the note field after adding', function () {
             $project = Project::factory()->create();
 
-            $component = livewire(ProjectEditor::class, ['project' => $project])
-                ->set('buildForm.newNote', 'A build note')
-                ->call('addBuildNote')
+            $component = livewire(NotesList::class, ['noteable' => $project->development])
+                ->set('newNote', 'A note')
+                ->call('addNote')
                 ->assertHasNoErrors();
 
-            expect($component->get('buildForm.newNote'))->toBe('');
+            expect($component->get('newNote'))->toBe('');
         });
 
-        it('displays notes in the build form', function () {
+        it('displays existing notes', function () {
             $project = Project::factory()->create();
-            $note = Note::factory()->forBuild($project->build)->create([
+            Note::factory()->forDevelopment($project->development)->create([
                 'user_id' => $this->user->id,
-                'body' => 'Existing build note',
+                'body' => 'Existing development note',
             ]);
+            $project->development->load('notes.user');
 
-            livewire(ProjectEditor::class, ['project' => $project])
-                ->set('tab', 'build')
-                ->assertSee('Existing build note')
+            livewire(NotesList::class, ['noteable' => $project->development])
+                ->assertSee('Existing development note')
                 ->assertSee($this->user->full_name);
+        });
+
+        it('displays Progress Notes heading', function () {
+            $project = Project::factory()->create();
+
+            livewire(NotesList::class, ['noteable' => $project->development])
+                ->assertSee('Progress Notes');
+        });
+
+        it('shows empty state when no notes exist', function () {
+            $project = Project::factory()->create();
+
+            livewire(NotesList::class, ['noteable' => $project->development])
+                ->assertSee('No notes yet.');
         });
     });
 
@@ -216,30 +194,6 @@ describe('Polymorphic Notes', function () {
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'build')
                 ->assertSee('Build Requirements');
-        });
-    });
-
-    describe('Notes Immutability', function () {
-        it('notes have no update method exposed in livewire', function () {
-            // Notes are immutable by design - there's no update endpoint
-            // This test confirms that the Note model only has create, not update/delete actions
-            $project = Project::factory()->create();
-
-            $note = Note::factory()->forDevelopment($project->development)->create([
-                'user_id' => $this->user->id,
-                'body' => 'Original note',
-            ]);
-
-            // Confirm the note exists and cannot be modified through the UI
-            // (There's no wire:click="editNote" or similar in the templates)
-            expect($note->body)->toBe('Original note');
-
-            // We can verify there's no method in ProjectEditor for editing/deleting notes
-            $editor = new ProjectEditor;
-            expect(method_exists($editor, 'editDevelopmentNote'))->toBeFalse()
-                ->and(method_exists($editor, 'deleteDevelopmentNote'))->toBeFalse()
-                ->and(method_exists($editor, 'editBuildNote'))->toBeFalse()
-                ->and(method_exists($editor, 'deleteBuildNote'))->toBeFalse();
         });
     });
 });

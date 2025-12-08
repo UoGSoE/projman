@@ -3,7 +3,6 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Project;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -54,8 +53,6 @@ class DevelopmentForm extends Form
     #[Validate('nullable|string|max:2048')]
     public ?string $codeReviewNotes;
 
-    public string $newNote = '';
-
     public function setProject(Project $project)
     {
         $this->project = $project;
@@ -83,21 +80,5 @@ class DevelopmentForm extends Form
             'completion_date' => $this->completionDate,
             'code_review_notes' => $this->codeReviewNotes,
         ]);
-    }
-
-    public function addNote(): void
-    {
-        $this->validate([
-            'newNote' => 'required|string|max:65535',
-        ]);
-
-        $this->project->development->notes()->create([
-            'user_id' => Auth::id(),
-            'body' => $this->newNote,
-        ]);
-
-        $this->newNote = '';
-
-        $this->project->development->load('notes');
     }
 }
