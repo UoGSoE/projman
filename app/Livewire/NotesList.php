@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Flux;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
@@ -31,6 +32,8 @@ class NotesList extends Component
         $this->newNote = '';
 
         $this->noteable->load('notes.user');
+
+        Flux::modal('add-note')->close();
     }
 
     public function render()
