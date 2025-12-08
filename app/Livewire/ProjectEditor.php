@@ -72,10 +72,10 @@ class ProjectEditor extends Component
             'scoping',
             'scheduling',
             'detailedDesign',
-            'development',
+            'development.notes.user',
             'testing',
             'deployed',
-            'build',
+            'build.notes.user',
             'history',
         ]);
         $this->projectId = $project->id;
@@ -188,6 +188,18 @@ class ProjectEditor extends Component
     {
         $this->deployedForm->approve();
         Flux::toast('Deployment approved - project status set to Completed', variant: 'success');
+    }
+
+    public function addDevelopmentNote(): void
+    {
+        $this->developmentForm->addNote();
+        Flux::toast('Note added', variant: 'success');
+    }
+
+    public function addBuildNote(): void
+    {
+        $this->buildForm->addNote();
+        Flux::toast('Note added', variant: 'success');
     }
 
     public function toggleHeatmap(): void
