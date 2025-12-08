@@ -1479,6 +1479,14 @@ After completing each feature:
 
 ---
 
+## Next steps
+
+The stakeholder has asked for some new features to be added to the project.  These are the broad descriptions - you will need to check with the user for the details of each.
+
+1. Developer/build notes
+2. Adjustable time-scale on the heatmap - both the stand along and the modelling view on the Scheduling page
+3. Making the developer-only 'Advance to next stage' button be the primary action rather than the current 'Save / Update' buttons.
+
 **Document Version**: 3.0
 **Last Updated**: 2025-01-25
 **Status**: 476 tests passing (1,509 assertions) - **100% FEATURE COMPLETE** (all 6 features + Priority enum + Skills integration)
