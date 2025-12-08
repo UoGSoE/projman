@@ -208,7 +208,7 @@ class RoadmapView extends Component
             $span = max(1, $lastWeek - $firstWeek + 1);
 
             $months->push([
-                'label' => $current->format('M'),
+                'label' => $current->format('M Y'),
                 'span' => $span,
             ]);
 
