@@ -118,16 +118,13 @@
 
     {{-- Action Buttons --}}
     <div class="flex flex-col md:flex-row gap-4 w-full justify-between items-center">
-        {{-- Row 1: Update and Model --}}
-        <div class="flex flex-wrap gap-2">
-            <flux:button type="submit" variant="primary">Update</flux:button>
-            <flux:button wire:click="toggleHeatmap" variant="filled" data-test="model-heatmap-button">
-                {{ $showHeatmap ? 'Hide Heatmap' : 'Model' }}
-            </flux:button>
-        </div>
+        {{-- Left: Model button --}}
+        <flux:button wire:click="toggleHeatmap" variant="filled" data-test="model-heatmap-button">
+            {{ $showHeatmap ? 'Hide Heatmap' : 'Model' }}
+        </flux:button>
 
-        {{-- Row 2: DCGG Workflow Buttons --}}
-        <div class="flex flex-wrap gap-2">
+        {{-- Right: Workflow and Advance buttons --}}
+        <div class="flex flex-wrap gap-3 items-center">
             @if(!$schedulingForm->submittedToDcggAt)
                 <flux:button wire:click="submitSchedulingToDCGG" variant="filled" data-test="submit-scheduling-to-dcgg-button">
                     Submit to DCGG
@@ -135,14 +132,22 @@
             @endif
 
             @if($schedulingForm->submittedToDcggAt && !$schedulingForm->scheduledAt)
-                <flux:button wire:click="scheduleScheduling" variant="primary" data-test="schedule-scheduling-button">
+                <flux:button wire:click="scheduleScheduling" variant="filled" data-test="schedule-scheduling-button">
                     Schedule
                 </flux:button>
             @endif
 
-            <flux:button icon:trailing="arrow-right" wire:click="advanceToNextStage()">
-                Advance To Next Stage
+            <flux:button wire:click="saveAndAdvance('scheduling')" variant="primary" icon:trailing="arrow-right">
+                Advance to Next Stage
             </flux:button>
+            <flux:button
+                wire:click="advanceToNextStage()"
+                variant="filled"
+                icon="forward"
+                size="sm"
+                class="!bg-amber-500 hover:!bg-amber-600 cursor-pointer"
+                title="Skip stage without saving (developers only)"
+            />
         </div>
     </div>
 </form>

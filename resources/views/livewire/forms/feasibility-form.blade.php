@@ -66,29 +66,33 @@
     <flux:separator />
 
     {{-- Action Buttons --}}
-    <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-        <flux:button type="submit" variant="primary">Update</flux:button>
-
-        <div class="flex flex-col md:flex-row justify-end gap-4">
-            @if($errors->isEmpty() && $feasibilityForm->approvalStatus === 'pending' && $project->feasibility->isReadyForApproval() && $project->feasibility->hasProperSolutionAssessment())
-                <flux:button
-                    wire:click="approveFeasibility"
-                    type="button"
-                    variant="primary"
-                    color="emerald"
-                    :disabled="$feasibilityForm->existingSolutionStatus === 'yes' || $feasibilityForm->offTheShelfSolutionStatus === 'yes'"
-                    data-test="approve-feasibility-button">
-                    Approve
-                </flux:button>
-                <flux:modal.trigger name="reject-feasibility-modal">
-                    <flux:button type="button" variant="danger" data-test="reject-feasibility-button">Reject</flux:button>
-                </flux:modal.trigger>
-            @endif
-
-            <flux:button icon:trailing="arrow-right" type="button" wire:click="advanceToNextStage()">
-                Advance To Next Stage
+    <div class="flex flex-wrap gap-3 items-center">
+        @if($errors->isEmpty() && $feasibilityForm->approvalStatus === 'pending' && $project->feasibility->isReadyForApproval() && $project->feasibility->hasProperSolutionAssessment())
+            <flux:button
+                wire:click="approveFeasibility"
+                type="button"
+                variant="primary"
+                color="emerald"
+                :disabled="$feasibilityForm->existingSolutionStatus === 'yes' || $feasibilityForm->offTheShelfSolutionStatus === 'yes'"
+                data-test="approve-feasibility-button">
+                Approve
             </flux:button>
-        </div>
+            <flux:modal.trigger name="reject-feasibility-modal">
+                <flux:button type="button" variant="danger" data-test="reject-feasibility-button">Reject</flux:button>
+            </flux:modal.trigger>
+        @endif
+
+        <flux:button wire:click="saveAndAdvance('feasibility')" variant="primary" icon:trailing="arrow-right">
+            Advance to Next Stage
+        </flux:button>
+        <flux:button
+            wire:click="advanceToNextStage()"
+            variant="filled"
+            icon="forward"
+            size="sm"
+            class="!bg-amber-500 hover:!bg-amber-600 cursor-pointer"
+            title="Skip stage without saving (developers only)"
+        />
     </div>
 </form>
 

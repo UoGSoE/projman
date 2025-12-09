@@ -124,8 +124,13 @@ class ProjectEditor extends Component
 
         $this->project->addHistory(Auth::user(), 'Advanced to '.$this->project->status->value);
 
-        Flux::toast('Project saved and advanced to '.ucfirst($this->project->status->value), variant: 'success');
+        Flux::toast('Project advanced to '.ucfirst($this->project->status->value), variant: 'success');
+    }
 
+    public function saveAndAdvance(string $formType): void
+    {
+        $this->save($formType);
+        $this->advanceToNextStage();
     }
 
     public function approveFeasibility(): void

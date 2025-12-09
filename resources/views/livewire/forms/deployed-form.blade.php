@@ -76,7 +76,7 @@
     <flux:separator />
 
     {{-- Action Buttons --}}
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-3 items-center">
         <flux:button type="submit" variant="primary">Update</flux:button>
 
         @if($project->deployed->isReadyForServiceAcceptance() && $project->deployed->needsServiceAcceptance())
@@ -90,5 +90,14 @@
                 Approved (Complete Project)
             </flux:button>
         @endif
+
+        <flux:button
+            wire:click="advanceToNextStage()"
+            variant="filled"
+            icon="forward"
+            size="sm"
+            class="!bg-amber-500 hover:!bg-amber-600 cursor-pointer"
+            title="Skip stage without saving (developers only)"
+        />
     </div>
 </form>

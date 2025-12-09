@@ -58,10 +58,17 @@
 
     <flux:separator />
 
-    <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
-        <flux:button type="submit" variant="primary" class="w-full">Save</flux:button>
-        <flux:button class="w-full" icon:trailing="arrow-right" wire:click="advanceToNextStage()">Advance
-            To Next Stage
+    <div class="flex items-center gap-2">
+        <flux:button wire:click="saveAndAdvance('detailed-design')" variant="primary" icon:trailing="arrow-right">
+            Advance to Next Stage
         </flux:button>
+        <flux:button
+            wire:click="advanceToNextStage()"
+            variant="filled"
+            icon="forward"
+            size="sm"
+            class="!bg-amber-500 hover:!bg-amber-600 cursor-pointer"
+            title="Skip stage without saving (developers only)"
+        />
     </div>
 </form>

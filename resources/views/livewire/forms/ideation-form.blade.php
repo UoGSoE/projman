@@ -31,12 +31,17 @@
 
     <flux:separator />
 
-    <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-        <flux:button type="submit" variant="primary">
-            Update
+    <div class="flex items-center gap-2">
+        <flux:button wire:click="saveAndAdvance('ideation')" variant="primary" icon:trailing="arrow-right">
+            Advance to Next Stage
         </flux:button>
-        <flux:button class="w-1/4" icon:trailing="arrow-right" wire:click="advanceToNextStage()">
-            Submit
-        </flux:button>
+        <flux:button
+            wire:click="advanceToNextStage()"
+            variant="filled"
+            icon="forward"
+            size="sm"
+            class="!bg-amber-500 hover:!bg-amber-600 cursor-pointer"
+            title="Skip stage without saving (developers only)"
+        />
     </div>
 </form>

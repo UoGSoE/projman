@@ -42,15 +42,21 @@
     <flux:separator />
 
     {{-- Action Buttons --}}
-    <div class="flex flex-wrap gap-2">
-        <flux:button type="submit" variant="primary">Update</flux:button>
-
+    <div class="flex flex-wrap gap-3 items-center">
         <flux:button wire:click="submitScoping" variant="filled" data-test="submit-scoping-button">
             Submit
         </flux:button>
 
-        <flux:button icon:trailing="arrow-right" wire:click="advanceToNextStage()">
-            Advance To Next Stage
+        <flux:button wire:click="saveAndAdvance('scoping')" variant="primary" icon:trailing="arrow-right">
+            Advance to Next Stage
         </flux:button>
+        <flux:button
+            wire:click="advanceToNextStage()"
+            variant="filled"
+            icon="forward"
+            size="sm"
+            class="!bg-amber-500 hover:!bg-amber-600 cursor-pointer"
+            title="Skip stage without saving (developers only)"
+        />
     </div>
 </form>
