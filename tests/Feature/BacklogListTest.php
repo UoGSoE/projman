@@ -2,7 +2,6 @@
 
 use App\Enums\ProjectStatus;
 use App\Livewire\BacklogList;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -11,7 +10,8 @@ use function Pest\Livewire\livewire;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->setupBaseNotificationRoles();
+    // Fake all events and use createProject() for faster tests
+    $this->fakeAllProjectEvents();
     $this->user = User::factory()->create(['is_admin' => true]);
     $this->actingAs($this->user);
 });
@@ -24,17 +24,17 @@ test('backlog list page renders successfully', function () {
 });
 
 test('displays active projects in backlog', function () {
-    $activeProject = Project::factory()->create([
+    $activeProject = $this->createProject([
         'title' => 'Active Project One',
         'status' => ProjectStatus::SCOPING,
     ]);
 
-    $completedProject = Project::factory()->create([
+    $completedProject = $this->createProject([
         'title' => 'Completed Project',
         'status' => ProjectStatus::COMPLETED,
     ]);
 
-    $cancelledProject = Project::factory()->create([
+    $cancelledProject = $this->createProject([
         'title' => 'Cancelled Project',
         'status' => ProjectStatus::CANCELLED,
     ]);
@@ -46,8 +46,8 @@ test('displays active projects in backlog', function () {
 });
 
 test('search filter works correctly', function () {
-    Project::factory()->create(['title' => 'Data Migration Project']);
-    Project::factory()->create(['title' => 'Website Redesign Project']);
+    $this->createProject(['title' => 'Data Migration Project']);
+    $this->createProject(['title' => 'Website Redesign Project']);
 
     livewire(BacklogList::class)
         ->set('search', 'Migration')
@@ -56,12 +56,12 @@ test('search filter works correctly', function () {
 });
 
 test('status filter works correctly', function () {
-    $scopingProject = Project::factory()->create([
+    $scopingProject = $this->createProject([
         'title' => 'Scoping Project',
         'status' => ProjectStatus::SCOPING,
     ]);
 
-    $schedulingProject = Project::factory()->create([
+    $schedulingProject = $this->createProject([
         'title' => 'Scheduling Project',
         'status' => ProjectStatus::SCHEDULING,
     ]);
@@ -73,12 +73,12 @@ test('status filter works correctly', function () {
 });
 
 test('shows all statuses when filter is set to all', function () {
-    $scopingProject = Project::factory()->create([
+    $scopingProject = $this->createProject([
         'title' => 'Scoping Project',
         'status' => ProjectStatus::SCOPING,
     ]);
 
-    $schedulingProject = Project::factory()->create([
+    $schedulingProject = $this->createProject([
         'title' => 'Scheduling Project',
         'status' => ProjectStatus::SCHEDULING,
     ]);
@@ -93,7 +93,7 @@ test('displays project details in table columns', function () {
     $owner = User::factory()->create(['forenames' => 'John', 'surname' => 'Doe']);
     $technicalOwner = User::factory()->create(['forenames' => 'Jane', 'surname' => 'Smith']);
 
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'user_id' => $owner->id,
         'title' => 'Test Project',
         'status' => ProjectStatus::SCOPING,
@@ -123,7 +123,9 @@ test('displays project details in table columns', function () {
 });
 
 test('pagination works correctly', function () {
-    Project::factory()->count(30)->create();
+    for ($i = 0; $i < 30; $i++) {
+        $this->createProject();
+    }
 
     livewire(BacklogList::class)
         ->assertSee('pagination')
@@ -132,7 +134,7 @@ test('pagination works correctly', function () {
 });
 
 test('shows message when no projects match filter', function () {
-    Project::factory()->create([
+    $this->createProject([
         'title' => 'Existing Project',
         'status' => ProjectStatus::SCOPING,
     ]);
@@ -143,24 +145,24 @@ test('shows message when no projects match filter', function () {
 });
 
 test('ref number links to change on a page', function () {
-    $project = Project::factory()->create(['title' => 'Test Project']);
+    $project = $this->createProject(['title' => 'Test Project']);
 
     livewire(BacklogList::class)
         ->assertSeeHtml(route('portfolio.change-on-a-page', $project));
 });
 
 test('search and status filters work together', function () {
-    Project::factory()->create([
+    $this->createProject([
         'title' => 'Migration in Scoping',
         'status' => ProjectStatus::SCOPING,
     ]);
 
-    Project::factory()->create([
+    $this->createProject([
         'title' => 'Migration in Scheduling',
         'status' => ProjectStatus::SCHEDULING,
     ]);
 
-    Project::factory()->create([
+    $this->createProject([
         'title' => 'Redesign in Scoping',
         'status' => ProjectStatus::SCOPING,
     ]);

@@ -2,19 +2,29 @@
 
 namespace Tests;
 
+use App\Events\DeploymentApproved;
+use App\Events\DeploymentServiceAccepted;
 use App\Events\FeasibilityApproved;
 use App\Events\FeasibilityRejected;
 use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
+use App\Events\ProjectUpdated;
 use App\Events\SchedulingScheduled;
 use App\Events\SchedulingSubmittedToDCGG;
 use App\Events\ScopingSubmitted;
+use App\Events\ServiceAcceptanceRequested;
+use App\Events\UATAccepted;
+use App\Events\UATRejected;
+use App\Events\UATRequested;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Event;
+use Tests\Traits\CreatesProjects;
 
 abstract class TestCase extends BaseTestCase
 {
+    use CreatesProjects;
+
     /**
      * Set up the base notification roles required for project lifecycle events.
      *
@@ -112,5 +122,31 @@ abstract class TestCase extends BaseTestCase
             ]);
             $adminUser->roles()->attach($adminRole);
         }
+    }
+
+    /**
+     * Fake ALL project-related events including ProjectCreated.
+     *
+     * Use this with createProject() for tests that don't need events at all.
+     * This is the fastest option - no listeners run, no roles needed.
+     */
+    protected function fakeAllProjectEvents(): void
+    {
+        Event::fake([
+            ProjectCreated::class,
+            ProjectUpdated::class,
+            ProjectStageChange::class,
+            FeasibilityApproved::class,
+            FeasibilityRejected::class,
+            ScopingSubmitted::class,
+            SchedulingSubmittedToDCGG::class,
+            SchedulingScheduled::class,
+            UATRequested::class,
+            UATAccepted::class,
+            UATRejected::class,
+            ServiceAcceptanceRequested::class,
+            DeploymentServiceAccepted::class,
+            DeploymentApproved::class,
+        ]);
     }
 }

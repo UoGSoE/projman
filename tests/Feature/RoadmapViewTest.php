@@ -12,7 +12,8 @@ use Livewire\Livewire;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->setupBaseNotificationRoles();
+    // Fake all events and use createProject() for faster tests
+    $this->fakeAllProjectEvents();
     $this->user = User::factory()->create(['is_admin' => true]);
     $this->actingAs($this->user);
 });
@@ -28,11 +29,11 @@ it('displays projects grouped by service function', function () {
     $infraUser = User::factory()->create(['service_function' => ServiceFunction::COLLEGE_INFRASTRUCTURE]);
     $researchUser = User::factory()->create(['service_function' => ServiceFunction::RESEARCH_COMPUTING]);
 
-    $infraProject = Project::factory()->create([
+    $infraProject = $this->createProject([
         'user_id' => $infraUser->id,
         'title' => 'Infrastructure Project',
     ]);
-    $researchProject = Project::factory()->create([
+    $researchProject = $this->createProject([
         'user_id' => $researchUser->id,
         'title' => 'Research Project',
     ]);
@@ -55,8 +56,8 @@ it('displays projects grouped by service function', function () {
 
 it('excludes projects without scheduling dates from timeline', function () {
     $user = User::factory()->create();
-    $scheduledProject = Project::factory()->create(['user_id' => $user->id, 'title' => 'Scheduled Project']);
-    $unscheduledProject = Project::factory()->create(['user_id' => $user->id, 'title' => 'Unscheduled Project']);
+    $scheduledProject = $this->createProject(['user_id' => $user->id, 'title' => 'Scheduled Project']);
+    $unscheduledProject = $this->createProject(['user_id' => $user->id, 'title' => 'Unscheduled Project']);
 
     $scheduledProject->scheduling()->update([
         'estimated_start_date' => now(),
@@ -70,7 +71,7 @@ it('excludes projects without scheduling dates from timeline', function () {
 
 it('calculates BRAG status as black for completed projects', function () {
     $user = User::factory()->create();
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'user_id' => $user->id,
         'status' => ProjectStatus::COMPLETED,
     ]);
@@ -87,7 +88,7 @@ it('calculates BRAG status as black for completed projects', function () {
 
 it('calculates BRAG status as red for overdue projects', function () {
     $user = User::factory()->create();
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'user_id' => $user->id,
         'status' => ProjectStatus::DEVELOPMENT,
     ]);
@@ -104,7 +105,7 @@ it('calculates BRAG status as red for overdue projects', function () {
 
 it('calculates BRAG status as amber for at-risk projects', function () {
     $user = User::factory()->create();
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'user_id' => $user->id,
         'status' => ProjectStatus::TESTING,
     ]);
@@ -121,7 +122,7 @@ it('calculates BRAG status as amber for at-risk projects', function () {
 
 it('calculates BRAG status as green for on-track projects', function () {
     $user = User::factory()->create();
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'user_id' => $user->id,
         'status' => ProjectStatus::SCOPING,
     ]);
@@ -141,7 +142,7 @@ it('calculates BRAG status as green for on-track projects', function () {
 
 it('displays month column headers correctly', function () {
     $user = User::factory()->create();
-    $project = Project::factory()->create(['user_id' => $user->id]);
+    $project = $this->createProject(['user_id' => $user->id]);
     $project->scheduling()->update([
         'estimated_start_date' => now()->startOfMonth(),
         'estimated_completion_date' => now()->addMonths(2)->endOfMonth(),
@@ -156,13 +157,13 @@ it('displays month column headers correctly', function () {
 it('calculates timeline start from earliest project date', function () {
     $user = User::factory()->create();
 
-    $earlyProject = Project::factory()->create(['user_id' => $user->id]);
+    $earlyProject = $this->createProject(['user_id' => $user->id]);
     $earlyProject->scheduling()->update([
         'estimated_start_date' => now()->subMonths(3),
         'estimated_completion_date' => now(),
     ]);
 
-    $lateProject = Project::factory()->create(['user_id' => $user->id]);
+    $lateProject = $this->createProject(['user_id' => $user->id]);
     $lateProject->scheduling()->update([
         'estimated_start_date' => now(),
         'estimated_completion_date' => now()->addMonths(2),
@@ -178,13 +179,13 @@ it('calculates timeline start from earliest project date', function () {
 it('calculates timeline end from latest project date with padding', function () {
     $user = User::factory()->create();
 
-    $shortProject = Project::factory()->create(['user_id' => $user->id]);
+    $shortProject = $this->createProject(['user_id' => $user->id]);
     $shortProject->scheduling()->update([
         'estimated_start_date' => now(),
         'estimated_completion_date' => now()->addMonth(),
     ]);
 
-    $longProject = Project::factory()->create(['user_id' => $user->id]);
+    $longProject = $this->createProject(['user_id' => $user->id]);
     $longProject->scheduling()->update([
         'estimated_start_date' => now(),
         'estimated_completion_date' => now()->addMonths(6),
@@ -202,7 +203,7 @@ it('calculates timeline end from latest project date with padding', function () 
 
 it('links project bars to change on a page', function () {
     $user = User::factory()->create();
-    $project = Project::factory()->create(['user_id' => $user->id, 'title' => 'Test Project']);
+    $project = $this->createProject(['user_id' => $user->id, 'title' => 'Test Project']);
     $project->scheduling()->update([
         'estimated_start_date' => now(),
         'estimated_completion_date' => now()->addMonths(2),
@@ -217,7 +218,7 @@ it('shows project count for each service function', function () {
     $user = User::factory()->create(['service_function' => ServiceFunction::APPLICATIONS_DATA]);
 
     for ($i = 0; $i < 3; $i++) {
-        $project = Project::factory()->create(['user_id' => $user->id]);
+        $project = $this->createProject(['user_id' => $user->id]);
         $project->scheduling()->update([
             'estimated_start_date' => now(),
             'estimated_completion_date' => now()->addMonths(2),
@@ -245,7 +246,7 @@ it('handles empty roadmap gracefully', function () {
 
 it('excludes cancelled projects from roadmap', function () {
     $user = User::factory()->create();
-    $cancelledProject = Project::factory()->create([
+    $cancelledProject = $this->createProject([
         'user_id' => $user->id,
         'status' => ProjectStatus::CANCELLED,
         'title' => 'Cancelled Project',
@@ -263,7 +264,7 @@ it('comprehensive integration test', function () {
     $infraUser = User::factory()->create(['service_function' => ServiceFunction::COLLEGE_INFRASTRUCTURE]);
     $appsUser = User::factory()->create(['service_function' => ServiceFunction::APPLICATIONS_DATA]);
 
-    $infraProject = Project::factory()->create([
+    $infraProject = $this->createProject([
         'user_id' => $infraUser->id,
         'title' => 'Infrastructure Upgrade',
         'status' => ProjectStatus::SCOPING,
@@ -273,7 +274,7 @@ it('comprehensive integration test', function () {
         'estimated_completion_date' => now()->addMonths(4),
     ]);
 
-    $overdueProject = Project::factory()->create([
+    $overdueProject = $this->createProject([
         'user_id' => $appsUser->id,
         'title' => 'Overdue Migration',
         'status' => ProjectStatus::DEVELOPMENT,
@@ -283,7 +284,7 @@ it('comprehensive integration test', function () {
         'estimated_completion_date' => now()->subWeek(),
     ]);
 
-    $completedProject = Project::factory()->create([
+    $completedProject = $this->createProject([
         'user_id' => $appsUser->id,
         'title' => 'Completed Feature',
         'status' => ProjectStatus::COMPLETED,
@@ -293,7 +294,7 @@ it('comprehensive integration test', function () {
         'estimated_completion_date' => now()->subMonth(),
     ]);
 
-    $unscheduledProject = Project::factory()->create([
+    $unscheduledProject = $this->createProject([
         'user_id' => $infraUser->id,
         'title' => 'Future Planning',
     ]);

@@ -4,7 +4,6 @@ use App\Livewire\ProjectEditor;
 use App\Models\Build;
 use App\Models\Development;
 use App\Models\Note;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -14,7 +13,7 @@ uses(RefreshDatabase::class);
 
 describe('Polymorphic Notes', function () {
     beforeEach(function () {
-        $this->fakeNotifications();
+        $this->fakeAllProjectEvents();
 
         $this->user = User::factory()->create(['is_admin' => true]);
         $this->actingAs($this->user);
@@ -22,7 +21,7 @@ describe('Polymorphic Notes', function () {
 
     describe('Note Model', function () {
         it('can be created on a Development model', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             $note = Note::create([
                 'noteable_type' => Development::class,
@@ -37,7 +36,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('can be created on a Build model', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             $note = Note::create([
                 'noteable_type' => Build::class,
@@ -52,7 +51,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('has correct user attribution', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             $note = Note::create([
                 'noteable_type' => Development::class,
@@ -66,7 +65,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('returns System when user is deleted', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             $tempUser = User::factory()->create();
 
             $note = Note::factory()->forDevelopment($project->development)->create([
@@ -84,7 +83,7 @@ describe('Polymorphic Notes', function () {
 
     describe('Development Notes via ProjectEditor', function () {
         it('can add a note to development', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             expect($project->development->notes)->toHaveCount(0);
 
@@ -101,7 +100,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('validates note body is required for development', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'development')
@@ -113,7 +112,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('clears the development note field after adding', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             $component = livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'development')
@@ -125,7 +124,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('displays existing development notes', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             Note::factory()->forDevelopment($project->development)->create([
                 'user_id' => $this->user->id,
                 'body' => 'Existing development note',
@@ -138,7 +137,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('displays Progress Notes heading on development tab', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'development')
@@ -146,7 +145,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('shows empty state when no development notes exist', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'development')
@@ -156,7 +155,7 @@ describe('Polymorphic Notes', function () {
 
     describe('Build Notes via ProjectEditor', function () {
         it('can add a note to build', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             expect($project->build->notes)->toHaveCount(0);
 
@@ -173,7 +172,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('validates note body is required for build', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'build')
@@ -185,7 +184,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('clears the build note field after adding', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             $component = livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'build')
@@ -197,7 +196,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('displays existing build notes', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             Note::factory()->forBuild($project->build)->create([
                 'user_id' => $this->user->id,
                 'body' => 'Existing build note',
@@ -210,7 +209,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('displays Progress Notes heading on build tab', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'build')
@@ -218,7 +217,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('shows empty state when no build notes exist', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'build')
@@ -228,7 +227,7 @@ describe('Polymorphic Notes', function () {
 
     describe('Build Form', function () {
         it('can save build requirements field', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('buildForm.buildRequirements', 'These are the build requirements for this project.')
@@ -240,7 +239,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('loads build requirements from database', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             $project->build->update(['build_requirements' => 'Pre-existing requirements']);
 
             $component = livewire(ProjectEditor::class, ['project' => $project]);
@@ -249,7 +248,7 @@ describe('Polymorphic Notes', function () {
         });
 
         it('displays build requirements textarea in form', function () {
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             livewire(ProjectEditor::class, ['project' => $project])
                 ->set('tab', 'build')

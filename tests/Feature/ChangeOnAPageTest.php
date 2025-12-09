@@ -2,7 +2,6 @@
 
 use App\Enums\EffortScale;
 use App\Livewire\ChangeOnAPage;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -11,13 +10,13 @@ use function Pest\Livewire\livewire;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->setupBaseNotificationRoles();
+    $this->fakeAllProjectEvents();
     $this->user = User::factory()->create(['is_admin' => true]);
     $this->actingAs($this->user);
 });
 
 test('change on a page renders successfully', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $response = $this->get(route('portfolio.change-on-a-page', $project));
 
@@ -26,7 +25,7 @@ test('change on a page renders successfully', function () {
 });
 
 test('displays project title and reference number', function () {
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'title' => 'Data Migration Project',
     ]);
 
@@ -41,7 +40,7 @@ test('displays champion and raised by information', function () {
         'surname' => 'Doe',
     ]);
 
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'user_id' => $owner->id,
     ]);
 
@@ -55,7 +54,7 @@ test('displays champion and raised by information', function () {
 });
 
 test('displays objective and business case in teal section', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->ideation->update([
         'objective' => 'Streamline data processing workflows',
@@ -68,7 +67,7 @@ test('displays objective and business case in teal section', function () {
 });
 
 test('displays benefits, in-scope, and out-of-scope in orange section', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->ideation->update([
         'benefits' => 'Faster processing and fewer errors',
@@ -86,7 +85,7 @@ test('displays benefits, in-scope, and out-of-scope in orange section', function
 });
 
 test('displays approved recommendation in purple section', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->feasibility->update([
         'approval_status' => 'approved',
@@ -97,7 +96,7 @@ test('displays approved recommendation in purple section', function () {
 });
 
 test('displays rejected recommendation with reason', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->feasibility->update([
         'approval_status' => 'rejected',
@@ -112,7 +111,7 @@ test('displays rejected recommendation with reason', function () {
 });
 
 test('displays rejected recommendation with off-the-shelf solution', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->feasibility->update([
         'approval_status' => 'rejected',
@@ -127,7 +126,7 @@ test('displays rejected recommendation with off-the-shelf solution', function ()
 });
 
 test('displays pending recommendation when not yet assessed', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->feasibility->update([
         'approval_status' => 'pending',
@@ -138,7 +137,7 @@ test('displays pending recommendation when not yet assessed', function () {
 });
 
 test('displays priority, effort, and start date in pink section', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->scheduling->update([
         'priority' => \App\Enums\Priority::PRIORITY_2->value,
@@ -161,7 +160,7 @@ test('displays technical details section when technical owner is assigned', func
         'surname' => 'Smith',
     ]);
 
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->scheduling->update([
         'assigned_to' => $technicalOwner->id,
@@ -175,7 +174,7 @@ test('displays technical details section when technical owner is assigned', func
 });
 
 test('hides technical details section when no technical information available', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->scheduling->update([
         'assigned_to' => null,
@@ -187,7 +186,7 @@ test('hides technical details section when no technical information available', 
 });
 
 test('displays back to backlog button', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     livewire(ChangeOnAPage::class, ['project' => $project])
         ->assertSee('Back to Backlog');
@@ -200,7 +199,7 @@ test('returns 404 for non-existent project', function () {
 });
 
 test('handles missing optional data gracefully', function () {
-    $project = Project::factory()->create();
+    $project = $this->createProject();
 
     $project->ideation->update([
         'objective' => null,
@@ -231,7 +230,7 @@ test('shows all stage data correctly in comprehensive view', function () {
     $owner = User::factory()->create(['forenames' => 'Alice', 'surname' => 'Johnson']);
     $technicalOwner = User::factory()->create(['forenames' => 'Bob', 'surname' => 'Williams']);
 
-    $project = Project::factory()->create([
+    $project = $this->createProject([
         'user_id' => $owner->id,
         'title' => 'Comprehensive Test Project',
     ]);

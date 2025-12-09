@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 describe('Software Development vs Build Toggle', function () {
     beforeEach(function () {
-        $this->fakeNotifications();
+        $this->fakeAllProjectEvents();
 
         // Create test skills
         $this->skill1 = Skill::factory()->create(['name' => 'PHP']);
@@ -37,7 +37,7 @@ describe('Software Development vs Build Toggle', function () {
     describe('Field Persistence', function () {
         it('saves and loads checkbox correctly', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             $assessor = User::factory()->create();
             ($this->setupValidScoping)($project, $assessor);
 
@@ -64,7 +64,7 @@ describe('Software Development vs Build Toggle', function () {
 
         it('defaults to true for new projects', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             // Assert - Default should be true
             expect($project->scoping->requires_software_dev)->toBeTrue();
@@ -80,7 +80,7 @@ describe('Software Development vs Build Toggle', function () {
     describe('Development Form Conditional Disabling', function () {
         it('disables development form fieldset when checkbox unchecked', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             $project->scoping->update(['requires_software_dev' => false]);
 
             // Act
@@ -93,7 +93,7 @@ describe('Software Development vs Build Toggle', function () {
 
         it('enables development form fieldset when checkbox checked', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             $project->scoping->update(['requires_software_dev' => true]);
 
             // Act
@@ -106,7 +106,7 @@ describe('Software Development vs Build Toggle', function () {
 
         it('shows explanatory callout when development is disabled', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             $project->scoping->update(['requires_software_dev' => false]);
 
             // Act
@@ -121,7 +121,7 @@ describe('Software Development vs Build Toggle', function () {
     describe('UI Tab Visibility', function () {
         it('always shows both development and build tabs', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             // Act - Test with software dev enabled
             $response = livewire(ProjectEditor::class, ['project' => $project]);
@@ -141,7 +141,7 @@ describe('Software Development vs Build Toggle', function () {
 
         it('displays build tab with TBC placeholder', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             // Act
             $response = livewire(ProjectEditor::class, ['project' => $project]);
@@ -157,7 +157,7 @@ describe('Software Development vs Build Toggle', function () {
     describe('Checkbox Behavior', function () {
         it('is editable in scoping stage', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
             $assessor = User::factory()->create();
             ($this->setupValidScoping)($project, $assessor);
 
@@ -176,7 +176,7 @@ describe('Software Development vs Build Toggle', function () {
 
         it('displays checkbox in scoping form', function () {
             // Arrange
-            $project = Project::factory()->create();
+            $project = $this->createProject();
 
             // Act - Switch to scoping tab
             $response = livewire(ProjectEditor::class, ['project' => $project])
@@ -187,12 +187,52 @@ describe('Software Development vs Build Toggle', function () {
         });
     });
 
+    describe('Stage Progression Skip', function () {
+        it('skips Development stage when requires_software_dev is false', function () {
+            // Arrange
+            $project = $this->createProject(['status' => \App\Enums\ProjectStatus::DETAILED_DESIGN]);
+            $project->scoping->update(['requires_software_dev' => false]);
+
+            // Act
+            $project->advanceToNextStage();
+
+            // Assert - Should skip Development and go straight to Build
+            expect($project->fresh()->status)->toBe(\App\Enums\ProjectStatus::BUILD);
+        });
+
+        it('does not skip Development stage when requires_software_dev is true', function () {
+            // Arrange
+            $project = $this->createProject(['status' => \App\Enums\ProjectStatus::DETAILED_DESIGN]);
+            $project->scoping->update(['requires_software_dev' => true]);
+
+            // Act
+            $project->advanceToNextStage();
+
+            // Assert - Should go to Development as normal
+            expect($project->fresh()->status)->toBe(\App\Enums\ProjectStatus::DEVELOPMENT);
+        });
+
+        it('skips Development via Livewire advanceToNextStage when requires_software_dev is false', function () {
+            // Arrange
+            $project = $this->createProject(['status' => \App\Enums\ProjectStatus::DETAILED_DESIGN]);
+            $project->scoping->update(['requires_software_dev' => false]);
+
+            // Act
+            livewire(ProjectEditor::class, ['project' => $project])
+                ->call('advanceToNextStage')
+                ->assertHasNoErrors();
+
+            // Assert
+            expect($project->fresh()->status)->toBe(\App\Enums\ProjectStatus::BUILD);
+        });
+    });
+
     describe('Project Isolation', function () {
         it('does not affect other projects when toggling checkbox', function () {
             // Arrange
             $assessor = User::factory()->create();
-            $project1 = Project::factory()->create();
-            $project2 = Project::factory()->create();
+            $project1 = $this->createProject();
+            $project2 = $this->createProject();
 
             ($this->setupValidScoping)($project1, $assessor);
             ($this->setupValidScoping)($project2, $assessor);

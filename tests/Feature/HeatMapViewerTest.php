@@ -1,8 +1,6 @@
 <?php
 
 use App\Livewire\HeatMapViewer;
-use App\Models\Project;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -10,18 +8,12 @@ use Livewire\Livewire;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    $this->fakeAllProjectEvents();
+
     $this->user = User::factory()->create([
         'is_admin' => true,
         'surname' => 'AdminUser',
     ]);
-
-    // Attach Admin role so ensureProjectCreatedRoles() doesn't create duplicate admin user
-    $adminRole = Role::firstOrCreate(['name' => 'Admin']);
-    $this->user->roles()->attach($adminRole);
-
-    // Fake notifications for this test suite (doesn't test notification behavior)
-    // Must be called AFTER user creation so ensureProjectCreatedRoles() sees this user
-    $this->fakeNotifications();
 
     $this->actingAs($this->user);
 });
@@ -68,12 +60,12 @@ it('provides staff sorted alphabetically by surname', function () {
 
 it('provides active projects but excludes cancelled projects', function () {
     // Arrange
-    $activeProject = Project::factory()->create([
+    $activeProject = $this->createProject([
         'title' => 'Active Test Project',
         'status' => 'scoping',
     ]);
 
-    $cancelledProject = Project::factory()->create([
+    $cancelledProject = $this->createProject([
         'title' => 'Cancelled Project',
         'status' => 'cancelled',
     ]);

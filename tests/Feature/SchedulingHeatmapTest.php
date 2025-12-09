@@ -1,7 +1,6 @@
 <?php
 
 use App\Livewire\ProjectEditor;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -11,14 +10,14 @@ uses(RefreshDatabase::class);
 
 describe('Scheduling Heatmap Integration', function () {
     beforeEach(function () {
-        // Fake notifications for this test suite (doesn't test notification behavior)
-        $this->fakeNotifications();
+        // Fake all events and use createProject() for faster tests
+        $this->fakeAllProjectEvents();
     });
 
     it('displays heatmap when Model button is clicked', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
         $this->actingAs($user);
 
         // Act & Assert - initially not visible
@@ -34,7 +33,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('hides heatmap when Model button is clicked again', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
         $this->actingAs($user);
 
         // Act & Assert - toggle on then off
@@ -49,7 +48,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('shows assigned staff at top of heatmap when staff are assigned', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
 
         // Create staff members with known surnames for ordering
         $assignedStaff = User::factory()->create([
@@ -86,7 +85,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('shows all staff alphabetically when no staff are assigned', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true, 'surname' => 'TestAdmin']);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
 
         // Create staff with known surnames
         $staffA = User::factory()->create([
@@ -122,7 +121,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('includes technical lead and change champion in assigned staff', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
 
         $techLead = User::factory()->create(['is_staff' => true, 'surname' => 'TechLead']);
         $changeChampion = User::factory()->create(['is_staff' => true, 'surname' => 'Champion']);
@@ -150,7 +149,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('includes CoSE IT staff in assigned staff list', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
 
         $coseStaff1 = User::factory()->create(['is_staff' => true, 'surname' => 'Staff1']);
         $coseStaff2 = User::factory()->create(['is_staff' => true, 'surname' => 'Staff2']);
@@ -176,7 +175,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('shows both assigned_to and coseItStaff together at top of heatmap', function () {
         // Arrange - This tests the exact user scenario: Joe (assigned_to) + Jenny (coseItStaff)
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
 
         // Joe Blogs - assigned_to
         $joeBlogs = User::factory()->create([
@@ -233,7 +232,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('loads assigned staff from database correctly when reopening project', function () {
         // Arrange - This tests data persistence: save to DB, then reload
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
 
         $joeBlogs = User::factory()->create(['surname' => 'Blogs', 'forenames' => 'Joe', 'is_staff' => true]);
         $jennySmith = User::factory()->create(['surname' => 'Smith', 'forenames' => 'Jenny', 'is_staff' => true]);
@@ -281,7 +280,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('returns correct structure in heatmapData computed property', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
         User::factory()->count(3)->create(['is_staff' => true]);
 
         $this->actingAs($user);
@@ -303,7 +302,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('displays UI elements correctly when heatmap is shown', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
         User::factory()->count(2)->create(['is_staff' => true]);
 
         $this->actingAs($user);
@@ -321,7 +320,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('updates button label when toggling heatmap', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
         $this->actingAs($user);
 
         // Act & Assert - button text changes
@@ -336,7 +335,7 @@ describe('Scheduling Heatmap Integration', function () {
     it('shows correct message when staff are assigned', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $project = $this->createProject();
         $assignedStaff = User::factory()->create(['is_staff' => true]);
 
         $this->actingAs($user);

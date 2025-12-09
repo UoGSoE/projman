@@ -8,6 +8,7 @@ use App\Models\DetailedDesign;
 use App\Models\Development;
 use App\Models\Feasibility;
 use App\Models\Ideation;
+use App\Models\Project;
 use App\Models\Scheduling;
 use App\Models\Scoping;
 use App\Models\Testing;
@@ -75,8 +76,13 @@ enum ProjectStatus: string
         };
     }
 
-    public function getNextStatus(): ?self
+    public function getNextStatus(?Project $project = null): ?self
     {
+        // If at Detailed Design and project doesn't require software dev, skip Development
+        if ($this === self::DETAILED_DESIGN && $project?->scoping?->requires_software_dev === false) {
+            return self::BUILD;
+        }
+
         return match ($this) {
             self::IDEATION => self::FEASIBILITY,
             self::FEASIBILITY => self::SCOPING,
