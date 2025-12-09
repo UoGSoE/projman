@@ -1483,10 +1483,51 @@ After completing each feature:
 
 The stakeholder has asked for some new features to be added to the project.  These are the broad descriptions - you will need to check with the user for the details of each.
 
-1. Developer/build notes
-2. Adjustable time-scale on the heatmap - both the stand along and the modelling view on the Scheduling page
+1. ~~Developer/build notes~~ ✅ DONE - See "Polymorphic Notes System" below
+2. Adjustable time-scale on the heatmap - both the stand alone and the modelling view on the Scheduling page
 3. Making the developer-only 'Advance to next stage' button be the primary action rather than the current 'Save / Update' buttons.
 
-**Document Version**: 3.0
-**Last Updated**: 2025-01-25
-**Status**: 476 tests passing (1,509 assertions) - **100% FEATURE COMPLETE** (all 6 features + Priority enum + Skills integration)
+---
+
+### Polymorphic Notes System ✅
+**Date Completed**: 2025-12-08
+
+**Overview:**
+Immutable progress notes that can be attached to Development and Build stages (polymorphic, expandable to other stages later).
+
+**Database & Models:**
+- New `notes` table with polymorphic `noteable` relationship
+- `Note` model with `belongsTo(User::class)` and `morphTo()` for noteable
+- `user_id` nullable to handle deleted users (displays "System" via accessor)
+- Notes are immutable by design - no edit/delete methods exposed
+
+**UI Implementation:**
+- Initial implementation used `flux:table` but was visually ugly with long notes
+- Attempted Livewire sub-component approach failed (nested components + Flux modals don't mix)
+- Final solution: Anonymous Blade component `<x-notes-list>`
+- Uses `flux:callout` for clean display with heading (user + date) and body (note text)
+- Flyout modal for adding notes via `+` button
+- Dynamic icons: check for current user's notes, user icon for others
+
+**Key Files:**
+- `app/Models/Note.php` - Note model with polymorphic relationship
+- `database/migrations/2025_12_08_190649_create_notes_table.php`
+- `resources/views/components/notes-list.blade.php` - Reusable anonymous Blade component
+- Development and Build models have `notes()` morphMany relationship
+- DevelopmentForm and BuildForm have `newNote` property and `addNote()` method
+
+**Testing:**
+- 16 tests in `tests/Feature/NoteTest.php`
+- 518 tests passing (1,587 assertions)
+
+**Also includes Build Form Foundation:**
+- Added `build_requirements` text field to Build model
+- Build form now has actual content instead of TBC placeholder
+
+**See `NOTES_PLAN.md` for detailed implementation notes.**
+
+---
+
+**Document Version**: 3.1
+**Last Updated**: 2025-12-09
+**Status**: 518 tests passing (1,587 assertions) - Polymorphic Notes + Build Form complete
