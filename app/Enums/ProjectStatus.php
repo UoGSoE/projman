@@ -20,9 +20,9 @@ enum ProjectStatus: string
     case SCHEDULING = 'scheduling';
     case DETAILED_DESIGN = 'detailed-design';
     case DEVELOPMENT = 'development';
+    case BUILD = 'build';
     case TESTING = 'testing';
     case DEPLOYED = 'deployed';
-    case BUILD = 'build';
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
 
@@ -83,10 +83,10 @@ enum ProjectStatus: string
             self::SCOPING => self::SCHEDULING,
             self::SCHEDULING => self::DETAILED_DESIGN,
             self::DETAILED_DESIGN => self::DEVELOPMENT,
-            self::DEVELOPMENT => self::TESTING,
+            self::DEVELOPMENT => self::BUILD,
+            self::BUILD => self::TESTING,
             self::TESTING => self::DEPLOYED,
-            self::DEPLOYED => self::BUILD,
-            self::BUILD => self::COMPLETED,
+            self::DEPLOYED => self::COMPLETED,
         };
     }
 
