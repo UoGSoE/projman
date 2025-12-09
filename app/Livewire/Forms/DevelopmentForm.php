@@ -3,11 +3,14 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Project;
+use App\Traits\HasNotes;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class DevelopmentForm extends Form
 {
+    use HasNotes;
+
     public ?Project $project = null;
 
     public $developmentTeamSearch = '';

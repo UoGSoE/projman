@@ -1,12 +1,14 @@
+@props(['noteable', 'formPrefix', 'addNoteMethod'])
+
 <div>
     <div class="flex items-center gap-2">
         <flux:heading size="lg">Progress Notes</flux:heading>
-        <flux:modal.trigger name="add-note">
+        <flux:modal.trigger name="add-note-{{ $formPrefix }}">
             <flux:button icon="plus" size="sm" variant="ghost" class="cursor-pointer" />
         </flux:modal.trigger>
     </div>
 
-    <flux:modal name="add-note" variant="flyout">
+    <flux:modal name="add-note-{{ $formPrefix }}" variant="flyout">
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Add Progress Note</flux:heading>
@@ -14,7 +16,7 @@
             </div>
 
             <flux:textarea
-                wire:model="newNote"
+                wire:model="{{ $formPrefix }}.newNote"
                 label="Note"
                 rows="4"
                 placeholder="Enter your progress note..."
@@ -22,7 +24,7 @@
 
             <div class="flex">
                 <flux:spacer />
-                <flux:button wire:click="addNote" variant="primary">Add Note</flux:button>
+                <flux:button wire:click="{{ $addNoteMethod }}" variant="primary">Add Note</flux:button>
             </div>
         </div>
     </flux:modal>

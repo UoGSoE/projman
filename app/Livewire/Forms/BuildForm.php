@@ -3,11 +3,14 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Project;
+use App\Traits\HasNotes;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class BuildForm extends Form
 {
+    use HasNotes;
+
     public ?Project $project = null;
 
     #[Validate('nullable|string|max:65535')]

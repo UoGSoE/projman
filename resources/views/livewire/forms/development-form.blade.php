@@ -73,4 +73,8 @@
 
 <flux:separator class="my-6" />
 
-<livewire:notes-list :noteable="$project->development" />
+<x-notes-list
+    :noteable="$project->development"
+    formPrefix="developmentForm"
+    addNoteMethod="addDevelopmentNote"
+/>

@@ -18,4 +18,8 @@
 
 <flux:separator class="my-6" />
 
-<livewire:notes-list :noteable="$project->build" />
+<x-notes-list
+    :noteable="$project->build"
+    formPrefix="buildForm"
+    addNoteMethod="addBuildNote"
+/>

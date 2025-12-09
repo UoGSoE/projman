@@ -190,6 +190,18 @@ class ProjectEditor extends Component
         Flux::toast('Deployment approved - project status set to Completed', variant: 'success');
     }
 
+    public function addDevelopmentNote(): void
+    {
+        $this->developmentForm->addNote($this->project->development);
+        Flux::modal('add-note-developmentForm')->close();
+    }
+
+    public function addBuildNote(): void
+    {
+        $this->buildForm->addNote($this->project->build);
+        Flux::modal('add-note-buildForm')->close();
+    }
+
     public function toggleHeatmap(): void
     {
         $this->showHeatmap = ! $this->showHeatmap;
