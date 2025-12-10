@@ -111,12 +111,6 @@ describe('SkillsManager Component', function () {
             expect($component->activeTab)->toBe('available-skills');
         });
 
-        it('has form modification flag set to false by default', function () {
-            $component = livewire(SkillsManager::class);
-
-            expect($component->isFormModified)->toBe(false);
-        });
-
         it('has show create skill form flag set to false by default', function () {
             $component = livewire(SkillsManager::class);
 
@@ -329,7 +323,6 @@ describe('SkillsManager Component', function () {
             expect($component->skillName)->toBe('');
             expect($component->skillDescription)->toBe('');
             expect($component->skillCategory)->toBe('');
-            expect($component->isFormModified)->toBe(false);
             expect($component->assertSee('Add New Skill'));
             expect($component->assertSee('Add a new skill to the system.'));
         });
@@ -409,38 +402,6 @@ describe('SkillsManager Component', function () {
 
         });
 
-        it('discards modal state when closed', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal')
-                ->set('skillName', 'Test Skill')
-                ->set('skillDescription', 'Test Description')
-                ->set('skillCategory', 'Test Category')
-                ->set('isFormModified', true)
-                ->call('closeAddSkillModal');
-
-            expect($component->selectedSkill)->toBeNull();
-            expect($component->skillName)->toBe('');
-            expect($component->skillDescription)->toBe('');
-            expect($component->skillCategory)->toBe('');
-            expect($component->isFormModified)->toBe(false);
-
-        });
-
-        it('tracks form modification during skill creation', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal');
-
-            expect($component->isFormModified)->toBe(false);
-
-            $component->set('skillName', 'New Skill');
-            expect($component->isFormModified)->toBe(true);
-
-            $component->set('skillDescription', 'New Description');
-            expect($component->isFormModified)->toBe(true);
-
-            $component->set('skillCategory', 'New Category');
-            expect($component->isFormModified)->toBe(true);
-        });
     });
 
     describe('Skill Editing modal functionality', function () {
@@ -452,7 +413,6 @@ describe('SkillsManager Component', function () {
             expect($component->skillName)->toBe('Laravel');
             expect($component->skillDescription)->toBe('PHP framework for web development');
             expect($component->skillCategory)->toBe('Programming');
-            expect($component->isFormModified)->toBe(false);
             expect($component->assertSee('Edit Skill'));
             expect($component->assertSee('Edit the skill details.'));
         });
@@ -469,33 +429,6 @@ describe('SkillsManager Component', function () {
             expect($this->skill1->name)->toBe('Laravel Framework');
             expect($this->skill1->description)->toBe('Updated PHP framework description');
             expect($this->skill1->skill_category)->toBe('Backend');
-        });
-
-        it('tracks form modification during editing', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openEditSkillModal', $this->skill1);
-
-            expect($component->isFormModified)->toBe(false);
-
-            $component->set('skillName', 'New Name');
-            expect($component->isFormModified)->toBe(true);
-
-            $component->set('skillDescription', 'New Description');
-            expect($component->isFormModified)->toBe(true);
-
-            $component->set('skillCategory', 'New Category');
-            expect($component->isFormModified)->toBe(true);
-        });
-
-        it('resets form modification flag when edit modal is closed', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openEditSkillModal', $this->skill1);
-
-            $component->set('skillName', 'Modified Name');
-            expect($component->isFormModified)->toBe(true);
-
-            $component->call('closeEditSkillModal');
-            expect($component->isFormModified)->toBe(false);
         });
 
         it('validates required fields for skill editing', function () {
@@ -603,25 +536,11 @@ describe('SkillsManager Component', function () {
             expect($component->skillSearchForAssignment)->toBe('');
             expect($component->selectedSkillForAssignment)->toBeNull();
             expect($component->newSkillLevel)->toBe('');
-            expect($component->isFormModified)->toBe(false);
             expect($component->assertSee('Manage Skills for'));
             expect($component->assertSee($this->staffUser1->full_name));
             expect($component->assertSee('Laravel'));
             expect($component->assertSee('PHP framework for web development'));
             expect($component->assertSee('Programming'));
-        });
-
-        it('closes user skill modal and discards modal state', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('closeUserSkillModal')
-                ->asserthasnoerrors();
-
-            expect($component->selectedUser)->toBeNull();
-            expect($component->skillSearchForAssignment)->toBe('');
-            expect($component->selectedSkillForAssignment)->toBeNull();
-            expect($component->newSkillLevel)->toBe('');
-            expect($component->isFormModified)->toBe(false);
         });
 
         it('toggles skill selection for assignment', function () {
@@ -943,54 +862,6 @@ describe('SkillsManager Component', function () {
         });
     });
 
-    describe('Form State Management', function () {
-        it('tracks form modification for skill name', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal');
-
-            expect($component->isFormModified)->toBe(false);
-
-            $component->set('skillName', 'New Skill');
-            expect($component->isFormModified)->toBe(true);
-        });
-
-        it('tracks form modification for skill description', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal');
-
-            expect($component->isFormModified)->toBe(false);
-
-            $component->set('skillDescription', 'New Description');
-            expect($component->isFormModified)->toBe(true);
-        });
-
-        it('tracks form modification for skill category', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal');
-
-            expect($component->isFormModified)->toBe(false);
-
-            $component->set('skillCategory', 'New Category');
-            expect($component->isFormModified)->toBe(true);
-        });
-
-        it('resets form modification flag when modal is closed', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal')
-                ->set('skillName', 'Modified')
-                ->call('closeAddSkillModal');
-
-            expect($component->isFormModified)->toBe(false);
-        });
-
-        it('marks form as not modified when opening modal', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal');
-
-            expect($component->isFormModified)->toBe(false);
-        });
-    });
-
     describe('Skill Display with User Counts', function () {
         beforeEach(function () {
             // Assign skills to users for testing user counts
@@ -1120,6 +991,98 @@ describe('SkillsManager Component', function () {
                     $this->staffUser1->fresh()->skills()->where('skill_id', $this->skill1->id)->first()->pivot->skill_level
                 );
             }
+        });
+    });
+
+    describe('Export Functionality', function () {
+        it('downloads skills as Excel file when on available-skills tab', function () {
+            livewire(SkillsManager::class)
+                ->set('activeTab', 'available-skills')
+                ->call('downloadExcel')
+                ->assertFileDownloaded('skills-export-'.now()->format('Y-m-d').'.xlsx');
+        });
+
+        it('downloads skills as CSV file when on available-skills tab', function () {
+            livewire(SkillsManager::class)
+                ->set('activeTab', 'available-skills')
+                ->call('downloadCsv')
+                ->assertFileDownloaded('skills-export-'.now()->format('Y-m-d').'.csv');
+        });
+
+        it('downloads user skills as Excel file when on user-skills tab', function () {
+            livewire(SkillsManager::class)
+                ->set('activeTab', 'user-skills')
+                ->call('downloadExcel')
+                ->assertFileDownloaded('user-skills-export-'.now()->format('Y-m-d').'.xlsx');
+        });
+
+        it('downloads user skills as CSV file when on user-skills tab', function () {
+            livewire(SkillsManager::class)
+                ->set('activeTab', 'user-skills')
+                ->call('downloadCsv')
+                ->assertFileDownloaded('user-skills-export-'.now()->format('Y-m-d').'.csv');
+        });
+
+        it('includes all skills in export regardless of search filter', function () {
+            $component = livewire(SkillsManager::class)
+                ->set('activeTab', 'available-skills')
+                ->set('skillSearchQuery', 'Laravel');
+
+            // Even with search filter, export should include all skills
+            $exportData = $component->instance()->getSkillsExportData();
+
+            // Should have header row plus all 5 skills from beforeEach
+            expect(count($exportData))->toBe(6);
+        });
+
+        it('includes all staff users in export regardless of search filter', function () {
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
+            $this->staffUser2->updateSkill($this->skill2->id, SkillLevel::ADVANCED->value);
+
+            $component = livewire(SkillsManager::class)
+                ->set('activeTab', 'user-skills')
+                ->set('userSearchQuery', 'John');
+
+            // Even with search filter, export should include all user skills
+            $exportData = $component->instance()->getUserSkillsExportData();
+
+            // Should have header row plus 2 user-skill rows
+            expect(count($exportData))->toBe(3);
+        });
+
+        it('exports skills with correct columns', function () {
+            $component = livewire(SkillsManager::class)
+                ->set('activeTab', 'available-skills');
+
+            $exportData = $component->instance()->getSkillsExportData();
+
+            expect($exportData[0])->toBe(['Name', 'Description', 'Category', 'Users Count']);
+        });
+
+        it('exports user skills with correct columns', function () {
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
+
+            $component = livewire(SkillsManager::class)
+                ->set('activeTab', 'user-skills');
+
+            $exportData = $component->instance()->getUserSkillsExportData();
+
+            expect($exportData[0])->toBe(['User', 'Skill', 'Skill Level', 'Skill Level (Numeric)', 'Category']);
+        });
+
+        it('exports user skills with human-readable and numeric skill level values', function () {
+            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
+
+            $component = livewire(SkillsManager::class)
+                ->set('activeTab', 'user-skills');
+
+            $exportData = $component->instance()->getUserSkillsExportData();
+
+            // Find the row for staffUser1's Laravel skill
+            $userSkillRow = collect($exportData)->first(fn ($row) => $row[0] === $this->staffUser1->full_name);
+
+            expect($userSkillRow[2])->toBe('Intermediate');
+            expect($userSkillRow[3])->toBe(2);
         });
     });
 });

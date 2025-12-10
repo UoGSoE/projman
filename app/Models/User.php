@@ -174,13 +174,6 @@ class User extends Authenticatable
         return $currentSkill->pivot->skill_level;
     }
 
-    public function hasSkill(int $skillId): bool
-    {
-        return $this->skills->where('id', $skillId)->count() > 0;
-        // or
-        // return $this->skills()->where('skill_id', $skillId)->count() > 0;
-    }
-
     public function getBusynessWeek1Attribute($value): ?Busyness
     {
         return $value ? Busyness::from($value) : null;

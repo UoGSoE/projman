@@ -1,9 +1,18 @@
 <div>
     <div class="flex justify-between items-center">
         <flux:heading size="xl" level="1">Skills Management</flux:heading>
-        <flux:modal.trigger wire:click="openAddSkillModal">
-            <flux:button>Add New Skill</flux:button>
-        </flux:modal.trigger>
+        <div class="flex items-center gap-2">
+            <flux:dropdown>
+                <flux:button icon="arrow-down-tray">Download</flux:button>
+                <flux:menu>
+                    <flux:menu.item icon="table-cells" wire:click="downloadExcel">Excel (.xlsx)</flux:menu.item>
+                    <flux:menu.item icon="document-text" wire:click="downloadCsv">CSV (.csv)</flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
+            <flux:modal.trigger wire:click="openAddSkillModal">
+                <flux:button>Add New Skill</flux:button>
+            </flux:modal.trigger>
+        </div>
     </div>
     <flux:separator variant="subtle" class="mt-6" />
 
@@ -155,7 +164,7 @@
         </flux:tab.panel>
     </flux:tab.group>
 
-    <flux:modal name="add-skill-form" variant="flyout" @close="closeAddSkillModal">
+    <flux:modal name="add-skill-form" variant="flyout">
         <form wire:submit="saveSkill">
             <div class="space-y-6">
                 <div>
@@ -166,21 +175,19 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model.live="skillName" wire:change="markFormAsModified"
-                            placeholder="Enter skill name" />
+                        <flux:input wire:model="skillName" placeholder="Enter skill name" />
                         <flux:error name="skillName" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model.live="skillDescription" wire:change="markFormAsModified"
-                            placeholder="Enter skill description" />
+                        <flux:textarea wire:model="skillDescription" placeholder="Enter skill description" />
                         <flux:error name="skillDescription" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Category</flux:label>
-                        <flux:autocomplete wire:model.live="skillCategory" placeholder="Search or enter skill category">
+                        <flux:autocomplete wire:model="skillCategory" placeholder="Search or enter skill category">
                             @foreach ($filteredCategories as $category)
                                 <flux:autocomplete.item>{{ $category }}</flux:autocomplete.item>
                             @endforeach
@@ -192,17 +199,15 @@
                 <div class="flex gap-3">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button type="button" variant="ghost" wire:click="closeAddSkillModal">Cancel</flux:button>
+                        <flux:button type="button" variant="ghost">Cancel</flux:button>
                     </flux:modal.close>
-                    @if ($isFormModified)
-                        <flux:button type="submit" variant="primary">Create Skill</flux:button>
-                    @endif
+                    <flux:button type="submit" variant="primary">Create Skill</flux:button>
                 </div>
             </div>
         </form>
     </flux:modal>
 
-    <flux:modal name="edit-skill-form" variant="flyout" @close="closeEditSkillModal">
+    <flux:modal name="edit-skill-form" variant="flyout">
         <form wire:submit="saveSkill">
             <div class="space-y-6">
                 <div>
@@ -213,21 +218,19 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model.live="skillName" wire:change="markFormAsModified"
-                            placeholder="Enter skill name" />
+                        <flux:input wire:model="skillName" placeholder="Enter skill name" />
                         <flux:error name="skillName" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model.live="skillDescription" wire:change="markFormAsModified"
-                            placeholder="Enter skill description" />
+                        <flux:textarea wire:model="skillDescription" placeholder="Enter skill description" />
                         <flux:error name="skillDescription" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Category</flux:label>
-                        <flux:autocomplete wire:model.live="skillCategory" placeholder="Search or enter skill category">
+                        <flux:autocomplete wire:model="skillCategory" placeholder="Search or enter skill category">
                             @foreach ($filteredCategories as $category)
                                 <flux:autocomplete.item>{{ $category }}</flux:autocomplete.item>
                             @endforeach
@@ -239,20 +242,16 @@
                 <div class="flex gap-3">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button type="button" variant="ghost" wire:click="closeEditSkillModal">Cancel
-                        </flux:button>
+                        <flux:button type="button" variant="ghost">Cancel</flux:button>
                     </flux:modal.close>
-                    @if ($isFormModified)
-                        <flux:button type="submit" variant="primary">Update Skill</flux:button>
-                    @endif
+                    <flux:button type="submit" variant="primary">Update Skill</flux:button>
                 </div>
             </div>
         </form>
     </flux:modal>
 
-    <flux:modal name="user-skills-form" variant="flyout" @close="closeUserSkillModal">
-
-        <form wire:submit="saveUserSkills">
+    <flux:modal name="user-skills-form" variant="flyout">
+        <form wire:submit.prevent>
             <div class="space-y-6">
                 <div>
                     <flux:heading size="lg" class="flex items-center gap-2">Manage Skills for <flux:text
@@ -451,8 +450,7 @@
                 <div class="flex gap-3">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button type="button" variant="ghost" wire:click="closeUserSkillModal">Close
-                        </flux:button>
+                        <flux:button type="button" variant="ghost">Close</flux:button>
                     </flux:modal.close>
                 </div>
             </div>
