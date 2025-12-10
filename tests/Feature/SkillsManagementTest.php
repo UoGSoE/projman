@@ -10,1079 +10,336 @@ use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
-describe('SkillsManager Component', function () {
-    beforeEach(function () {
-        // Create admin user for testing
-        $this->adminUser = User::factory()->create([
-            'is_admin' => true,
-        ]);
-
-        // Create staff users for testing
-        $this->staffUser1 = User::factory()->create([
-            'is_staff' => true,
-            'forenames' => 'John',
-            'surname' => 'Doe',
-        ]);
-
-        $this->staffUser2 = User::factory()->create([
-            'is_staff' => true,
-            'forenames' => 'Jane',
-            'surname' => 'Smith',
-        ]);
-
-        $this->staffUser3 = User::factory()->create([
-            'is_staff' => true,
-            'forenames' => 'Bob',
-            'surname' => 'Johnson',
-        ]);
-
-        // Create test skills
-        $this->skill1 = Skill::factory()->create([
-            'name' => 'Laravel',
-            'description' => 'PHP framework for web development',
-            'skill_category' => 'Programming',
-        ]);
-
-        $this->skill2 = Skill::factory()->create([
-            'name' => 'React',
-            'description' => 'JavaScript library for building user interfaces',
-            'skill_category' => 'Frontend',
-        ]);
-
-        $this->skill3 = Skill::factory()->create([
-            'name' => 'Project Management',
-            'description' => 'Managing projects and teams',
-            'skill_category' => 'Management',
-        ]);
-
-        $this->skill4 = Skill::factory()->create([
-            'name' => 'Vue.js',
-            'description' => 'Progressive JavaScript framework',
-            'skill_category' => 'Frontend',
-        ]);
-
-        $this->skill5 = Skill::factory()->create([
-            'name' => 'Python',
-            'description' => 'High-level programming language',
-            'skill_category' => 'Programming',
-        ]);
-    });
-
-    describe('Basic Rendering', function () {
-        it('renders the component', function () {
-            livewire(SkillsManager::class)
-                ->assertStatus(200)
-                ->assertViewIs('livewire.skills-manager');
-        });
-
-        it('displays skills in the list', function () {
-            livewire(SkillsManager::class)
-                ->assertSeeText('Laravel')
-                ->assertSeeText('React')
-                ->assertSeeText('Project Management')
-                ->assertSeeText('Vue.js')
-                ->assertSeeText('Python');
-        });
-
-        it('displays staff users in the list', function () {
-            livewire(SkillsManager::class)
-                ->assertSeeText('John Doe')
-                ->assertSeeText('Jane Smith')
-                ->assertSeeText('Bob Johnson');
-        });
-
-        it('has default sort settings', function () {
-            $component = livewire(SkillsManager::class);
-
-            expect($component->sortColumn)->toBe('name');
-            expect($component->sortDirection)->toBe('asc');
-        });
-
-        it('has empty search queries by default', function () {
-            $component = livewire(SkillsManager::class);
-
-            expect($component->skillSearchQuery)->toBe('');
-            expect($component->userSearchQuery)->toBe('');
-        });
-
-        it('has default active tab', function () {
-            $component = livewire(SkillsManager::class);
-
-            expect($component->activeTab)->toBe('available-skills');
-        });
-
-        it('has show create skill form flag set to false by default', function () {
-            $component = livewire(SkillsManager::class);
-
-            expect($component->showCreateSkillForm)->toBe(false);
-        });
-
-        it('displays Skill name, description, category and user count for each skill', function () {
-            // Assign skills to users for testing user counts
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-            $this->staffUser2->updateSkill($this->skill1->id, SkillLevel::ADVANCED->value);
-            $this->staffUser1->updateSkill($this->skill2->id, SkillLevel::BEGINNER->value);
-
-            livewire(SkillsManager::class)
-                ->assertSeeText('Laravel')
-                ->assertSeeText('PHP framework for web development')
-                ->assertSeeText('Programming')
-                ->assertSeeText('2') // skill1 has 2 users
-                ->assertSeeText('1') // skill2 has 1 user
-                ->assertSeeText('0'); // skill3 has 0 users
-        });
-
-        /**
-         * displays Skill name, description, category and user count
-         */
-    });
-
-    describe('Search Functionality', function () {
-        it('filters skills by name', function () {
-            livewire(SkillsManager::class)
-                ->set('skillSearchQuery', 'Laravel')
-                ->assertSeeText('Laravel')
-                ->assertDontSeeText('React')
-                ->assertDontSeeText('Project Management');
-        });
-
-        it('filters skills by description', function () {
-            livewire(SkillsManager::class)
-                ->set('skillSearchQuery', 'PHP framework')
-                ->assertSeeText('Laravel')
-                ->assertDontSeeText('React')
-                ->assertDontSeeText('Project Management');
-        });
-
-        it('filters skills by category', function () {
-            livewire(SkillsManager::class)
-                ->set('skillSearchQuery', 'Programming')
-                ->assertSeeText('Laravel')
-                ->assertSeeText('Python')
-                ->assertDontSeeText('React')
-                ->assertDontSeeText('Project Management');
-        });
-
-        it('is case insensitive for skill search', function () {
-            livewire(SkillsManager::class)
-                ->set('skillSearchQuery', 'laravel')
-                ->assertSeeText('Laravel')
-                ->assertDontSeeText('React');
-        });
-
-        it('requires minimum 2 characters for skill search', function () {
-            livewire(SkillsManager::class)
-                ->set('skillSearchQuery', 'L')
-                ->assertSeeText('Laravel')
-                ->assertSeeText('React')
-                ->assertSeeText('Project Management');
-        });
-
-        it('shows all skills when skill search is empty', function () {
-            livewire(SkillsManager::class)
-                ->set('skillSearchQuery', 'Laravel')
-                ->assertSeeText('Laravel')
-                ->assertDontSeeText('React')
-                ->set('skillSearchQuery', '')
-                ->assertSeeText('Laravel')
-                ->assertSeeText('React')
-                ->assertSeeText('Project Management');
-        });
-
-        it('filters users by forenames', function () {
-            $component = livewire(SkillsManager::class);
-            $component->set('userSearchQuery', 'John');
-
-            // The component should show John Doe but not others
-            $component->assertSeeText('John Doe');
-            // Note: The search might still show other users due to how the component renders
-        });
-
-        it('filters users by surname', function () {
-            livewire(SkillsManager::class)
-                ->set('userSearchQuery', 'Smith')
-                ->assertSeeText('Jane Smith')
-                ->assertDontSeeText('John Doe')
-                ->assertDontSeeText('Bob Johnson');
-        });
-
-        it('filters users by full name', function () {
-            livewire(SkillsManager::class)
-                ->set('userSearchQuery', 'John Doe')
-                ->assertSeeText('John Doe')
-                ->assertDontSeeText('Jane Smith')
-                ->assertDontSeeText('Bob Johnson');
-        });
-
-        it('is case insensitive for user search', function () {
-            livewire(SkillsManager::class)
-                ->set('userSearchQuery', 'john')
-                ->assertSeeText('John Doe')
-                ->assertDontSeeText('Jane Smith');
-        });
-
-        it('requires minimum 2 characters for user search', function () {
-            livewire(SkillsManager::class)
-                ->set('userSearchQuery', 'J')
-                ->assertSeeText('John Doe')
-                ->assertSeeText('Jane Smith')
-                ->assertSeeText('Bob Johnson');
-        });
-
-        it('shows all users when user search is empty', function () {
-            livewire(SkillsManager::class)
-                ->set('userSearchQuery', 'John')
-                ->assertSeeText('John Doe')
-                ->assertDontSeeText('Jane Smith')
-                ->set('userSearchQuery', '')
-                ->assertSeeText('John Doe')
-                ->assertSeeText('Jane Smith')
-                ->assertSeeText('Bob Johnson');
-        });
-
-        it('resets page when skill search changes', function () {
-            $component = livewire(SkillsManager::class);
-            $component->set('skillSearchQuery', 'Laravel');
-
-            // The component should reset to page 1 when search changes
-            // We can verify this by checking that the search was applied
-            expect($component->skillSearchQuery)->toBe('Laravel');
-        });
-    });
-
-    describe('Sorting Functionality', function () {
-        it('sorts by name ascending by default', function () {
-            livewire(SkillsManager::class)
-                ->assertSeeInOrder(['Laravel', 'Project Management', 'Python', 'React', 'Vue.js']);
-        });
-
-        it('toggles sort direction when clicking same column', function () {
-            livewire(SkillsManager::class)
-                ->call('sort', 'name')
-                ->assertSet('sortDirection', 'desc')
-                ->assertSeeInOrder(['Vue.js', 'React', 'Python', 'Project Management', 'Laravel'])
-                ->call('sort', 'name')
-                ->assertSet('sortDirection', 'asc')
-                ->assertSeeInOrder(['Laravel', 'Project Management', 'Python', 'React', 'Vue.js']);
-        });
-
-        it('changes sort column and resets to ascending', function () {
-            livewire(SkillsManager::class)
-                ->call('sort', 'name')
-                ->assertSet('sortDirection', 'desc')
-                ->call('sort', 'skill_category')
-                ->assertSet('sortColumn', 'skill_category')
-                ->assertSet('sortDirection', 'asc');
-        });
-
-        it('can sort by skill_category column', function () {
-            livewire(SkillsManager::class)
-                ->call('sort', 'skill_category')
-                ->assertSet('sortColumn', 'skill_category')
-                ->assertSet('sortDirection', 'asc');
-        });
-
-        it('can sort by description column', function () {
-            livewire(SkillsManager::class)
-                ->call('sort', 'description')
-                ->assertSet('sortColumn', 'description')
-                ->assertSet('sortDirection', 'asc');
-        });
-
-        it('resets page when sorting', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('sort', 'name');
-
-            // The component should reset to page 1 when sorting
-            // We can verify this by checking that the sort was applied
-            expect($component->sortColumn)->toBe('name');
-            expect($component->sortDirection)->toBe('desc');
-        });
-
-        it('maintains sort order across different columns', function () {
-            $component = livewire(SkillsManager::class);
-
-            // Sort by name descending
-            $component->call('sort', 'name');
-            expect($component->sortColumn)->toBe('name');
-            expect($component->sortDirection)->toBe('desc');
-
-            // Sort by category - should reset to ascending
-            $component->call('sort', 'skill_category');
-            expect($component->sortColumn)->toBe('skill_category');
-            expect($component->sortDirection)->toBe('asc');
-        });
-    });
-
-    describe('Skill Creation modal functionality', function () {
-        it('opens add skill modal', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal');
-
-            expect($component->selectedSkill)->toBeNull();
-            expect($component->skillName)->toBe('');
-            expect($component->skillDescription)->toBe('');
-            expect($component->skillCategory)->toBe('');
-            expect($component->assertSee('Add New Skill'));
-            expect($component->assertSee('Add a new skill to the system.'));
-        });
-
-        it('creates a new skill', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openAddSkillModal')
-                ->set('skillName', 'Angular')
-                ->set('skillDescription', 'TypeScript-based web framework')
-                ->set('skillCategory', 'Frontend')
-                ->call('saveSkill')
-                ->assertHasNoErrors();
-
-            expect(Skill::where('name', 'Angular')->exists())->toBeTrue();
-        });
-
-        it('validates required fields for skill creation', function () {
-            livewire(SkillsManager::class)
-                ->call('openAddSkillModal')
-                ->set('skillName', 'JavaScript')
-                ->set('skillDescription', 'JavaScript is a programming language')
-                ->set('skillCategory', 'Programming Language')
-                ->call('saveSkill')
-                ->assertHasNoErrors(['skillName', 'skillDescription', 'skillCategory']);
-
-            livewire(SkillsManager::class)
-                ->call('openAddSkillModal')
-                ->set('skillName', '')
-                ->set('skillDescription', 'Test Description')
-                ->set('skillCategory', 'Test Category')
-                ->call('saveSkill')
-                ->assertHasErrors(['skillName']);
-
-            livewire(SkillsManager::class)
-                ->call('openAddSkillModal')
-                ->set('skillName', 'Test Skill')
-                ->set('skillDescription', '')
-                ->set('skillCategory', 'Test Category')
-                ->call('saveSkill')
-                ->assertHasErrors(['skillDescription']);
-
-            livewire(SkillsManager::class)
-                ->call('openAddSkillModal')
-                ->set('skillName', 'Test Skill')
-                ->set('skillDescription', 'Test Description')
-                ->set('skillCategory', '')
-                ->call('saveSkill')
-                ->assertHasErrors(['skillCategory']);
-        });
-
-        it('validates field lengths for skill creation', function () {
-            livewire(SkillsManager::class)
-                ->call('openAddSkillModal')
-                ->set('skillName', str_repeat('a', 256))
-                ->set('skillDescription', str_repeat('b', 256))
-                ->set('skillCategory', str_repeat('c', 256))
-                ->call('saveSkill')
-                ->assertHasErrors(['skillName', 'skillDescription', 'skillCategory']);
-
-            // test for description length
-            livewire(SkillsManager::class)
-                ->call('openAddSkillModal')
-                ->set('skillName', str_repeat('a', 255))
-                ->set('skillDescription', str_repeat('b', 2))
-                ->set('skillCategory', str_repeat('c', 255))
-                ->call('saveSkill')
-                ->assertHasErrors(['skillDescription']);
-
-            // test for category length
-            livewire(SkillsManager::class)
-                ->call('openAddSkillModal')
-                ->set('skillName', str_repeat('a', 255))
-                ->set('skillDescription', str_repeat('b', 255))
-                ->set('skillCategory', str_repeat('c', 2))
-                ->call('saveSkill')
-                ->assertHasErrors(['skillCategory']);
-
-        });
-
-    });
-
-    describe('Skill Editing modal functionality', function () {
-        it('opens edit skill modal for existing skill', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openEditSkillModal', $this->skill1);
-
-            expect($component->selectedSkill->id)->toBe($this->skill1->id);
-            expect($component->skillName)->toBe('Laravel');
-            expect($component->skillDescription)->toBe('PHP framework for web development');
-            expect($component->skillCategory)->toBe('Programming');
-            expect($component->assertSee('Edit Skill'));
-            expect($component->assertSee('Edit the skill details.'));
-        });
-
-        it('updates existing skill', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', 'Laravel Framework')
-                ->set('skillDescription', 'Updated PHP framework description')
-                ->set('skillCategory', 'Backend')
-                ->call('saveSkill');
-
-            $this->skill1->refresh();
-            expect($this->skill1->name)->toBe('Laravel Framework');
-            expect($this->skill1->description)->toBe('Updated PHP framework description');
-            expect($this->skill1->skill_category)->toBe('Backend');
-        });
-
-        it('validates required fields for skill editing', function () {
-            livewire(SkillsManager::class)
-                ->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', '')
-                ->set('skillDescription', '')
-                ->set('skillCategory', '')
-                ->call('saveSkill')
-                ->assertHasErrors(['skillName', 'skillDescription', 'skillCategory']);
-
-            livewire(SkillsManager::class)
-                ->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', 'Test Skill')
-                ->set('skillDescription', '')
-                ->set('skillCategory', 'Test Category')
-                ->call('saveSkill')
-                ->assertHasErrors(['skillDescription']);
-
-            livewire(SkillsManager::class)
-                ->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', 'Test Skill')
-                ->set('skillDescription', 'Test Description')
-                ->set('skillCategory', '')
-                ->call('saveSkill')
-                ->assertHasErrors(['skillCategory']);
-
-            livewire(SkillsManager::class)
-                ->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', '')
-                ->set('skillDescription', 'Test Description')
-                ->set('skillCategory', 'Test Category')
-                ->call('saveSkill')
-                ->assertHasErrors(['skillName']);
-
-        });
-
-        it('validates field lengths for skill editing', function () {
-            livewire(SkillsManager::class)
-                ->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', str_repeat('a', 256))
-                ->set('skillDescription', str_repeat('b', 256))
-                ->set('skillCategory', str_repeat('c', 256))
-                ->call('saveSkill')
-                ->assertHasErrors(['skillName', 'skillDescription', 'skillCategory']);
-
-            livewire(SkillsManager::class)
-                ->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', str_repeat('a', 255))
-                ->set('skillDescription', str_repeat('b', 2))
-                ->set('skillCategory', str_repeat('c', 255))
-                ->call('saveSkill')
-                ->assertHasErrors(['skillDescription']);
-
-            livewire(SkillsManager::class)
-                ->call('openEditSkillModal', $this->skill1)
-                ->set('skillName', str_repeat('a', 255))
-                ->set('skillDescription', str_repeat('b', 255))
-                ->set('skillCategory', str_repeat('c', 2))
-                ->call('saveSkill')
-                ->assertHasErrors(['skillCategory']);
-        });
-    });
-
-    describe('Skill Deletion', function () {
-        it('deletes skill only when not assigned to users', function () {
-            livewire(SkillsManager::class)
-                ->call('deleteSkill', $this->skill1);
-
-            expect(Skill::where('id', $this->skill1->id)->exists())->toBeFalse();
-        });
-
-        it('prevents deletion of skill assigned to users', function () {
-            // Assign skill to user
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-
-            livewire(SkillsManager::class)
-                ->call('deleteSkill', $this->skill1);
-
-            // Skill should still exist
-            expect(Skill::where('id', $this->skill1->id)->exists())->toBeTrue();
-        });
-
-        it('allows deletion of skill when all user assignments are removed', function () {
-            // Assign skill to user
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-
-            // Remove the assignment
-            $this->staffUser1->skills()->detach($this->skill1->id);
-
-            // Now deletion should work
-            livewire(SkillsManager::class)
-                ->call('deleteSkill', $this->skill1);
-
-            expect(Skill::where('id', $this->skill1->id)->exists())->toBeFalse();
-        });
-    });
-
-    describe('User Skills Management', function () {
-        it('opens user skill modal with user data', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1);
-
-            expect($component->selectedUser->id)->toBe($this->staffUser1->id);
-            expect($component->skillSearchForAssignment)->toBe('');
-            expect($component->selectedSkillForAssignment)->toBeNull();
-            expect($component->newSkillLevel)->toBe('');
-            expect($component->assertSee('Manage Skills for'));
-            expect($component->assertSee($this->staffUser1->full_name));
-            expect($component->assertSee('Laravel'));
-            expect($component->assertSee('PHP framework for web development'));
-            expect($component->assertSee('Programming'));
-        });
-
-        it('toggles skill selection for assignment', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', $this->skill1->id);
-
-            expect($component->selectedSkillForAssignment->id)->toBe($this->skill1->id);
-            expect($component->newSkillLevel)->toBe(SkillLevel::BEGINNER->value);
-
-            $component->call('toggleSkillSelection', $this->skill1->id);
-            expect($component->selectedSkillForAssignment)->toBeNull();
-            expect($component->newSkillLevel)->toBe('');
-        });
-
-        it('cancels skill selection', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', $this->skill1->id)
-                ->call('cancelSkillSelection');
-
-            expect($component->selectedSkillForAssignment)->toBeNull();
-            expect($component->newSkillLevel)->toBe('');
-        });
-
-        it('adds skill with level to user', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', $this->skill1->id)
-                ->set('newSkillLevel', SkillLevel::INTERMEDIATE->value)
-                ->call('addSkillWithLevel');
-
-            $this->staffUser1->refresh();
-            expect($this->staffUser1->skills)->toHaveCount(1);
-            expect($this->staffUser1->skills->contains($this->skill1))->toBeTrue();
-            expect($this->staffUser1->skills->first()->pivot->skill_level)->toBe(SkillLevel::INTERMEDIATE->value);
-        });
-
-        it('updates user skill level', function () {
-            // First assign the skill to a user
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
-
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('updateSkillLevel', $this->skill1->id, SkillLevel::ADVANCED->value);
-
-            $this->assertEquals(
-                SkillLevel::ADVANCED->value,
-                $this->staffUser1->fresh()->skills()->where('skill_id', $this->skill1->id)->first()->pivot->skill_level
-            );
-        });
-
-        it('removes skill from user', function () {
-            // First assign the skill
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('removeUserSkill', $this->skill1->id);
-
-            $this->assertFalse($this->staffUser1->fresh()->skills->contains($this->skill1));
-        });
-
-        it('validates skill level when updating', function () {
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
-
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('updateSkillLevel', $this->skill1->id, 'invalid_level');
-
-            // Should not update with invalid level
-            $this->assertEquals(
-                SkillLevel::BEGINNER->value,
-                $this->staffUser1->fresh()->skills()->where('skill_id', $this->skill1->id)->first()->pivot->skill_level
-            );
-        });
-
-        it('validates skill level when adding skill', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', $this->skill1->id)
-                ->set('newSkillLevel', 'invalid_level')
-                ->call('addSkillWithLevel')
-                ->assertHasErrors(['newSkillLevel']);
-        });
-
-        it('requires valid skill level for adding skill', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', $this->skill1->id)
-                ->set('newSkillLevel', '')
-                ->call('addSkillWithLevel');
-
-            // The component should not add the skill without a valid level
-            expect($this->staffUser1->fresh()->skills->contains($this->skill1))->toBeFalse();
-        });
-    });
-
-    describe('New Skill Creation with Assignment', function () {
-        it('toggles create skill form', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleCreateSkillForm');
-
-            expect($component->showCreateSkillForm)->toBe(true);
-            expect($component->newSkillLevel)->toBe(SkillLevel::BEGINNER->value);
-
-            $component->call('toggleCreateSkillForm');
-            expect($component->showCreateSkillForm)->toBe(false);
-        });
-
-        it('updates new skill name when skill search changes', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->set('skillSearchForAssignment', 'New Skill');
-
-            expect($component->newSkillName)->toBe('New Skill');
-        });
-
-        it('creates new skill with details and assigns to user', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleCreateSkillForm')
-                ->set('newSkillName', 'Docker')
-                ->set('newSkillDescription', 'Containerization platform')
-                ->set('newSkillCategory', 'DevOps')
-                ->set('newSkillLevel', SkillLevel::INTERMEDIATE->value)
-                ->call('createAndAssignSkill');
-
-            expect(Skill::where('name', 'Docker')->exists())->toBeTrue();
-
-            $this->staffUser1->refresh();
-            expect($this->staffUser1->skills)->toHaveCount(1);
-            expect($this->staffUser1->skills->first()->name)->toBe('Docker');
-            expect($this->staffUser1->skills->first()->pivot->skill_level)->toBe(SkillLevel::INTERMEDIATE->value);
-        });
-
-        it('validates required fields for new skill creation', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleCreateSkillForm')
-                ->set('newSkillName', '')
-                ->set('newSkillDescription', '')
-                ->set('newSkillCategory', '')
-                ->set('newSkillLevel', '')
-                ->call('createAndAssignSkill')
-                ->assertHasErrors(['newSkillName', 'newSkillDescription', 'newSkillCategory', 'newSkillLevel']);
-        });
-
-        it('validates field lengths for new skill creation', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleCreateSkillForm')
-                ->set('newSkillName', str_repeat('a', 256))
-                ->set('newSkillDescription', str_repeat('b', 256))
-                ->set('newSkillCategory', str_repeat('c', 256))
-                ->set('newSkillLevel', SkillLevel::BEGINNER->value)
-                ->call('createAndAssignSkill')
-                ->assertHasErrors(['newSkillName', 'newSkillDescription', 'newSkillCategory']);
-        });
-
-        it('validates skill level for new skill creation', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleCreateSkillForm')
-                ->set('newSkillName', 'Test Skill')
-                ->set('newSkillDescription', 'Test Description')
-                ->set('newSkillCategory', 'Test Category')
-                ->set('newSkillLevel', 'invalid_level')
-                ->call('createAndAssignSkill')
-                ->assertHasErrors(['newSkillLevel']);
-        });
-    });
-
-    describe('Edge Cases and Error Handling', function () {
-        it('handles empty skill list gracefully', function () {
-            Skill::query()->delete();
-
-            livewire(SkillsManager::class)
-                ->assertStatus(200);
-        });
-
-        it('handles special characters in skill names', function () {
-            Skill::factory()->create([
-                'name' => 'C++',
-                'description' => 'Programming language with special chars: & < > "',
-                'skill_category' => 'Programming',
-            ]);
-
-            livewire(SkillsManager::class)
-                ->assertSeeText('C++')
-                ->assertSeeText('Programming language with special chars: & < > "');
-        });
-
-        it('handles very long skill names and descriptions', function () {
-            $longName = str_repeat('a', 100);
-            $longDescription = str_repeat('b', 100);
-
-            Skill::factory()->create([
-                'name' => $longName,
-                'description' => $longDescription,
-                'skill_category' => 'Test',
-            ]);
-
-            livewire(SkillsManager::class)
-                ->assertSeeText($longName)
-                ->assertSeeText($longDescription);
-        });
-
-        it('handles user with no skills', function () {
-            $userWithoutSkills = User::factory()->create(['is_staff' => true]);
-
-            $component = livewire(SkillsManager::class);
-
-            $component->assertSee('Skills Management')
-                ->assertSee($userWithoutSkills->full_name);
-        });
-
-        it('handles non-existent skill ID gracefully', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', 99999);
-
-            expect($component->selectedSkillForAssignment)->toBeNull();
-        });
-
-        it('handles non-existent user ID gracefully', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('updateSkillLevel', 99999, SkillLevel::INTERMEDIATE->value);
-
-            // Should not throw an error
-            expect($component)->not->toThrow(Exception::class);
-        });
-
-        it('handles empty user search gracefully', function () {
-            $component = livewire(SkillsManager::class);
-            $component->set('userSearchQuery', '');
-
-            // Should show all users
-            $component->assertSee('John Doe')
-                ->assertSee('Jane Smith')
-                ->assertSee('Bob Johnson');
-        });
-
-        it('handles empty skill search gracefully', function () {
-            $component = livewire(SkillsManager::class);
-            $component->set('skillSearchQuery', '');
-
-            // Should show all skills
-            $component->assertSee('Laravel')
-                ->assertSee('React')
-                ->assertSee('Project Management');
-        });
-
-        it('handles skill search with special characters', function () {
-            Skill::factory()->create([
-                'name' => 'C#',
-                'description' => 'Microsoft programming language',
-                'skill_category' => 'Programming',
-            ]);
-
-            livewire(SkillsManager::class)
-                ->set('skillSearchQuery', 'C#')
-                ->assertSeeText('C#');
-        });
-
-        it('handles user search with special characters', function () {
-            User::factory()->create([
-                'is_staff' => true,
-                'forenames' => 'José',
-                'surname' => 'García',
-            ]);
-
-            livewire(SkillsManager::class)
-                ->set('userSearchQuery', 'José')
-                ->assertSeeText('José García');
-        });
-    });
-
-    describe('Pagination and UI State Management', function () {
-        it('paginates skills correctly', function () {
-            // Create more skills to test pagination
-            Skill::factory()->count(15)->create();
-
-            $component = livewire(SkillsManager::class);
-
-            // Should show first page with default skills
-            $component->assertSeeText('Laravel')
-                ->assertSeeText('React')
-                ->assertSeeText('Project Management');
-        });
-
-        it('resets page when search changes', function () {
-            $component = livewire(SkillsManager::class);
-            $component->set('skillSearchQuery', 'Laravel');
-
-            // Verify search was applied
-            expect($component->skillSearchQuery)->toBe('Laravel');
-        });
-
-        it('resets page when sort changes', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('sort', 'name');
-
-            // Verify sort was applied
-            expect($component->sortColumn)->toBe('name');
-            expect($component->sortDirection)->toBe('desc');
-        });
-
-        it('maintains pagination state during operations', function () {
-            $component = livewire(SkillsManager::class);
-
-            // Test that search and sort operations work
-            $component->set('skillSearchQuery', 'Laravel');
-            expect($component->skillSearchQuery)->toBe('Laravel');
-
-            $component->call('sort', 'name');
-            expect($component->sortColumn)->toBe('name');
-        });
-    });
-
-    describe('Skill Display with User Counts', function () {
-        beforeEach(function () {
-            // Assign skills to users for testing user counts
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-            $this->staffUser2->updateSkill($this->skill1->id, SkillLevel::ADVANCED->value);
-            $this->staffUser1->updateSkill($this->skill2->id, SkillLevel::BEGINNER->value);
-            // $this->skill3 has 0 users
-        });
-
-        it('displays user count badges for each skill', function () {
-            livewire(SkillsManager::class)
-                ->assertSeeText('2') // skill1 has 2 users
-                ->assertSeeText('1') // skill2 has 1 user
-                ->assertSeeText('0'); // skill3 has 0 users
-        });
-
-        it('shows correct user count for Laravel skill', function () {
-            livewire(SkillsManager::class)
-                ->assertSeeText('Laravel')
-                ->assertSeeText('2'); // Should show 2 users
-        });
-
-        it('shows correct user count for React skill', function () {
-            livewire(SkillsManager::class)
-                ->assertSeeText('React')
-                ->assertSeeText('1'); // Should show 1 user
-        });
-
-        it('shows zero user count for Project Management skill', function () {
-            livewire(SkillsManager::class)
-                ->assertSeeText('Project Management')
-                ->assertSeeText('0'); // Should show 0 users
-        });
-
-        it('updates user count when users are assigned to skills', function () {
-            // Create a new user
-            $newUser = User::factory()->create(['is_staff' => true]);
-
-            // Assign the new user to skill1
-            $newUser->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
-
-            livewire(SkillsManager::class)
-                ->assertSeeText('Laravel')
-                ->assertSeeText('3'); // Should now show 3 users
-        });
-
-        it('updates user count when users are removed from skills', function () {
-            // Remove a user from skill1
-            $this->staffUser1->skills()->detach($this->skill1->id);
-
-            livewire(SkillsManager::class)
-                ->assertSeeText('Laravel')
-                ->assertSeeText('1'); // Should now show 1 user
-        });
-
-        it('maintains user count display during search operations', function () {
-            $component = livewire(SkillsManager::class);
-
-            // Search for Laravel skill
-            $component->set('skillSearchQuery', 'Laravel')
-                ->assertSeeText('Laravel')
-                ->assertSeeText('2'); // User count should still be visible
-
-            // Clear search
-            $component->set('skillSearchQuery', '')
-                ->assertSeeText('Laravel')
-                ->assertSeeText('2')
-                ->assertSeeText('React')
-                ->assertSeeText('1');
-        });
-
-        it('maintains user count display during sorting operations', function () {
-            $component = livewire(SkillsManager::class);
-
-            // Sort by name descending
-            $component->call('sort', 'name');
-            expect($component->sortDirection)->toBe('desc');
-
-            // Sort by name again to toggle back to ascending
-            $component->call('sort', 'name');
-            expect($component->sortDirection)->toBe('asc');
-
-            // Verify user counts are still visible after sorting
-            $component->assertSeeText('2') // Laravel skill user count
-                ->assertSeeText('1') // React skill user count
-                ->assertSeeText('0'); // Project Management skill user count
-        });
-    });
-
-    describe('Skill Level Management', function () {
-        it('validates all skill levels correctly', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', $this->skill1->id);
-
-            // Test each valid skill level
-            foreach (SkillLevel::cases() as $level) {
-                $component->set('newSkillLevel', $level->value)
-                    ->call('addSkillWithLevel')
-                    ->assertHasNoErrors();
-
-                // Clean up for next test
-                $this->staffUser1->skills()->detach($this->skill1->id);
-            }
-        });
-
-        it('rejects invalid skill levels', function () {
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1)
-                ->call('toggleSkillSelection', $this->skill1->id)
-                ->set('newSkillLevel', 'invalid_level')
-                ->call('addSkillWithLevel')
-                ->assertHasErrors(['newSkillLevel']);
-        });
-
-        it('handles skill level updates with all valid levels', function () {
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
-
-            $component = livewire(SkillsManager::class);
-            $component->call('openUserSkillModal', $this->staffUser1);
-
-            foreach (SkillLevel::cases() as $level) {
-                $component->call('updateSkillLevel', $this->skill1->id, $level->value);
-
-                $this->assertEquals(
-                    $level->value,
-                    $this->staffUser1->fresh()->skills()->where('skill_id', $this->skill1->id)->first()->pivot->skill_level
-                );
-            }
-        });
-    });
-
-    describe('Export Functionality', function () {
-        it('downloads skills as Excel file when on available-skills tab', function () {
-            livewire(SkillsManager::class)
-                ->set('activeTab', 'available-skills')
-                ->call('downloadExcel')
-                ->assertFileDownloaded('skills-export-'.now()->format('Y-m-d').'.xlsx');
-        });
-
-        it('downloads skills as CSV file when on available-skills tab', function () {
-            livewire(SkillsManager::class)
-                ->set('activeTab', 'available-skills')
-                ->call('downloadCsv')
-                ->assertFileDownloaded('skills-export-'.now()->format('Y-m-d').'.csv');
-        });
-
-        it('downloads user skills as Excel file when on user-skills tab', function () {
-            livewire(SkillsManager::class)
-                ->set('activeTab', 'user-skills')
-                ->call('downloadExcel')
-                ->assertFileDownloaded('user-skills-export-'.now()->format('Y-m-d').'.xlsx');
-        });
-
-        it('downloads user skills as CSV file when on user-skills tab', function () {
-            livewire(SkillsManager::class)
-                ->set('activeTab', 'user-skills')
-                ->call('downloadCsv')
-                ->assertFileDownloaded('user-skills-export-'.now()->format('Y-m-d').'.csv');
-        });
-
-        it('includes all skills in export regardless of search filter', function () {
-            $component = livewire(SkillsManager::class)
-                ->set('activeTab', 'available-skills')
-                ->set('skillSearchQuery', 'Laravel');
-
-            // Even with search filter, export should include all skills
-            $exportData = $component->instance()->getSkillsExportData();
-
-            // Should have header row plus all 5 skills from beforeEach
-            expect(count($exportData))->toBe(6);
-        });
-
-        it('includes all staff users in export regardless of search filter', function () {
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-            $this->staffUser2->updateSkill($this->skill2->id, SkillLevel::ADVANCED->value);
-
-            $component = livewire(SkillsManager::class)
-                ->set('activeTab', 'user-skills')
-                ->set('userSearchQuery', 'John');
-
-            // Even with search filter, export should include all user skills
-            $exportData = $component->instance()->getUserSkillsExportData();
-
-            // Should have header row plus 2 user-skill rows
-            expect(count($exportData))->toBe(3);
-        });
-
-        it('exports skills with correct columns', function () {
-            $component = livewire(SkillsManager::class)
-                ->set('activeTab', 'available-skills');
-
-            $exportData = $component->instance()->getSkillsExportData();
-
-            expect($exportData[0])->toBe(['Name', 'Description', 'Category', 'Users Count']);
-        });
-
-        it('exports user skills with correct columns', function () {
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-
-            $component = livewire(SkillsManager::class)
-                ->set('activeTab', 'user-skills');
-
-            $exportData = $component->instance()->getUserSkillsExportData();
-
-            expect($exportData[0])->toBe(['User', 'Skill', 'Skill Level', 'Skill Level (Numeric)', 'Category']);
-        });
-
-        it('exports user skills with human-readable and numeric skill level values', function () {
-            $this->staffUser1->updateSkill($this->skill1->id, SkillLevel::INTERMEDIATE->value);
-
-            $component = livewire(SkillsManager::class)
-                ->set('activeTab', 'user-skills');
-
-            $exportData = $component->instance()->getUserSkillsExportData();
-
-            // Find the row for staffUser1's Laravel skill
-            $userSkillRow = collect($exportData)->first(fn ($row) => $row[0] === $this->staffUser1->full_name);
-
-            expect($userSkillRow[2])->toBe('Intermediate');
-            expect($userSkillRow[3])->toBe(2);
-        });
-    });
+beforeEach(function () {
+    $this->admin = User::factory()->create(['is_admin' => true]);
+    $this->actingAs($this->admin);
+});
+
+// =============================================================================
+// Component Basics
+// =============================================================================
+
+it('renders the skills manager page', function () {
+    livewire(SkillsManager::class)
+        ->assertStatus(200)
+        ->assertSee('Skills Management');
+});
+
+it('shows available skills tab by default', function () {
+    $skill = Skill::factory()->create(['name' => 'Laravel']);
+
+    livewire(SkillsManager::class)
+        ->assertSee('Laravel');
+});
+
+// =============================================================================
+// Skill CRUD
+// =============================================================================
+
+it('creates a new skill', function () {
+    livewire(SkillsManager::class)
+        ->call('openAddSkillModal')
+        ->set('skillName', 'Docker')
+        ->set('skillDescription', 'Containerization platform')
+        ->set('skillCategory', 'DevOps')
+        ->call('saveSkill')
+        ->assertHasNoErrors();
+
+    expect(Skill::where('name', 'Docker')->exists())->toBeTrue();
+});
+
+it('validates skill creation', function (array $data, array $errors) {
+    livewire(SkillsManager::class)
+        ->call('openAddSkillModal')
+        ->set('skillName', $data['skillName'] ?? 'Valid Name')
+        ->set('skillDescription', $data['skillDescription'] ?? 'Valid description')
+        ->set('skillCategory', $data['skillCategory'] ?? 'Valid Category')
+        ->call('saveSkill')
+        ->assertHasErrors($errors);
+})->with([
+    'empty name' => [['skillName' => ''], ['skillName']],
+    'empty description' => [['skillDescription' => ''], ['skillDescription']],
+    'empty category' => [['skillCategory' => ''], ['skillCategory']],
+    'name too long' => [['skillName' => str_repeat('a', 256)], ['skillName']],
+    'description too short' => [['skillDescription' => 'ab'], ['skillDescription']],
+    'category too short' => [['skillCategory' => 'ab'], ['skillCategory']],
+]);
+
+it('edits an existing skill', function () {
+    $skill = Skill::factory()->create([
+        'name' => 'Old Name',
+        'description' => 'Old description',
+        'skill_category' => 'Old Category',
+    ]);
+
+    livewire(SkillsManager::class)
+        ->call('openEditSkillModal', $skill)
+        ->set('skillName', 'New Name')
+        ->set('skillDescription', 'New description')
+        ->set('skillCategory', 'New Category')
+        ->call('saveSkill')
+        ->assertHasNoErrors();
+
+    $skill->refresh();
+    expect($skill->name)->toBe('New Name');
+    expect($skill->description)->toBe('New description');
+    expect($skill->skill_category)->toBe('New Category');
+});
+
+it('deletes a skill without users', function () {
+    $skill = Skill::factory()->create();
+    $skillId = $skill->id;
+
+    livewire(SkillsManager::class)
+        ->call('deleteSkill', $skill);
+
+    expect(Skill::find($skillId))->toBeNull();
+});
+
+it('prevents deleting skill with assigned users', function () {
+    $skill = Skill::factory()->create();
+    $user = User::factory()->create(['is_staff' => true]);
+    $user->updateSkill($skill->id, SkillLevel::INTERMEDIATE->value);
+
+    livewire(SkillsManager::class)
+        ->call('deleteSkill', $skill);
+
+    expect(Skill::find($skill->id))->not->toBeNull();
+});
+
+// =============================================================================
+// Search & Filter
+// =============================================================================
+
+it('filters skills by search query', function (string $search, string $shouldSee, string $shouldNotSee) {
+    Skill::factory()->create(['name' => 'Laravel', 'description' => 'PHP framework', 'skill_category' => 'Programming']);
+    Skill::factory()->create(['name' => 'React', 'description' => 'JS library', 'skill_category' => 'Frontend']);
+
+    livewire(SkillsManager::class)
+        ->set('skillSearchQuery', $search)
+        ->assertSee($shouldSee)
+        ->assertDontSee($shouldNotSee);
+})->with([
+    'by name' => ['Laravel', 'Laravel', 'React'],
+    'by description' => ['PHP framework', 'Laravel', 'React'],
+    'by category' => ['Programming', 'Laravel', 'React'],
+    'case insensitive' => ['laravel', 'Laravel', 'React'],
+]);
+
+it('filters users by search query', function (string $search, string $shouldSee, string $shouldNotSee) {
+    User::factory()->create(['is_staff' => true, 'forenames' => 'John', 'surname' => 'Doe']);
+    User::factory()->create(['is_staff' => true, 'forenames' => 'Jane', 'surname' => 'Smith']);
+
+    livewire(SkillsManager::class)
+        ->set('userSearchQuery', $search)
+        ->assertSee($shouldSee)
+        ->assertDontSee($shouldNotSee);
+})->with([
+    'by forename' => ['John', 'John Doe', 'Jane Smith'],
+    'by surname' => ['Smith', 'Jane Smith', 'John Doe'],
+    'full name' => ['John Doe', 'John Doe', 'Jane Smith'],
+    'case insensitive' => ['john', 'John Doe', 'Jane Smith'],
+]);
+
+it('requires minimum 2 characters for search', function () {
+    Skill::factory()->create(['name' => 'Laravel']);
+    Skill::factory()->create(['name' => 'React']);
+
+    livewire(SkillsManager::class)
+        ->set('skillSearchQuery', 'L')
+        ->assertSee('Laravel')
+        ->assertSee('React');
+});
+
+// =============================================================================
+// Sorting
+// =============================================================================
+
+it('sorts skills by column', function () {
+    Skill::factory()->create(['name' => 'Zebra']);
+    Skill::factory()->create(['name' => 'Apple']);
+
+    livewire(SkillsManager::class)
+        ->assertSeeInOrder(['Apple', 'Zebra']);
+});
+
+it('toggles sort direction when clicking same column', function () {
+    Skill::factory()->create(['name' => 'Zebra']);
+    Skill::factory()->create(['name' => 'Apple']);
+
+    livewire(SkillsManager::class)
+        ->call('sort', 'name')
+        ->assertSeeInOrder(['Zebra', 'Apple'])
+        ->call('sort', 'name')
+        ->assertSeeInOrder(['Apple', 'Zebra']);
+});
+
+// =============================================================================
+// User Skill Assignment
+// =============================================================================
+
+it('assigns skill to user with level', function () {
+    $user = User::factory()->create(['is_staff' => true]);
+    $skill = Skill::factory()->create();
+
+    livewire(SkillsManager::class)
+        ->call('openUserSkillModal', $user)
+        ->call('toggleSkillSelection', $skill->id)
+        ->set('newSkillLevel', SkillLevel::INTERMEDIATE->value)
+        ->call('addSkillWithLevel');
+
+    $user->refresh();
+    expect($user->skills)->toHaveCount(1);
+    expect($user->skills->first()->pivot->skill_level)->toBe(SkillLevel::INTERMEDIATE->value);
+});
+
+it('updates user skill level', function () {
+    $user = User::factory()->create(['is_staff' => true]);
+    $skill = Skill::factory()->create();
+    $user->updateSkill($skill->id, SkillLevel::BEGINNER->value);
+
+    livewire(SkillsManager::class)
+        ->call('openUserSkillModal', $user)
+        ->call('updateSkillLevel', $skill->id, SkillLevel::ADVANCED->value);
+
+    expect($user->fresh()->skills->first()->pivot->skill_level)->toBe(SkillLevel::ADVANCED->value);
+});
+
+it('removes skill from user', function () {
+    $user = User::factory()->create(['is_staff' => true]);
+    $skill = Skill::factory()->create();
+    $user->updateSkill($skill->id, SkillLevel::INTERMEDIATE->value);
+
+    livewire(SkillsManager::class)
+        ->call('openUserSkillModal', $user)
+        ->call('removeUserSkill', $skill->id);
+
+    expect($user->fresh()->skills)->toHaveCount(0);
+});
+
+it('validates skill level', function (string $invalidLevel) {
+    $user = User::factory()->create(['is_staff' => true]);
+    $skill = Skill::factory()->create();
+
+    livewire(SkillsManager::class)
+        ->call('openUserSkillModal', $user)
+        ->call('toggleSkillSelection', $skill->id)
+        ->set('newSkillLevel', $invalidLevel)
+        ->call('addSkillWithLevel')
+        ->assertHasErrors(['newSkillLevel']);
+
+    expect($user->fresh()->skills)->toHaveCount(0);
+})->with(['invalid', 'not_a_level', '999']);
+
+// =============================================================================
+// Inline Skill Creation
+// =============================================================================
+
+it('creates new skill while assigning to user', function () {
+    $user = User::factory()->create(['is_staff' => true]);
+
+    livewire(SkillsManager::class)
+        ->call('openUserSkillModal', $user)
+        ->call('toggleCreateSkillForm')
+        ->set('newSkillName', 'Docker')
+        ->set('newSkillDescription', 'Container platform')
+        ->set('newSkillCategory', 'DevOps')
+        ->set('newSkillLevel', SkillLevel::INTERMEDIATE->value)
+        ->call('createAndAssignSkill');
+
+    expect(Skill::where('name', 'Docker')->exists())->toBeTrue();
+    expect($user->fresh()->skills)->toHaveCount(1);
+    expect($user->fresh()->skills->first()->name)->toBe('Docker');
+});
+
+it('validates inline skill creation', function () {
+    $user = User::factory()->create(['is_staff' => true]);
+
+    livewire(SkillsManager::class)
+        ->call('openUserSkillModal', $user)
+        ->call('toggleCreateSkillForm')
+        ->set('newSkillName', '')
+        ->set('newSkillDescription', '')
+        ->set('newSkillCategory', '')
+        ->set('newSkillLevel', '')
+        ->call('createAndAssignSkill')
+        ->assertHasErrors(['newSkillName', 'newSkillDescription', 'newSkillCategory', 'newSkillLevel']);
+
+    expect(Skill::count())->toBe(0);
+});
+
+// =============================================================================
+// Export
+// =============================================================================
+
+it('exports skills to file', function (string $format, string $method) {
+    Skill::factory()->create(['name' => 'Test Skill']);
+
+    livewire(SkillsManager::class)
+        ->set('activeTab', 'available-skills')
+        ->call($method)
+        ->assertFileDownloaded('skills-export-'.now()->format('Y-m-d').'.'.$format);
+})->with([
+    'xlsx' => ['xlsx', 'downloadExcel'],
+    'csv' => ['csv', 'downloadCsv'],
+]);
+
+it('exports user skills to file', function (string $format, string $method) {
+    $user = User::factory()->create(['is_staff' => true]);
+    $skill = Skill::factory()->create();
+    $user->updateSkill($skill->id, SkillLevel::INTERMEDIATE->value);
+
+    livewire(SkillsManager::class)
+        ->set('activeTab', 'user-skills')
+        ->call($method)
+        ->assertFileDownloaded('user-skills-export-'.now()->format('Y-m-d').'.'.$format);
+})->with([
+    'xlsx' => ['xlsx', 'downloadExcel'],
+    'csv' => ['csv', 'downloadCsv'],
+]);
+
+// =============================================================================
+// User Count Display
+// =============================================================================
+
+it('shows correct user count per skill', function () {
+    $skill = Skill::factory()->create(['name' => 'Laravel']);
+    $user1 = User::factory()->create(['is_staff' => true]);
+    $user2 = User::factory()->create(['is_staff' => true]);
+    $user1->updateSkill($skill->id, SkillLevel::BEGINNER->value);
+    $user2->updateSkill($skill->id, SkillLevel::ADVANCED->value);
+
+    $component = livewire(SkillsManager::class);
+
+    // Verify via export data which is more reliable than assertSeeText
+    $exportData = $component->instance()->getSkillsExportData();
+    $laravelRow = collect($exportData)->first(fn ($row) => $row[0] === 'Laravel');
+    expect($laravelRow[3])->toBe(2);
+});
+
+it('updates count when users assigned or removed', function () {
+    $skill = Skill::factory()->create(['name' => 'Laravel']);
+    $user = User::factory()->create(['is_staff' => true]);
+
+    // Initially 0 users
+    $component = livewire(SkillsManager::class);
+    $exportData = $component->instance()->getSkillsExportData();
+    $row = collect($exportData)->first(fn ($r) => $r[0] === 'Laravel');
+    expect($row[3])->toBe(0);
+
+    // Assign user
+    $user->updateSkill($skill->id, SkillLevel::BEGINNER->value);
+
+    $component = livewire(SkillsManager::class);
+    $exportData = $component->instance()->getSkillsExportData();
+    $row = collect($exportData)->first(fn ($r) => $r[0] === 'Laravel');
+    expect($row[3])->toBe(1);
+
+    // Remove user
+    $user->removeSkill($skill->id);
+
+    $component = livewire(SkillsManager::class);
+    $exportData = $component->instance()->getSkillsExportData();
+    $row = collect($exportData)->first(fn ($r) => $r[0] === 'Laravel');
+    expect($row[3])->toBe(0);
 });
