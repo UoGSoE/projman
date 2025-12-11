@@ -67,7 +67,7 @@ class Feasibility extends Model
 
     private function formatRejectionRecommendation(): string
     {
-        $parts = ['Project rejected'];
+        $parts = ['Work package rejected'];
 
         if ($this->reject_reason) {
             $parts[] = "Reason: {$this->reject_reason}";

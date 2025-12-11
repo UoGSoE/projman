@@ -46,7 +46,7 @@ test('rejected with only reject reason shows basic rejection', function () {
     ]);
 
     expect($feasibility->recommendation)
-        ->toBe('Project rejected. Reason: Project scope too large');
+        ->toBe('Work package rejected. Reason: Project scope too large');
 });
 
 test('rejected with existing solution shows both reason and existing solution', function () {
@@ -58,7 +58,7 @@ test('rejected with existing solution shows both reason and existing solution', 
     ]);
 
     expect($feasibility->recommendation)
-        ->toBe('Project rejected. Reason: Duplicate functionality. Existing solution: Use the current CRM system');
+        ->toBe('Work package rejected. Reason: Duplicate functionality. Existing solution: Use the current CRM system');
 });
 
 test('rejected with off-the-shelf solution shows both reason and off-the-shelf solution', function () {
@@ -70,7 +70,7 @@ test('rejected with off-the-shelf solution shows both reason and off-the-shelf s
     ]);
 
     expect($feasibility->recommendation)
-        ->toBe('Project rejected. Reason: Better to buy than build. Off-the-shelf solution: Consider purchasing Salesforce');
+        ->toBe('Work package rejected. Reason: Better to buy than build. Off-the-shelf solution: Consider purchasing Salesforce');
 });
 
 test('rejected with all fields shows complete rejection message', function () {
@@ -82,7 +82,7 @@ test('rejected with all fields shows complete rejection message', function () {
     ]);
 
     expect($feasibility->recommendation)
-        ->toBe('Project rejected. Reason: Multiple alternatives available. Existing solution: Internal tool already exists. Off-the-shelf solution: Or purchase from vendor');
+        ->toBe('Work package rejected. Reason: Multiple alternatives available. Existing solution: Internal tool already exists. Off-the-shelf solution: Or purchase from vendor');
 });
 
 test('rejected without reason shows only rejection', function () {
@@ -94,5 +94,5 @@ test('rejected without reason shows only rejection', function () {
     ]);
 
     expect($feasibility->recommendation)
-        ->toBe('Project rejected');
+        ->toBe('Work package rejected');
 });
