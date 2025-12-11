@@ -4,6 +4,13 @@ namespace App\Enums;
 
 enum SkillLevel: string
 {
+    /**
+     * No Knowledge	- No awareness, exposure or understanding of this skill
+     * Awareness	- You have an awareness/understanding of the skill  but haven't applied it..
+     * Working	    - You can use the skill in a limited capacity with guidance.
+     * Practitioner	- You have a good level of expertise and can apply skills effectively
+     * Expert	    - You are highly proficient and can teach or mentor others in this skill.
+    */
     case BEGINNER = 'beginner';
     case INTERMEDIATE = 'intermediate';
     case ADVANCED = 'advanced';

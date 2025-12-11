@@ -95,6 +95,24 @@ When writing tests and you are getting unexpected results with assertSee or asse
 
 If you can't figure out why a test is failing after one or two fixes, add a healthy amount of logging in the test and code using dump() or dd() so that you can see what is going on rather than guessing.
 
+We also like to keep our tests quite concise.  For example:
+
+
+```php
+Livewire::test(CreateProject::class)
+    ->set('name', '')
+    ->set('description', '')
+    ->set('email', 'kkdkdkdkkdkd')
+    ->call('create')
+    ->assertHasErrors(['name', 'description', 'email']);
+assertCount(0, Project::all());
+```
+
+
+Note that we don't have individual tests for each field.  We just test that the form is invalid when the fields are empty.  We don't need to test the error messages (outside of very unique/custom validation rules).
+
+That is a common pattern in our test code.  We will quite often do something like test the happy path, then the sad path.  For most cases we are testing the functionality - not every tiny detail unless it has actual concrete business logic implications.
+
 Note: if you are running the whole test suite, you can use the `--compact` flag.  It will still show you the full output for any failures, but will save you having to fill up your context window with all the passing test names.
 
 ### UI styling
