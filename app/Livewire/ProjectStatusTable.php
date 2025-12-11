@@ -73,6 +73,6 @@ class ProjectStatusTable extends Component
     {
         $project = Project::findOrFail($projectId);
         $project->cancel();
-        Flux::toast('Project cancelled', variant: 'success');
+        Flux::toast('Work package cancelled', variant: 'success');
     }
 }

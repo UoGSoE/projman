@@ -88,7 +88,7 @@ describe('Software Development vs Build Toggle', function () {
 
             // Assert - Fieldset should exist and show explanatory message
             $response->assertSeeHtml('data-test="development-form-fieldset"')
-                ->assertSee('This project does not require custom software development');
+                ->assertSee('This work package does not require custom software development');
         });
 
         it('enables development form fieldset when checkbox checked', function () {
@@ -101,7 +101,7 @@ describe('Software Development vs Build Toggle', function () {
 
             // Assert - Fieldset should exist and NOT show explanatory message
             $response->assertSeeHtml('data-test="development-form-fieldset"')
-                ->assertDontSee('This project does not require custom software development');
+                ->assertDontSee('This work package does not require custom software development');
         });
 
         it('shows explanatory callout when development is disabled', function () {
@@ -113,7 +113,7 @@ describe('Software Development vs Build Toggle', function () {
             $response = livewire(ProjectEditor::class, ['project' => $project]);
 
             // Assert
-            $response->assertSee('This project does not require custom software development')
+            $response->assertSee('This work package does not require custom software development')
                 ->assertSee('Fields are disabled');
         });
     });

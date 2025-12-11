@@ -83,7 +83,7 @@ it('shows user details, roles, skills, requests, and IT assignments for admins',
     $response->assertSeeText('Networking');
     $response->assertSeeText($requestedProject->title);
     $response->assertSeeText($itAssignment->title);
-    $response->assertSeeText('IT project assignments');
+    $response->assertSeeText('IT work package assignments');
     $response->assertSeeText('1 assignments');
     $response->assertDontSeeText($completedAssignment->title);
     $response->assertDontSeeText($cancelledAssignment->title);
@@ -97,7 +97,7 @@ it('hides IT assignment information when the user has no skills', function () {
     $response = $this->get(route('user.show', $targetUser));
 
     $response->assertOk();
-    $response->assertDontSeeText('IT project assignments');
+    $response->assertDontSeeText('IT work package assignments');
 });
 
 it('can toggle to include completed and cancelled assignments', function () {

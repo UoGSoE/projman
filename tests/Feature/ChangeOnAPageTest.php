@@ -31,7 +31,7 @@ test('displays project title and reference number', function () {
 
     livewire(ChangeOnAPage::class, ['project' => $project])
         ->assertSee('Data Migration Project')
-        ->assertSee("Project Reference #{$project->id}");
+        ->assertSee("Work Package Reference #{$project->id}");
 });
 
 test('displays champion and raised by information', function () {
@@ -105,7 +105,7 @@ test('displays rejected recommendation with reason', function () {
     ]);
 
     livewire(ChangeOnAPage::class, ['project' => $project])
-        ->assertSee('Project rejected')
+        ->assertSee('Work package rejected')
         ->assertSee('Budget constraints')
         ->assertSee('Use existing CRM system');
 });
@@ -120,7 +120,7 @@ test('displays rejected recommendation with off-the-shelf solution', function ()
     ]);
 
     livewire(ChangeOnAPage::class, ['project' => $project])
-        ->assertSee('Project rejected')
+        ->assertSee('Work package rejected')
         ->assertSee('Not cost effective')
         ->assertSee('Consider Salesforce');
 });
@@ -266,7 +266,7 @@ test('shows all stage data correctly in comprehensive view', function () {
     livewire(ChangeOnAPage::class, ['project' => $project])
         // Header
         ->assertSee('Comprehensive Test Project')
-        ->assertSee("Project Reference #{$project->id}")
+        ->assertSee("Work Package Reference #{$project->id}")
         // Row 1
         ->assertSee('IT Services')
         ->assertSee('Alice Johnson')

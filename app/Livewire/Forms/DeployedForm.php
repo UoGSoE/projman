@@ -132,6 +132,6 @@ class DeployedForm extends Form
         $this->setProject($this->project->fresh());
 
         event(new DeploymentApproved($this->project));
-        event(new ProjectUpdated($this->project, 'Deployment approved - project completed'));
+        event(new ProjectUpdated($this->project, 'Deployment approved - work package completed'));
     }
 }

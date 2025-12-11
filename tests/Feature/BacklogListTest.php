@@ -141,7 +141,7 @@ test('shows message when no projects match filter', function () {
 
     livewire(BacklogList::class)
         ->set('search', 'Nonexistent Project Name')
-        ->assertSee('No projects found matching your criteria');
+        ->assertSee('No work packages found matching your criteria');
 });
 
 test('ref number links to change on a page', function () {

@@ -22,7 +22,7 @@ it('renders the roadmap view successfully', function () {
     $this->get(route('portfolio.roadmap'))
         ->assertOk()
         ->assertSeeLivewire(RoadmapView::class)
-        ->assertSee('Project Roadmap');
+        ->assertSee('Work Package Roadmap');
 });
 
 it('displays projects grouped by service function', function () {
@@ -65,7 +65,7 @@ it('excludes projects without scheduling dates from timeline', function () {
     ]);
 
     Livewire::test(RoadmapView::class)
-        ->assertSee('Unscheduled Projects')
+        ->assertSee('Unscheduled Work Packages')
         ->assertSee('Unscheduled Project');
 });
 
@@ -241,7 +241,7 @@ it('displays stubbed status boxes', function () {
 
 it('handles empty roadmap gracefully', function () {
     Livewire::test(RoadmapView::class)
-        ->assertSee('No scheduled projects');
+        ->assertSee('No scheduled work packages');
 });
 
 it('excludes cancelled projects from roadmap', function () {
@@ -302,13 +302,13 @@ it('comprehensive integration test', function () {
     $response = $this->get(route('portfolio.roadmap'));
 
     $response->assertOk()
-        ->assertSee('Project Roadmap')
+        ->assertSee('Work Package Roadmap')
         ->assertSee('College Infrastructure')
         ->assertSee('Applications & Data')
         ->assertSee('Infrastructure Upgrade')
         ->assertSee('Overdue Migration')
         ->assertSee('Completed Feature')
-        ->assertSee('Unscheduled Projects')
+        ->assertSee('Unscheduled Work Packages')
         ->assertSee('Future Planning')
         ->assertSee('Portfolio Health');
 });

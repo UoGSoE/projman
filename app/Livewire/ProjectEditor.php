@@ -109,13 +109,13 @@ class ProjectEditor extends Component
 
         $this->project->addHistory(Auth::user(), 'Saved '.$formType);
 
-        Flux::toast('Project saved', variant: 'success');
+        Flux::toast('Work package saved', variant: 'success');
     }
 
     public function advanceToNextStage()
     {
         if ($this->project->status === ProjectStatus::CANCELLED || $this->project->status === ProjectStatus::COMPLETED) {
-            Flux::toast('Project is '.ucfirst($this->project->status->value).', cannot advance to next stage', variant: 'warning');
+            Flux::toast('Work package is '.ucfirst($this->project->status->value).', cannot advance to next stage', variant: 'warning');
 
             return;
         }
@@ -124,7 +124,7 @@ class ProjectEditor extends Component
 
         $this->project->addHistory(Auth::user(), 'Advanced to '.$this->project->status->value);
 
-        Flux::toast('Project advanced to '.ucfirst($this->project->status->value), variant: 'success');
+        Flux::toast('Work package advanced to '.ucfirst($this->project->status->value), variant: 'success');
     }
 
     public function saveAndAdvance(string $formType): void
@@ -180,7 +180,7 @@ class ProjectEditor extends Component
     {
         $this->testingForm->submit();
         $this->advanceToNextStage();
-        Flux::toast('Testing complete - project advanced to Deployed stage', variant: 'success');
+        Flux::toast('Testing complete - work package advanced to Deployed stage', variant: 'success');
     }
 
     public function acceptDeploymentService(): void
@@ -192,7 +192,7 @@ class ProjectEditor extends Component
     public function approveDeployment(): void
     {
         $this->deployedForm->approve();
-        Flux::toast('Deployment approved - project status set to Completed', variant: 'success');
+        Flux::toast('Deployment approved - work package status set to Completed', variant: 'success');
     }
 
     public function addDevelopmentNote(): void
