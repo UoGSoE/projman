@@ -1,6 +1,6 @@
 <div>
     <div class="flex flex-col md:flex-row gap-4 justify-between">
-        <flux:heading size="xl" level="1">Project Details</flux:heading>
+        <flux:heading size="xl" level="1">Work Package Details</flux:heading>
         <flux:button icon="pencil" variant="primary" href="{{ route('project.edit', $project) }}">Edit</flux:button>
     </div>
 
@@ -24,7 +24,7 @@
 
     <flux:separator variant="subtle" class="mt-6" />
 
-    <flux:heading>Project History</flux:heading>
+    <flux:heading>Work Package History</flux:heading>
 
     <flux:table>
         <flux:table.columns>

@@ -1,12 +1,12 @@
 <x-mail::message>
-# Deployment Approved - Project Completed
+# Deployment Approved - Work Package Completed
 
-Deployment has been approved for project **{{ $project->title }}**.
+Deployment has been approved for work package **{{ $project->title }}**.
 
-All Service Handover approvals have been received and the project status has been set to **Completed**.
+All Service Handover approvals have been received and the work package status has been set to **Completed**.
 
 <x-mail::button :url="route('project.show', ['project' => $project, 'tab' => 'deployed'])">
-View Project
+View Work Package
 </x-mail::button>
 
 Thanks,<br>

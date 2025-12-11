@@ -1,12 +1,12 @@
 <x-mail::message>
 # Feasibility Rejected
 
-The feasibility assessment for project **{{ $project->title }}** has been rejected.
+The feasibility assessment for work package **{{ $project->title }}** has been rejected.
 
 **Reason:** {{ $project->feasibility->reject_reason }}
 
 <x-mail::button :url="route('project.show', $project)">
-View Project
+View Work Package
 </x-mail::button>
 
 Thanks,<br>

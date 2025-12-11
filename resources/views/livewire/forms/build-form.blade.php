@@ -3,7 +3,7 @@
         label="Build Requirements"
         rows="6"
         wire:model="buildForm.buildRequirements"
-        placeholder="Describe the build requirements for this project..."
+        placeholder="Describe the build requirements for this work package..."
     />
 
     <flux:separator />

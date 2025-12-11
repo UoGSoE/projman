@@ -87,7 +87,7 @@
 
         @if($project->deployed->hasServiceAcceptance() && $project->deployed->isReadyForApproval() && $project->deployed->needsDeploymentApproval())
             <flux:button wire:click="approveDeployment" variant="filled" data-test="approve-deployment-button">
-                Approved (Complete Project)
+                Approved (Complete Work Package)
             </flux:button>
         @endif
 

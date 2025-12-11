@@ -1,8 +1,8 @@
 <div class="space-y-8">
     {{-- Header --}}
     <div>
-        <flux:heading size="xl">Project Roadmap</flux:heading>
-        <flux:subheading>Timeline view of all projects grouped by service function</flux:subheading>
+        <flux:heading size="xl">Work Package Roadmap</flux:heading>
+        <flux:subheading>Timeline view of all work packages grouped by service function</flux:subheading>
     </div>
 
     <flux:separator variant="subtle" />
@@ -30,7 +30,7 @@
 
     @if($totalWeeks === 0)
         <flux:callout icon="calendar" variant="secondary">
-            No scheduled projects yet. Projects need start and end dates to appear on the roadmap.
+            No scheduled work packages yet. Work packages need start and end dates to appear on the roadmap.
         </flux:callout>
     @else
         {{-- Timeline --}}
@@ -89,9 +89,9 @@
     {{-- Unscheduled Projects Section --}}
     @if($unscheduledProjects->isNotEmpty())
         <div class="mt-8">
-            <flux:heading size="lg">Unscheduled Projects</flux:heading>
+            <flux:heading size="lg">Unscheduled Work Packages</flux:heading>
             <flux:text class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                Projects without start and end dates assigned
+                Work packages without start and end dates assigned
             </flux:text>
 
             <div class="mt-4 grid gap-2">

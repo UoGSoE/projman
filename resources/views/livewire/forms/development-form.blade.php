@@ -2,7 +2,7 @@
     {{-- Explanatory Note When Not Software Development --}}
     @if (!$scopingForm->requiresSoftwareDev)
         <flux:callout variant="info">
-            This project does not require custom software development. Fields are disabled.
+            This work package does not require custom software development. Fields are disabled.
         </flux:callout>
     @endif
 

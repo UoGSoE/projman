@@ -2,7 +2,7 @@
     {{-- Header --}}
     <div class="mb-8">
         <flux:heading size="xl">{{ $project->title }}</flux:heading>
-        <flux:subheading>Project Reference #{{ $project->id }}</flux:subheading>
+        <flux:subheading>Work Package Reference #{{ $project->id }}</flux:subheading>
     </div>
 
     {{-- Row 1: Champion & School/Group --}}

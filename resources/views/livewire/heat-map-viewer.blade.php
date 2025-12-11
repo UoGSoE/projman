@@ -13,12 +13,12 @@
     ])
 
     <div>
-        <flux:heading size="lg">Active Projects</flux:heading>
+        <flux:heading size="lg">Active Work Packages</flux:heading>
         <flux:separator variant="subtle" class="mt-4" />
 
         @if ($activeProjects->isEmpty())
             <flux:callout icon="inbox" variant="secondary" class="mt-4">
-                <flux:callout.heading>No active projects</flux:callout.heading>
+                <flux:callout.heading>No active work packages</flux:callout.heading>
             </flux:callout>
         @else
             <flux:card class="mt-4 space-y-4">

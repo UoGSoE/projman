@@ -1,11 +1,11 @@
 <x-mail::message>
-# Project Update
+# Work Package Update
 
-Project {{ $project->title }} has been updated to the {{ ucfirst($project->status->value) }} stage and you are listed
+Work Package {{ $project->title }} has been updated to the {{ ucfirst($project->status->value) }} stage and you are listed
 as a contact for evaluating that stage.
 
 <x-mail::button :url="route('project.show', $project)">
-View Project
+View Work Package
 </x-mail::button>
 
 Thanks,<br>

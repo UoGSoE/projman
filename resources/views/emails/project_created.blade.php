@@ -1,7 +1,7 @@
 <x-mail::message>
     # Introduction
 
-    New Project created.
+    New Work Package created.
 
     <x-mail::button :url="''">
         Button Text

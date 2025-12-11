@@ -120,7 +120,7 @@
                     @if ($selectedRole)
                         @if ($selectedRole->users()->count() > 0)
                             <p>"{{ $selectedRole->name }}" role is assigned to {{ $selectedRole->users->count() }}
-                                users. Any users with this role will lose access to the associated projects and alerts.
+                                users. Any users with this role will lose access to the associated work packages and alerts.
                             </p>
                         @else
                             <p>Are you sure you want to delete "{{ $selectedRole->name }}" role?

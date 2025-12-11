@@ -1,7 +1,7 @@
 <div>
     @if ($projects->isEmpty())
         <div class="flex flex-col h-full mt-6 space-y-6">
-            <flux:text>You don't have any projects yet. Start a new project to get underway.</flux:text>
+            <flux:text>You don't have any work packages yet. Start a new work package to get underway.</flux:text>
         </div>
     @else
         @if (!$userId)
@@ -25,7 +25,7 @@
         @endif
         <flux:table :paginate="$projects">
             <flux:table.columns>
-                <flux:table.column>Project</flux:table.column>
+                <flux:table.column>Work Package</flux:table.column>
                 @if (!$userId)
                     <flux:table.column sortable :sorted="$sortBy === 'user'" :direction="$sortDirection"
                         wire:click="sort('user')">
@@ -93,7 +93,7 @@
                                         <flux:menu.item icon="at-symbol">Request Progress Update</flux:menu.item>
                                         <flux:menu.separator />
                                         <flux:menu.item wire:click="cancelProject({{ $project->id }})"
-                                            wire:confirm="Are you sure you want to cancel this project?" icon="trash"
+                                            wire:confirm="Are you sure you want to cancel this work package?" icon="trash"
                                             variant="danger">Cancel</flux:menu.item>
                                     </flux:menu>
                                 </flux:dropdown>

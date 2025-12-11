@@ -1,10 +1,10 @@
 <x-mail::message>
 # Scoping Scheduled
 
-The scoping phase for project **{{ $project->title }}** has been approved and scheduled for implementation.
+The scoping phase for work package **{{ $project->title }}** has been approved and scheduled for implementation.
 
 <x-mail::button :url="route('project.show', $project)">
-View Project
+View Work Package
 </x-mail::button>
 
 Thanks,<br>

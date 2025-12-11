@@ -86,20 +86,20 @@
     @if ($skills->isEmpty())
         <flux:callout variant="secondary" icon="sparkles">
             <flux:callout.heading>No skills recorded</flux:callout.heading>
-            <flux:callout.text>Add skills from the Skills Manager to start matching this user to projects.</flux:callout.text>
+            <flux:callout.text>Add skills from the Skills Manager to start matching this user to work packages.</flux:callout.text>
         </flux:callout>
     @endif
 
     <flux:card class="space-y-6">
         <div>
-            <flux:heading size="lg">Requested projects</flux:heading>
-            <flux:text variant="subtle" class="mt-1 text-sm">Projects submitted by this user.</flux:text>
+            <flux:heading size="lg">Requested work packages</flux:heading>
+            <flux:text variant="subtle" class="mt-1 text-sm">Work packages submitted by this user.</flux:text>
         </div>
 
         @if ($requestedProjects->isNotEmpty())
             <flux:table>
                 <flux:table.columns>
-                    <flux:table.column>Project</flux:table.column>
+                    <flux:table.column>Work Package</flux:table.column>
                     <flux:table.column>Status</flux:table.column>
                     <flux:table.column align="end">Requested</flux:table.column>
                 </flux:table.columns>
@@ -125,8 +125,8 @@
             </flux:table>
         @else
             <flux:callout variant="secondary" icon="inbox">
-                <flux:callout.heading>No project requests</flux:callout.heading>
-                <flux:callout.text>This user has not requested any projects yet.</flux:callout.text>
+                <flux:callout.heading>No work package requests</flux:callout.heading>
+                <flux:callout.text>This user has not requested any work packages yet.</flux:callout.text>
             </flux:callout>
         @endif
     </flux:card>
@@ -135,12 +135,12 @@
         <flux:card class="space-y-6">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <flux:heading size="lg">IT project assignments</flux:heading>
-                    <flux:text variant="subtle" class="mt-1 text-sm">Projects where this user appears in scheduling IT staff.</flux:text>
+                    <flux:heading size="lg">IT work package assignments</flux:heading>
+                    <flux:text variant="subtle" class="mt-1 text-sm">Work packages where this user appears in scheduling IT staff.</flux:text>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <flux:field variant="inline" class="sm:justify-end">
-                        <flux:switch label="Include completed projects" wire:model.live="showAllAssignments" />
+                        <flux:switch label="Include completed work packages" wire:model.live="showAllAssignments" />
                     </flux:field>
                     <flux:badge size="sm" variant="outline" icon="users">
                         {{ $itAssignments->count() }} assignments
@@ -151,7 +151,7 @@
             @if ($itAssignments->isNotEmpty())
                 <flux:table>
                     <flux:table.columns>
-                        <flux:table.column>Project</flux:table.column>
+                        <flux:table.column>Work Package</flux:table.column>
                         <flux:table.column>Requested by</flux:table.column>
                         <flux:table.column>Status</flux:table.column>
                         <flux:table.column align="end">Deadline</flux:table.column>
@@ -188,7 +188,7 @@
             @else
                 <flux:callout variant="secondary" icon="hand-raised">
                     <flux:callout.heading>No IT assignments to show</flux:callout.heading>
-                    <flux:callout.text>This user isn't currently scheduled on any IT projects.</flux:callout.text>
+                    <flux:callout.text>This user isn't currently scheduled on any IT work packages.</flux:callout.text>
                 </flux:callout>
             @endif
         </flux:card>

@@ -1,11 +1,11 @@
 <div>
-    <flux:heading size="lg">Project Backlog</flux:heading>
+    <flux:heading size="lg">Work Package Backlog</flux:heading>
 
     <div class="flex flex-col md:flex-row gap-6 mt-6">
         <flux:input
             type="text"
             wire:model.live="search"
-            placeholder="Search projects..."
+            placeholder="Search work packages..."
         />
 
         <flux:select wire:model.live="statusFilter" placeholder="Filter by status...">
@@ -19,7 +19,7 @@
     <flux:separator variant="subtle" class="mt-6" />
 
     @if ($projects->isEmpty())
-        <flux:text class="mt-6">No projects found matching your criteria.</flux:text>
+        <flux:text class="mt-6">No work packages found matching your criteria.</flux:text>
     @else
         <flux:table :paginate="$projects" class="mt-6">
             <flux:table.columns>
