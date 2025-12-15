@@ -24,8 +24,6 @@ class UserList extends Component
 
     public $availableRoles = [];
 
-    public $formModified = false;
-
     public function render()
     {
         return view('livewire.user-list', [
@@ -75,15 +73,8 @@ class UserList extends Component
 
     public function openChangeUserRoleModal(User $user)
     {
-
-        $this->markFormAsNotModified();
-
-        // Refresh the user to get fresh data from database
         $this->selectedUser = $user->fresh(['roles']);
-
-        // Get user's current roles from the fresh database data
         $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
-        // Get all available roles from the database
         $this->availableRoles = Role::active()->get();
     }
 
@@ -119,40 +110,13 @@ class UserList extends Component
 
         // Update the component state with fresh data
         $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
-        $this->markFormAsNotModified();
 
         Flux::modal('change-user-role')->close();
         Flux::toast('User roles updated successfully', variant: 'success');
     }
 
-    public function resetChangeUserRoleModal()
-    {
-
-        $this->userRoles = [];
-        $this->selectedUser = null;
-        $this->markFormAsNotModified();
-    }
-
-    public function markFormAsModified()
-    {
-        $this->formModified = true;
-    }
-
-    public function markFormAsNotModified()
-    {
-        $this->formModified = false;
-    }
-
     public function updatedSearch()
     {
-        // Reset pagination when search changes
         $this->resetPage();
-    }
-
-    public function updated($propertyName)
-    {
-        if (in_array($propertyName, ['userRoles'])) {
-            $this->markFormAsModified();
-        }
     }
 }

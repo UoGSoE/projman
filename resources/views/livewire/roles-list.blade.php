@@ -64,7 +64,7 @@
         </flux:table.rows>
     </flux:table>
 
-    <flux:modal name="edit-role" variant="flyout" @close="resetEditRoleModal">
+    <flux:modal name="edit-role" variant="flyout">
         <form wire:submit="saveEditRole">
             <div class="space-y-6">
                 <div>
@@ -76,12 +76,12 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model.live="roleName" required wire:change="markFormAsModified" />
+                        <flux:input wire:model.live="roleName" required />
                         <flux:error name="roleName" />
                     </flux:field>
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model.live="roleDescription" wire:change="markFormAsModified" />
+                        <flux:textarea wire:model.live="roleDescription" />
                         <flux:error name="roleDescription" />
                     </flux:field>
                     <flux:field>
@@ -89,7 +89,7 @@
                         <flux:description>
                             Active roles will be shown to users.
                         </flux:description>
-                        <flux:switch value wire:model.live="roleIsActive" wire:change="markFormAsModified" />
+                        <flux:switch wire:model.live="roleIsActive" />
                         <flux:error name="roleIsActive" />
                     </flux:field>
                 </div>
@@ -97,14 +97,11 @@
                 <div class="flex gap-3">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button type="button" variant="ghost" wire:click="resetEditRoleModal">Cancel
-                        </flux:button>
+                        <flux:button type="button" variant="ghost">Cancel</flux:button>
                     </flux:modal.close>
-                    @if ($formModified || $isCreating)
-                        <flux:button type="submit" variant="primary">
-                            {{ $isCreating ? 'Create Role' : 'Save Changes' }}
-                        </flux:button>
-                    @endif
+                    <flux:button type="submit" variant="primary">
+                        {{ $isCreating ? 'Create Role' : 'Save Changes' }}
+                    </flux:button>
                 </div>
             </div>
         </form>

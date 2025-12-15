@@ -27,8 +27,6 @@ class RolesList extends Component
 
     public $roleIsActive = false;
 
-    public $formModified = false;
-
     public function render()
     {
         return view('livewire.roles-list', [
@@ -71,7 +69,6 @@ class RolesList extends Component
         $this->roleName = '';
         $this->roleDescription = '';
         $this->roleIsActive = false;
-        $this->markFormAsNotModified();
         Flux::modal('edit-role')->show();
     }
 
@@ -166,29 +163,10 @@ class RolesList extends Component
         $this->roleName = '';
         $this->roleDescription = '';
         $this->roleIsActive = false;
-        $this->markFormAsNotModified();
-    }
-
-    public function updated($propertyName)
-    {
-        if (in_array($propertyName, ['roleName', 'roleDescription', 'roleIsActive'])) {
-            $this->markFormAsModified();
-        }
     }
 
     public function updatedSearch()
     {
-        // Reset pagination when search changes
         $this->resetPage();
-    }
-
-    public function markFormAsNotModified()
-    {
-        $this->formModified = false;
-    }
-
-    public function markFormAsModified()
-    {
-        $this->formModified = true;
     }
 }

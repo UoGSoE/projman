@@ -328,20 +328,4 @@ describe('User Role Management', function () {
         $this->assertTrue($this->regularUser->roles()->where('name', 'Administrator')->exists());
         $this->assertTrue($this->regularUser->roles()->where('name', 'Manager')->exists());
     });
-
-    it('resets modal state after close', function () {
-        livewire(UserList::class)
-            ->call('openChangeUserRoleModal', $this->regularUser)
-            ->call('resetChangeUserRoleModal')
-            ->assertSet('selectedUser', null)
-            ->assertSet('userRoles', []);
-    });
-
-    it('discards changes when modal is closed', function () {
-        livewire(UserList::class)
-            ->call('openChangeUserRoleModal', $this->regularUser)
-            ->set('userRoles', ['Administrator', 'Manager'])
-            ->call('resetChangeUserRoleModal')
-            ->assertSet('userRoles', []);
-    });
 });

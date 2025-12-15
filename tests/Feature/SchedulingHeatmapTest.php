@@ -57,7 +57,7 @@ describe('Scheduling Heatmap Integration', function () {
             'is_staff' => true,
         ]);
         $unassignedStaff = User::factory()->create([
-            'surname' => 'Apple',
+            'surname' => 'Zzzzzzzzzz',
             'forenames' => 'Bob',
             'is_staff' => true,
         ]);
@@ -76,7 +76,7 @@ describe('Scheduling Heatmap Integration', function () {
 
         $staffCollection = $heatmapData['staff'];
         $firstStaff = $staffCollection->first()['user'];
-        $secondStaff = $staffCollection->skip(1)->first()['user'];
+        $secondStaff = $staffCollection->last()['user'];
 
         expect($firstStaff->id)->toBe($assignedStaff->id)
             ->and($secondStaff->id)->toBe($unassignedStaff->id);

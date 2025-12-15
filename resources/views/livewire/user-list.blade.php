@@ -99,22 +99,20 @@
             @endforeach
         </flux:table.rows>
     </flux:table>
-    <flux:modal name="change-user-role" variant="flyout" @close="resetChangeUserRoleModal">
+    <flux:modal name="change-user-role" variant="flyout">
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Change User Role</flux:heading>
                 <flux:text class="mt-2">Click on roles to assign or remove them from this user.
                 </flux:text>
             </div>
-            <form wire:submit="saveUserRoles" method="post">
-                @csrf
+            <form wire:submit="saveUserRoles">
                 <div class="space-y-4 max-w-sm">
                     <flux:input label="User"
                         :value="$selectedUser ? $selectedUser->forenames . ' ' . $selectedUser->surname : ''"
                         readonly disabled />
 
                     <flux:checkbox.group wire:model.live="userRoles"
-                     wire:change="markFormAsModified"
                      label="User Roles"
                      variant="cards"
                      class="flex-col">
@@ -131,11 +129,9 @@
                 <div class="flex gap-3 mt-6">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button variant="ghost" wire:click="resetChangeUserRoleModal">Cancel</flux:button>
+                        <flux:button variant="ghost">Cancel</flux:button>
                     </flux:modal.close>
-                    @if ($formModified)
-                        <flux:button variant="primary" type="submit">Save Changes</flux:button>
-                    @endif
+                    <flux:button variant="primary" type="submit">Save Changes</flux:button>
                 </div>
             </form>
         </div>
