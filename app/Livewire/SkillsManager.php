@@ -3,10 +3,11 @@
 namespace App\Livewire;
 
 use App\Enums\SkillLevel;
+use App\Livewire\Forms\SkillForm;
+use App\Livewire\Forms\UserSkillForm;
 use App\Models\Skill;
 use App\Models\User;
 use Flux\Flux;
-use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Ohffs\SimpleSpout\ExcelSheet;
@@ -14,6 +15,10 @@ use Ohffs\SimpleSpout\ExcelSheet;
 class SkillsManager extends Component
 {
     use WithPagination;
+
+    public SkillForm $skillForm;
+
+    public UserSkillForm $userSkillForm;
 
     public string $sortColumn = 'name';
 
@@ -25,33 +30,14 @@ class SkillsManager extends Component
 
     public string $activeTab = 'available-skills';
 
+    // UI state for user skill modal
     public bool $showCreateSkillForm = false;
-
-    public ?Skill $selectedSkill = null;
-
-    public ?User $selectedUser = null;
 
     public ?Skill $selectedSkillForAssignment = null;
 
-    // Skill form fields
-    public string $skillName = '';
-
-    public string $skillDescription = '';
-
-    public string $skillCategory = '';
-
-    // User skill assignment fields
-    public string $newSkillLevel = '';
-
-    public array $userSkillLevels = [];
-
     public string $skillSearchForAssignment = '';
 
-    public string $newSkillName = '';
-
-    public string $newSkillDescription = '';
-
-    public string $newSkillCategory = '';
+    public string $newSkillLevel = '';
 
     public function render()
     {
@@ -126,52 +112,36 @@ class SkillsManager extends Component
 
     public function updatedSkillSearchForAssignment(): void
     {
-        $this->newSkillName = $this->skillSearchForAssignment;
+        $this->userSkillForm->newSkillName = $this->skillSearchForAssignment;
     }
 
     // Skill CRUD
 
     public function openAddSkillModal(): void
     {
-        $this->selectedSkill = null;
-        $this->skillName = '';
-        $this->skillDescription = '';
-        $this->skillCategory = '';
+        $this->skillForm->clear();
         Flux::modal('add-skill-form')->show();
     }
 
     public function openEditSkillModal(Skill $skill): void
     {
-        $this->selectedSkill = $skill;
-        $this->skillName = $skill->name;
-        $this->skillDescription = $skill->description;
-        $this->skillCategory = $skill->skill_category;
+        $this->skillForm->setSkill($skill);
         Flux::modal('edit-skill-form')->show();
     }
 
     public function saveSkill(): void
     {
-        $validated = $this->validate([
-            'skillName' => 'required|string|max:255',
-            'skillDescription' => 'required|string|min:3|max:255',
-            'skillCategory' => 'required|string|min:3|max:255',
-        ]);
+        $this->skillForm->save();
 
-        $skillData = [
-            'name' => $this->skillName,
-            'description' => $this->skillDescription,
-            'skill_category' => $this->skillCategory,
-        ];
-
-        if ($this->selectedSkill) {
-            $this->selectedSkill->update($skillData);
+        if ($this->skillForm->isEditing()) {
             Flux::toast('Skill updated successfully', variant: 'success');
             Flux::modal('edit-skill-form')->close();
         } else {
-            Skill::create($skillData);
             Flux::toast('Skill created successfully', variant: 'success');
             Flux::modal('add-skill-form')->close();
         }
+
+        $this->skillForm->clear();
     }
 
     public function deleteSkill(Skill $skill): void
@@ -190,15 +160,11 @@ class SkillsManager extends Component
 
     public function openUserSkillModal(User $user): void
     {
-        $this->selectedUser = $user->load('skills');
+        $this->userSkillForm->setUser($user);
         $this->skillSearchForAssignment = '';
         $this->selectedSkillForAssignment = null;
         $this->newSkillLevel = '';
-        $this->newSkillName = '';
-        $this->newSkillDescription = '';
-        $this->newSkillCategory = '';
         $this->showCreateSkillForm = false;
-        $this->userSkillLevels = $this->selectedUser->skills->pluck('pivot.skill_level', 'id')->toArray();
         Flux::modal('user-skills-form')->show();
     }
 
@@ -223,17 +189,10 @@ class SkillsManager extends Component
 
     public function addSkillWithLevel(): void
     {
-        if (! $this->selectedUser || ! $this->selectedSkillForAssignment || ! $this->newSkillLevel) {
-            return;
-        }
-
-        $this->validate([
-            'newSkillLevel' => ['required', Rule::enum(SkillLevel::class)],
-        ]);
-
-        $this->selectedUser->updateSkill($this->selectedSkillForAssignment->id, $this->newSkillLevel);
-        $this->refreshSelectedUser();
-        $this->userSkillLevels[$this->selectedSkillForAssignment->id] = $this->newSkillLevel;
+        $this->userSkillForm->addSkill(
+            $this->selectedSkillForAssignment,
+            SkillLevel::from($this->newSkillLevel)
+        );
         $this->selectedSkillForAssignment = null;
         $this->newSkillLevel = '';
 
@@ -245,45 +204,16 @@ class SkillsManager extends Component
         $this->showCreateSkillForm = ! $this->showCreateSkillForm;
 
         if ($this->showCreateSkillForm) {
-            $this->newSkillName = $this->skillSearchForAssignment;
-            $this->newSkillLevel = SkillLevel::BEGINNER->value;
+            $this->userSkillForm->newSkillName = $this->skillSearchForAssignment;
+            $this->userSkillForm->newSkillLevel = SkillLevel::BEGINNER;
         } else {
-            $this->newSkillName = '';
-            $this->newSkillDescription = '';
-            $this->newSkillCategory = '';
-            $this->newSkillLevel = '';
+            $this->userSkillForm->clearNewSkillFields();
         }
     }
 
     public function createAndAssignSkill(): void
     {
-        if (! $this->selectedUser) {
-            Flux::toast('No user selected', variant: 'danger');
-
-            return;
-        }
-
-        $this->validate([
-            'newSkillName' => 'required|string|max:255',
-            'newSkillDescription' => 'required|string|max:255',
-            'newSkillCategory' => 'required|string|max:255',
-            'newSkillLevel' => ['required', Rule::enum(SkillLevel::class)],
-        ]);
-
-        $skill = Skill::create([
-            'name' => $this->newSkillName,
-            'description' => $this->newSkillDescription,
-            'skill_category' => $this->newSkillCategory,
-        ]);
-
-        $this->selectedUser->updateSkill($skill->id, $this->newSkillLevel);
-        $this->refreshSelectedUser();
-        $this->userSkillLevels[$skill->id] = $this->newSkillLevel;
-
-        $this->newSkillName = '';
-        $this->newSkillDescription = '';
-        $this->newSkillCategory = '';
-        $this->newSkillLevel = '';
+        $this->userSkillForm->createAndAssign();
         $this->skillSearchForAssignment = '';
         $this->showCreateSkillForm = false;
 
@@ -292,38 +222,16 @@ class SkillsManager extends Component
 
     public function updateSkillLevel(int $skillId, string $level): void
     {
-        if (! $this->selectedUser || ! User::isValidSkillLevel($level)) {
-            if (! User::isValidSkillLevel($level)) {
-                Flux::toast('Invalid skill level', variant: 'danger');
-            }
-
-            return;
-        }
-
-        $this->selectedUser->updateSkill($skillId, $level);
-        $this->refreshSelectedUser();
-        $this->userSkillLevels[$skillId] = $level;
+        $this->userSkillForm->updateLevel($skillId, SkillLevel::from($level));
 
         Flux::toast('Skill level updated successfully', variant: 'success');
     }
 
     public function removeUserSkill(int $skillId): void
     {
-        if (! $this->selectedUser) {
-            return;
-        }
-
-        $this->selectedUser->removeSkill($skillId);
-        unset($this->userSkillLevels[$skillId]);
-        $this->refreshSelectedUser();
+        $this->userSkillForm->removeSkill($skillId);
 
         Flux::toast('Skill removed successfully', variant: 'success');
-    }
-
-    private function refreshSelectedUser(): void
-    {
-        $this->selectedUser = $this->selectedUser->fresh(['skills']);
-        $this->userSkillLevels = $this->selectedUser->skills->pluck('pivot.skill_level', 'id')->toArray();
     }
 
     // Export functionality

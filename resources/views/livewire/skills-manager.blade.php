@@ -175,24 +175,24 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model="skillName" placeholder="Enter skill name" />
-                        <flux:error name="skillName" />
+                        <flux:input wire:model="skillForm.name" placeholder="Enter skill name" />
+                        <flux:error name="skillForm.name" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model="skillDescription" placeholder="Enter skill description" />
-                        <flux:error name="skillDescription" />
+                        <flux:textarea wire:model="skillForm.description" placeholder="Enter skill description" />
+                        <flux:error name="skillForm.description" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Category</flux:label>
-                        <flux:autocomplete wire:model="skillCategory" placeholder="Search or enter skill category">
+                        <flux:autocomplete wire:model="skillForm.category" placeholder="Search or enter skill category">
                             @foreach ($filteredCategories as $category)
                                 <flux:autocomplete.item>{{ $category }}</flux:autocomplete.item>
                             @endforeach
                         </flux:autocomplete>
-                        <flux:error name="skillCategory" />
+                        <flux:error name="skillForm.category" />
                     </flux:field>
                 </div>
 
@@ -218,24 +218,24 @@
                 <div class="space-y-4 max-w-sm">
                     <flux:field>
                         <flux:label>Name</flux:label>
-                        <flux:input wire:model="skillName" placeholder="Enter skill name" />
-                        <flux:error name="skillName" />
+                        <flux:input wire:model="skillForm.name" placeholder="Enter skill name" />
+                        <flux:error name="skillForm.name" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Description</flux:label>
-                        <flux:textarea wire:model="skillDescription" placeholder="Enter skill description" />
-                        <flux:error name="skillDescription" />
+                        <flux:textarea wire:model="skillForm.description" placeholder="Enter skill description" />
+                        <flux:error name="skillForm.description" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Category</flux:label>
-                        <flux:autocomplete wire:model="skillCategory" placeholder="Search or enter skill category">
+                        <flux:autocomplete wire:model="skillForm.category" placeholder="Search or enter skill category">
                             @foreach ($filteredCategories as $category)
                                 <flux:autocomplete.item>{{ $category }}</flux:autocomplete.item>
                             @endforeach
                         </flux:autocomplete>
-                        <flux:error name="skillCategory" />
+                        <flux:error name="skillForm.category" />
                     </flux:field>
                 </div>
 
@@ -256,7 +256,7 @@
                 <div>
                     <flux:heading size="lg" class="flex items-center gap-2">Manage Skills for <flux:text
                             class="font-bold text-base" color="blue">
-                            {{ $selectedUser ? $selectedUser->full_name : '' }}</flux:text>
+                            {{ $userSkillForm->user?->full_name ?? '' }}</flux:text>
                     </flux:heading>
                     <flux:text class="mt-2">Add new skills or manage existing skill levels.</flux:text>
                 </div>
@@ -275,7 +275,7 @@
                                     @foreach ($filteredSkills as $skill)
                                         @php
                                             $userHasSkill =
-                                                $selectedUser && $selectedUser->skills->contains('id', $skill->id);
+                                                $userSkillForm->user && $userSkillForm->user->skills->contains('id', $skill->id);
                                         @endphp
                                         <flux:card
                                             class="hover:bg-zinc-50 dark:hover:bg-zinc-700 p-4 {{ $userHasSkill ? 'opacity-60' : 'cursor-pointer' }}"
@@ -350,40 +350,39 @@
                                             <div class="grid grid-cols-1 gap-4">
                                                 <flux:field>
                                                     <flux:label>Skill Name</flux:label>
-                                                    <flux:input wire:model.live="newSkillName"
-                                                        placeholder="Enter skill name"
-                                                        value="{{ $skillSearchForAssignment }}" />
-                                                    <flux:error name="newSkillName" />
+                                                    <flux:input wire:model.live="userSkillForm.newSkillName"
+                                                        placeholder="Enter skill name" />
+                                                    <flux:error name="userSkillForm.newSkillName" />
                                                 </flux:field>
 
                                                 <flux:field>
                                                     <flux:label>Description</flux:label>
-                                                    <flux:textarea wire:model.live="newSkillDescription"
+                                                    <flux:textarea wire:model.live="userSkillForm.newSkillDescription"
                                                         placeholder="Enter skill description" />
-                                                    <flux:error name="newSkillDescription" />
+                                                    <flux:error name="userSkillForm.newSkillDescription" />
                                                 </flux:field>
 
                                                 <flux:field>
                                                     <flux:label>Category</flux:label>
-                                                    <flux:autocomplete wire:model.live="newSkillCategory"
+                                                    <flux:autocomplete wire:model.live="userSkillForm.newSkillCategory"
                                                         placeholder="Search or enter skill category">
                                                         @foreach ($filteredCategories as $category)
                                                             <flux:autocomplete.item>{{ $category }}
                                                             </flux:autocomplete.item>
                                                         @endforeach
                                                     </flux:autocomplete>
-                                                    <flux:error name="newSkillCategory" />
+                                                    <flux:error name="userSkillForm.newSkillCategory" />
                                                 </flux:field>
 
                                                 <flux:field>
                                                     <flux:label>Skill Level</flux:label>
-                                                    <flux:select wire:model.live="newSkillLevel" required>
+                                                    <flux:select wire:model.live="userSkillForm.newSkillLevel" required>
                                                         @foreach (\App\Enums\SkillLevel::cases() as $level)
                                                             <flux:select.option value="{{ $level->value }}">
                                                                 {{ $level->getDisplayName() }}</flux:select.option>
                                                         @endforeach
                                                     </flux:select>
-                                                    <flux:error name="newSkillLevel" />
+                                                    <flux:error name="userSkillForm.newSkillLevel" />
                                                 </flux:field>
                                             </div>
 
@@ -409,10 +408,10 @@
                         <flux:heading size="md">User Skills</flux:heading>
 
 
-                        @if ($selectedUser && $selectedUser->skills->count() > 0)
+                        @if ($userSkillForm->user && $userSkillForm->user->skills->count() > 0)
 
                             <div class="space-y-2">
-                                @foreach ($selectedUser->skills as $skill)
+                                @foreach ($userSkillForm->user->skills as $skill)
                                     <flux:card class="hover:bg-zinc-50 dark:hover:bg-zinc-700 cursor-pointer p-4">
                                         <div>
                                             <div class="flex items-center gap-2">
@@ -425,7 +424,7 @@
                                         </div>
                                         <div class="flex items-center gap-4 mt-4" @click.stop>
 
-                                            <flux:select wire:model.live="userSkillLevels.{{ $skill->id }}"
+                                            <flux:select wire:model.live="userSkillForm.skillLevels.{{ $skill->id }}"
                                                 wire:change="updateSkillLevel({{ $skill->id }}, $event.target.value)"
                                                 @click.stop>
                                                 @foreach (\App\Enums\SkillLevel::cases() as $level)
