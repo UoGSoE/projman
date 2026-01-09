@@ -64,6 +64,11 @@ class Testing extends Model
         return $this->belongsTo(User::class, 'uat_tester_id');
     }
 
+    public function testLead(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'test_lead');
+    }
+
     public function isReadyForServiceAcceptance(): bool
     {
         return $this->user_acceptance === 'approved';

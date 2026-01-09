@@ -1,7 +1,12 @@
 <div>
     <div class="flex flex-col md:flex-row gap-4 justify-between">
         <flux:heading size="xl" level="1">Work Package Details</flux:heading>
-        <flux:button icon="pencil" variant="primary" href="{{ route('project.edit', $project) }}">Edit</flux:button>
+        <div class="flex gap-2">
+            @admin
+            <flux:button icon="arrow-down-tray" href="{{ route('project.export', $project) }}" target="_blank">Export</flux:button>
+            @endadmin
+            <flux:button icon="pencil" variant="primary" href="{{ route('project.edit', $project) }}">Edit</flux:button>
+        </div>
     </div>
 
     <div class="flex flex-col md:grid grid-cols-2 gap-4">

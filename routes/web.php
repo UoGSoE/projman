@@ -22,5 +22,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/portfolio/backlog', \App\Livewire\BacklogList::class)->name('portfolio.backlog');
         Route::get('/portfolio/change-on-a-page/{project}', \App\Livewire\ChangeOnAPage::class)->name('portfolio.change-on-a-page');
         Route::get('/portfolio/roadmap', \App\Livewire\RoadmapView::class)->name('portfolio.roadmap');
+        Route::get('/work-package/{project}/export', \App\Http\Controllers\ProjectExportController::class)->name('project.export');
     });
 });

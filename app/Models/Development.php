@@ -40,6 +40,11 @@ class Development extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function leadDeveloper(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'lead_developer');
+    }
+
     public function notes(): MorphMany
     {
         return $this->morphMany(Note::class, 'noteable');
