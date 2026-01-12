@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Busyness;
 use App\Livewire\HeatMapViewer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -79,17 +80,18 @@ it('provides active projects but excludes cancelled projects', function () {
     expect($activeProjects[0]->id)->toBe($activeProject->id);
 });
 
-it('provides 10 upcoming working days', function () {
+it('provides 10 buckets in days view by default', function () {
     // Act
     $component = Livewire::test(HeatMapViewer::class);
 
     // Assert
-    $days = $component->viewData('days');
-    expect($days)->toHaveCount(10);
+    $buckets = $component->viewData('buckets');
+    expect($buckets)->toHaveCount(10);
 
-    // All days should be weekdays
-    foreach ($days as $day) {
-        expect($day->isWeekday())->toBeTrue();
+    // All buckets should have label/sublabel/start/end
+    foreach ($buckets as $bucket) {
+        expect($bucket)->toHaveKeys(['label', 'sublabel', 'start', 'end']);
+        expect($bucket['start']->isWeekday())->toBeTrue();
     }
 });
 
@@ -108,4 +110,87 @@ it('includes busyness data for each staff member', function () {
     $staff = $component->viewData('staff');
     expect($staff[0])->toHaveKey('busyness');
     expect($staff[0]['busyness'])->toHaveCount(10);
+});
+
+it('defaults to days view mode', function () {
+    // Act
+    $component = Livewire::test(HeatMapViewer::class);
+
+    // Assert
+    expect($component->get('viewMode'))->toBe('days');
+    expect($component->viewData('viewMode'))->toBe('days');
+});
+
+it('can switch to weeks view mode', function () {
+    // Act
+    $component = Livewire::test(HeatMapViewer::class)
+        ->set('viewMode', 'weeks');
+
+    // Assert
+    expect($component->get('viewMode'))->toBe('weeks');
+    $buckets = $component->viewData('buckets');
+    expect($buckets)->toHaveCount(10);
+
+    // Week buckets should have W prefix in label
+    foreach ($buckets as $bucket) {
+        expect($bucket['label'])->toStartWith('W');
+    }
+});
+
+it('can switch to months view mode', function () {
+    // Act
+    $component = Livewire::test(HeatMapViewer::class)
+        ->set('viewMode', 'months');
+
+    // Assert
+    expect($component->get('viewMode'))->toBe('months');
+    $buckets = $component->viewData('buckets');
+    expect($buckets)->toHaveCount(10);
+
+    // Month buckets should have 3-letter month abbreviation
+    $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    foreach ($buckets as $bucket) {
+        expect($monthNames)->toContain($bucket['label']);
+    }
+});
+
+it('calculates busyness from project assignments in weeks view', function () {
+    // Arrange
+    $staff = User::factory()->create([
+        'is_staff' => true,
+    ]);
+
+    $project = $this->createProject([
+        'title' => 'Assigned Project',
+        'status' => 'scheduling',
+    ]);
+
+    // Assign the staff member to the project with dates that overlap the first week
+    $project->scheduling->update([
+        'assigned_to' => $staff->id,
+        'estimated_start_date' => now()->startOfWeek(),
+        'estimated_completion_date' => now()->endOfWeek(),
+    ]);
+
+    // Act
+    $component = Livewire::test(HeatMapViewer::class)
+        ->set('viewMode', 'weeks');
+
+    // Assert - staff should have LOW busyness for first week (1 project)
+    $staffData = $component->viewData('staff');
+    $assignedStaff = $staffData->firstWhere('user.id', $staff->id);
+
+    expect($assignedStaff['busyness'][0])->toBe(Busyness::LOW);
+});
+
+it('persists view mode in URL', function () {
+    // Arrange & Act
+    $this->get(route('project.heatmap', ['viewMode' => 'months']))
+        ->assertOk();
+
+    $component = Livewire::test(HeatMapViewer::class)
+        ->set('viewMode', 'months');
+
+    // Assert
+    expect($component->get('viewMode'))->toBe('months');
 });

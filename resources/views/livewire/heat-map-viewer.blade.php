@@ -1,13 +1,41 @@
 <div class="space-y-8">
-    <div>
-        <flux:heading size="xl" level="1">Staff Heatmap</flux:heading>
-        <flux:text class="mt-2 text-sm text-zinc-500">Upcoming ten working days of staff capacity at a glance.</flux:text>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <flux:heading size="xl" level="1">Staff Heatmap</flux:heading>
+            <flux:text class="mt-2 text-sm text-zinc-500">
+                @switch($viewMode)
+                    @case('weeks')
+                        Upcoming ten weeks of staff capacity at a glance.
+                        @break
+                    @case('months')
+                        Upcoming ten months of staff capacity at a glance.
+                        @break
+                    @default
+                        Upcoming ten working days of staff capacity at a glance.
+                @endswitch
+            </flux:text>
+        </div>
+
+        <div class="flex flex-col items-end gap-2">
+            <flux:radio.group wire:model.live="viewMode" variant="segmented" size="sm">
+                <flux:radio value="days" label="Days" />
+                <flux:radio value="weeks" label="Weeks" />
+                <flux:radio value="months" label="Months" />
+            </flux:radio.group>
+            <flux:text variant="subtle" class="text-xs">
+                @if ($viewMode === 'days')
+                    Showing manually reported busyness from staff profiles.
+                @else
+                    Showing busyness calculated from project assignments.
+                @endif
+            </flux:text>
+        </div>
     </div>
 
     <flux:separator variant="subtle" />
 
     @include('components.heatmap-table', [
-        'days' => $days,
+        'buckets' => $buckets,
         'staff' => $staff,
         'component' => $this,
     ])

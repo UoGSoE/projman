@@ -11,6 +11,192 @@ use Illuminate\Support\Collection;
 trait HasHeatmapData
 {
     /**
+     * Generate date buckets based on the current view mode.
+     *
+     * @return array<int, array{label: string, sublabel: string, start: Carbon, end: Carbon}>
+     */
+    protected function getDateBuckets(int $count = 10): array
+    {
+        $viewMode = property_exists($this, 'viewMode') ? $this->viewMode : 'days';
+
+        return match ($viewMode) {
+            'weeks' => $this->generateWeekBuckets($count),
+            'months' => $this->generateMonthBuckets($count),
+            default => $this->generateDayBuckets($count),
+        };
+    }
+
+    /**
+     * Generate day buckets (10 working days).
+     */
+    protected function generateDayBuckets(int $count): array
+    {
+        $days = $this->upcomingWorkingDays($count);
+
+        return array_map(fn (Carbon $day) => [
+            'label' => $day->format('D'),
+            'sublabel' => $day->format('d M'),
+            'start' => $day->copy()->startOfDay(),
+            'end' => $day->copy()->endOfDay(),
+        ], $days);
+    }
+
+    /**
+     * Generate week buckets (10 weeks starting from current week).
+     */
+    protected function generateWeekBuckets(int $count): array
+    {
+        $date = Carbon::today()->startOfWeek();
+        $buckets = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $weekStart = $date->copy();
+            $weekEnd = $date->copy()->endOfWeek();
+
+            $buckets[] = [
+                'label' => 'W'.$weekStart->weekOfYear,
+                'sublabel' => $weekStart->format('d M'),
+                'start' => $weekStart,
+                'end' => $weekEnd,
+            ];
+
+            $date->addWeek();
+        }
+
+        return $buckets;
+    }
+
+    /**
+     * Generate month buckets (10 months starting from current month).
+     */
+    protected function generateMonthBuckets(int $count): array
+    {
+        $date = Carbon::today()->startOfMonth();
+        $buckets = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $monthStart = $date->copy();
+            $monthEnd = $date->copy()->endOfMonth();
+
+            $buckets[] = [
+                'label' => $monthStart->format('M'),
+                'sublabel' => $monthStart->format('Y'),
+                'start' => $monthStart,
+                'end' => $monthEnd,
+            ];
+
+            $date->addMonth();
+        }
+
+        return $buckets;
+    }
+
+    /**
+     * Staff members with busyness calculated for each bucket.
+     */
+    protected function staffWithBusynessForBuckets(array $buckets, ?array $assignedUserIds = null, array $busynessAdjustments = []): Collection
+    {
+        $viewMode = property_exists($this, 'viewMode') ? $this->viewMode : 'days';
+
+        $staff = User::query()
+            ->where('is_staff', true)
+            ->orderBy('surname')
+            ->orderBy('forenames')
+            ->get();
+
+        if ($assignedUserIds !== null) {
+            $staff = $this->sortStaffByAssignment($staff, $assignedUserIds);
+        }
+
+        // For days view, use the existing week_1/week_2 busyness
+        if ($viewMode === 'days') {
+            return $staff->map(function (User $user) use ($buckets, $busynessAdjustments) {
+                $adjustment = $busynessAdjustments[$user->id] ?? 0;
+
+                return [
+                    'user' => $user,
+                    'busyness' => $this->busynessSeries($user, count($buckets), $adjustment),
+                ];
+            });
+        }
+
+        // For weeks/months, calculate busyness from project assignments
+        $projectsByUser = $this->getProjectAssignmentsByUser();
+
+        return $staff->map(function (User $user) use ($buckets, $projectsByUser, $busynessAdjustments) {
+            $userProjects = $projectsByUser->get($user->id, collect());
+            $adjustment = $busynessAdjustments[$user->id] ?? 0;
+
+            $busyness = array_map(function ($bucket) use ($userProjects, $adjustment) {
+                $count = $this->countProjectsInPeriod($userProjects, $bucket['start'], $bucket['end']);
+                $baseBusyness = Busyness::fromProjectCount($count);
+
+                return $adjustment === 0 ? $baseBusyness : $baseBusyness->adjustedBy($adjustment);
+            }, $buckets);
+
+            return [
+                'user' => $user,
+                'busyness' => $busyness,
+            ];
+        });
+    }
+
+    /**
+     * Get all active project assignments grouped by user ID.
+     */
+    protected function getProjectAssignmentsByUser(): Collection
+    {
+        $projects = Project::query()
+            ->currentlyActive()
+            ->with([
+                'scheduling',
+                'detailedDesign',
+                'development',
+                'testing',
+                'feasibility',
+                'scoping',
+            ])
+            ->get();
+
+        $assignments = collect();
+
+        foreach ($projects as $project) {
+            $userIds = $this->collectTeamMemberIds($project);
+
+            foreach ($userIds as $userId) {
+                if (! $assignments->has($userId)) {
+                    $assignments->put($userId, collect());
+                }
+                $assignments->get($userId)->push($project);
+            }
+        }
+
+        return $assignments;
+    }
+
+    /**
+     * Count how many projects overlap with the given period.
+     */
+    protected function countProjectsInPeriod(Collection $projects, Carbon $start, Carbon $end): int
+    {
+        return $projects->filter(function (Project $project) use ($start, $end) {
+            $projectStart = $project->scheduling?->estimated_start_date;
+            $projectEnd = $project->scheduling?->estimated_completion_date;
+
+            // If no dates set, assume the project is ongoing
+            if (! $projectStart && ! $projectEnd) {
+                return true;
+            }
+
+            // Project overlaps if it starts before period ends AND ends after period starts
+            $startsBeforePeriodEnds = ! $projectStart || $projectStart->lte($end);
+            $endsAfterPeriodStarts = ! $projectEnd || $projectEnd->gte($start);
+
+            return $startsBeforePeriodEnds && $endsAfterPeriodStarts;
+        })->count();
+    }
+
+    /**
      * Determine the busyness enum for the given user/day index.
      *
      * If adjustment is non-zero, shifts the stored busyness level

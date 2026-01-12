@@ -3,22 +3,27 @@
 namespace App\Livewire;
 
 use App\Traits\HasHeatmapData;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class HeatMapViewer extends Component
 {
     use HasHeatmapData;
 
+    #[Url]
+    public string $viewMode = 'days';
+
     public function render()
     {
-        $days = $this->upcomingWorkingDays();
-        $staff = $this->staffWithBusyness($days);
+        $buckets = $this->getDateBuckets();
+        $staff = $this->staffWithBusynessForBuckets($buckets);
         $activeProjects = $this->activeProjects();
 
         return view('livewire.heat-map-viewer', [
-            'days' => $days,
+            'buckets' => $buckets,
             'staff' => $staff,
             'activeProjects' => $activeProjects,
+            'viewMode' => $this->viewMode,
         ]);
     }
 }
