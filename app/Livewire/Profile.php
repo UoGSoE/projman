@@ -64,11 +64,14 @@ class Profile extends Component
 
     public function buildSkillArray()
     {
-        $user = auth()->user();
+        $user = auth()->user()->load('skills');
+        $userSkills = $user->skills->keyBy('id');
         $skills = Skill::orderBy('name')->get();
+
         foreach ($skills as $skill) {
+            $userSkill = $userSkills->get($skill->id);
             $this->userSkill[$skill->id] = [
-                'skill_level' => $user->getSkillLevel($skill),
+                'skill_level' => $userSkill?->pivot->skill_level ?? 'none',
             ];
         }
 
