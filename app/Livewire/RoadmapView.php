@@ -256,7 +256,7 @@ class RoadmapView extends Component
     public function bragColorClasses(string $bragStatus): string
     {
         return match ($bragStatus) {
-            'black' => 'bg-zinc-900 dark:bg-zinc-950 text-white',
+            'black' => 'bg-[rgb(27,122,200)] text-white',
             'red' => 'bg-red-600 dark:bg-red-700 text-white',
             'amber' => 'bg-amber-500 dark:bg-amber-600 text-white',
             'green' => 'bg-green-600 dark:bg-green-700 text-white',

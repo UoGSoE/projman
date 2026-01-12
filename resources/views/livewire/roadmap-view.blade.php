@@ -23,7 +23,7 @@
             <span>Overdue</span>
         </div>
         <div class="flex items-center gap-2">
-            <span class="inline-block w-4 h-4 rounded bg-zinc-900"></span>
+            <span class="inline-block w-4 h-4 rounded bg-[rgb(27,122,200)]"></span>
             <span>Completed</span>
         </div>
     </div>
