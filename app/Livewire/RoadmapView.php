@@ -4,21 +4,29 @@ namespace App\Livewire;
 
 use App\Enums\ProjectStatus;
 use App\Models\Project;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
+use Flux\DateRange;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class RoadmapView extends Component
 {
+    #[Url]
+    public ?DateRange $dateRange = null;
+
+    public function mount(): void
+    {
+        $this->dateRange ??= new DateRange(now()->startOfWeek(), now()->addMonths(3)->endOfWeek());
+    }
+
     public function render()
     {
         $allProjects = $this->projects();
-        $timelineStart = $this->calculateTimelineStart($allProjects);
-        $timelineEnd = $this->calculateTimelineEnd($allProjects);
-        $totalWeeks = $timelineStart && $timelineEnd
-            ? (int) $timelineStart->diffInWeeks($timelineEnd) + 1
-            : 0;
+        $timelineStart = $this->dateRange->start()->copy()->startOfWeek();
+        $timelineEnd = $this->dateRange->end()->copy()->endOfWeek();
+        $totalWeeks = (int) $timelineStart->diffInWeeks($timelineEnd) + 1;
 
         return view('livewire.roadmap-view', [
             'roadmapData' => $this->prepareRoadmapData($allProjects, $timelineStart, $totalWeeks),
@@ -140,15 +148,20 @@ class RoadmapView extends Component
     #[Computed]
     public function projects(): Collection
     {
+        $rangeStart = $this->dateRange->start();
+        $rangeEnd = $this->dateRange->end();
+
         return Project::query()
             ->with([
                 'user',
                 'scheduling',
             ])
             ->whereNotIn('status', [ProjectStatus::CANCELLED])
-            ->whereHas('scheduling', function ($query) {
+            ->whereHas('scheduling', function ($query) use ($rangeStart, $rangeEnd) {
                 $query->whereNotNull('estimated_start_date')
-                    ->whereNotNull('estimated_completion_date');
+                    ->whereNotNull('estimated_completion_date')
+                    ->where('estimated_start_date', '<=', $rangeEnd)
+                    ->where('estimated_completion_date', '>=', $rangeStart);
             })
             ->get();
     }
@@ -167,34 +180,10 @@ class RoadmapView extends Component
     }
 
     /**
-     * Calculate timeline start (1 week before earliest project).
-     */
-    private function calculateTimelineStart(Collection $projects): ?Carbon
-    {
-        $dates = $projects->pluck('scheduling.estimated_start_date')->filter();
-
-        return $dates->isEmpty() ? null : $dates->min()->copy()->startOfWeek();
-    }
-
-    /**
-     * Calculate timeline end (1 week after latest project).
-     */
-    private function calculateTimelineEnd(Collection $projects): ?Carbon
-    {
-        $dates = $projects->pluck('scheduling.estimated_completion_date')->filter();
-
-        return $dates->isEmpty() ? null : $dates->max()->copy()->endOfWeek()->addWeek();
-    }
-
-    /**
      * Calculate month spans for headers.
      */
-    private function calculateMonthSpans(?Carbon $timelineStart, ?Carbon $timelineEnd): Collection
+    private function calculateMonthSpans(Carbon $timelineStart, Carbon $timelineEnd): Collection
     {
-        if (! $timelineStart || ! $timelineEnd) {
-            return collect();
-        }
-
         $months = collect();
         $current = $timelineStart->copy()->startOfMonth();
 
@@ -216,18 +205,6 @@ class RoadmapView extends Component
         }
 
         return $months;
-    }
-
-    #[Computed]
-    public function timelineStart(): ?Carbon
-    {
-        return $this->calculateTimelineStart($this->projects());
-    }
-
-    #[Computed]
-    public function timelineEnd(): ?Carbon
-    {
-        return $this->calculateTimelineEnd($this->projects());
     }
 
     public function calculateBRAG(Project $project): string

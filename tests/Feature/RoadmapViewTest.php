@@ -5,8 +5,8 @@ use App\Enums\ServiceFunction;
 use App\Livewire\RoadmapView;
 use App\Models\Project;
 use App\Models\User;
+use Flux\DateRange;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -154,51 +154,63 @@ it('displays month column headers correctly', function () {
         ->assertSee(now()->addMonths(2)->format('M Y'));
 });
 
-it('calculates timeline start from earliest project date', function () {
+it('initializes with a default date range of 3 months', function () {
+    $component = Livewire::test(RoadmapView::class);
+
+    expect($component->instance()->dateRange)
+        ->toBeInstanceOf(DateRange::class);
+
+    // Default should span approximately 3 months from now
+    expect($component->instance()->dateRange->start()->format('Y-m-d'))
+        ->toBe(now()->startOfWeek()->format('Y-m-d'));
+    expect($component->instance()->dateRange->end()->format('Y-m'))
+        ->toBe(now()->addMonths(3)->format('Y-m'));
+});
+
+it('filters projects by selected date range', function () {
     $user = User::factory()->create();
 
-    $earlyProject = $this->createProject(['user_id' => $user->id]);
-    $earlyProject->scheduling()->update([
-        'estimated_start_date' => now()->subMonths(3),
-        'estimated_completion_date' => now(),
-    ]);
-
-    $lateProject = $this->createProject(['user_id' => $user->id]);
-    $lateProject->scheduling()->update([
-        'estimated_start_date' => now(),
+    // Project within range (next 2 months)
+    $projectInRange = $this->createProject(['user_id' => $user->id, 'title' => 'In Range Project']);
+    $projectInRange->scheduling()->update([
+        'estimated_start_date' => now()->addWeeks(2),
         'estimated_completion_date' => now()->addMonths(2),
     ]);
 
-    $component = Livewire::test(RoadmapView::class);
+    // Project outside range (6 months from now)
+    $projectOutOfRange = $this->createProject(['user_id' => $user->id, 'title' => 'Out Of Range Project']);
+    $projectOutOfRange->scheduling()->update([
+        'estimated_start_date' => now()->addMonths(6),
+        'estimated_completion_date' => now()->addMonths(8),
+    ]);
 
-    expect($component->instance()->timelineStart())
-        ->toBeInstanceOf(Carbon::class)
-        ->format('Y-m')->toBe(now()->subMonths(3)->format('Y-m'));
+    // Set date range to next 3 months only (using array format for Livewire synth)
+    Livewire::test(RoadmapView::class)
+        ->set('dateRange', [
+            'start' => now()->format('Y-m-d'),
+            'end' => now()->addMonths(3)->format('Y-m-d'),
+        ])
+        ->assertSee('In Range Project')
+        ->assertDontSee('Out Of Range Project');
 });
 
-it('calculates timeline end from latest project date with padding', function () {
+it('shows projects that overlap with the date range', function () {
     $user = User::factory()->create();
 
-    $shortProject = $this->createProject(['user_id' => $user->id]);
-    $shortProject->scheduling()->update([
-        'estimated_start_date' => now(),
+    // Project that starts before range but ends within
+    $overlappingProject = $this->createProject(['user_id' => $user->id, 'title' => 'Overlapping Project']);
+    $overlappingProject->scheduling()->update([
+        'estimated_start_date' => now()->subMonth(),
         'estimated_completion_date' => now()->addMonth(),
     ]);
 
-    $longProject = $this->createProject(['user_id' => $user->id]);
-    $longProject->scheduling()->update([
-        'estimated_start_date' => now(),
-        'estimated_completion_date' => now()->addMonths(6),
-    ]);
-
-    $component = Livewire::test(RoadmapView::class);
-
-    // Timeline end includes 1 week padding after the latest project end date
-    $expectedEnd = now()->addMonths(6)->endOfWeek()->addWeek();
-
-    expect($component->instance()->timelineEnd())
-        ->toBeInstanceOf(Carbon::class)
-        ->format('Y-m')->toBe($expectedEnd->format('Y-m'));
+    // Use array format for Livewire synth
+    Livewire::test(RoadmapView::class)
+        ->set('dateRange', [
+            'start' => now()->format('Y-m-d'),
+            'end' => now()->addMonths(3)->format('Y-m-d'),
+        ])
+        ->assertSee('Overlapping Project');
 });
 
 it('links project bars to change on a page', function () {
@@ -241,7 +253,7 @@ it('displays stubbed status boxes', function () {
 
 it('handles empty roadmap gracefully', function () {
     Livewire::test(RoadmapView::class)
-        ->assertSee('No scheduled work packages');
+        ->assertSee('No scheduled work packages in the selected date range');
 });
 
 it('excludes cancelled projects from roadmap', function () {
@@ -271,7 +283,7 @@ it('comprehensive integration test', function () {
     ]);
     $infraProject->scheduling()->update([
         'estimated_start_date' => now(),
-        'estimated_completion_date' => now()->addMonths(4),
+        'estimated_completion_date' => now()->addMonths(2),
     ]);
 
     $overdueProject = $this->createProject([
@@ -299,9 +311,12 @@ it('comprehensive integration test', function () {
         'title' => 'Future Planning',
     ]);
 
-    $response = $this->get(route('portfolio.roadmap'));
-
-    $response->assertOk()
+    // Set date range to cover all projects (past and future)
+    Livewire::test(RoadmapView::class)
+        ->set('dateRange', [
+            'start' => now()->subMonths(4)->format('Y-m-d'),
+            'end' => now()->addMonths(4)->format('Y-m-d'),
+        ])
         ->assertSee('Work Package Roadmap')
         ->assertSee('College Infrastructure')
         ->assertSee('Applications & Data')

@@ -1,8 +1,13 @@
 <div class="space-y-8">
     {{-- Header --}}
-    <div>
-        <flux:heading size="xl">Work Package Roadmap</flux:heading>
-        <flux:subheading>Timeline view of all work packages grouped by service function</flux:subheading>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <flux:heading size="xl">Work Package Roadmap</flux:heading>
+            <flux:subheading>Timeline view of all work packages grouped by service function</flux:subheading>
+        </div>
+        <div>
+            <flux:date-picker mode="range" wire:model.live="dateRange" />
+        </div>
     </div>
 
     <flux:separator variant="subtle" />
@@ -28,9 +33,9 @@
         </div>
     </div>
 
-    @if($totalWeeks === 0)
+    @if(empty($roadmapData))
         <flux:callout icon="calendar" variant="secondary">
-            No scheduled work packages yet. Work packages need start and end dates to appear on the roadmap.
+            No scheduled work packages in the selected date range.
         </flux:callout>
     @else
         {{-- Timeline --}}
