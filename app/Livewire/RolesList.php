@@ -83,6 +83,8 @@ class RolesList extends Component
         $this->roleName = $this->selectedRole->name;
         $this->roleDescription = $this->selectedRole->description;
         $this->roleIsActive = $this->selectedRole->is_active;
+
+        Flux::modal('edit-role')->show();
     }
 
     public function openDeleteRoleModal(Role $role)

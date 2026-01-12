@@ -45,11 +45,9 @@
 
                             <flux:menu>
 
-                                <flux:menu.item icon="pencil">
-                                    <flux:modal.trigger name="edit-role"
-                                        wire:click="openEditRoleModal({{ $role->id }})">
-                                        Edit Role
-                                    </flux:modal.trigger>
+                                <flux:menu.item icon="pencil"
+                                    wire:click="openEditRoleModal({{ $role->id }})">
+                                    Edit Role
                                 </flux:menu.item>
                                 <flux:menu.separator />
                                 <flux:menu.item variant="danger" icon="trash"
