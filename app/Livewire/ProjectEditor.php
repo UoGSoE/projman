@@ -215,7 +215,7 @@ class ProjectEditor extends Component
     #[Computed]
     public function heatmapData(): array
     {
-        $days = $this->upcomingWorkingDays(10);
+        $buckets = $this->getDateBuckets();
 
         // Collect assigned user IDs from scheduling form
         $assignedUserIds = $this->getAssignedStaffIds();
@@ -223,11 +223,11 @@ class ProjectEditor extends Component
         // Calculate busyness adjustments for live preview
         $adjustments = $this->calculateBusynessAdjustments();
 
-        $staff = $this->staffWithBusyness($days, $assignedUserIds, $adjustments);
+        $staff = $this->staffWithBusynessForBuckets($buckets, $assignedUserIds, $adjustments);
         $projects = $this->activeProjects();
 
         return [
-            'days' => $days,
+            'buckets' => $buckets,
             'staff' => $staff,
             'projects' => $projects,
             'component' => $this,

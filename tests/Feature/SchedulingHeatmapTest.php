@@ -290,9 +290,9 @@ describe('Scheduling Heatmap Integration', function () {
         $heatmapData = $component->get('heatmapData');
 
         // Assert - structure contains all required keys
-        expect($heatmapData)->toHaveKeys(['days', 'staff', 'projects', 'component', 'hasAssignedStaff'])
-            ->and($heatmapData['days'])->toBeArray()
-            ->and($heatmapData['days'])->toHaveCount(10) // 10 working days
+        expect($heatmapData)->toHaveKeys(['buckets', 'staff', 'projects', 'component', 'hasAssignedStaff'])
+            ->and($heatmapData['buckets'])->toBeArray()
+            ->and($heatmapData['buckets'])->toHaveCount(10) // 10 working days
             ->and($heatmapData['staff'])->toBeInstanceOf(\Illuminate\Support\Collection::class)
             ->and($heatmapData['projects'])->toBeInstanceOf(\Illuminate\Support\Collection::class)
             ->and($heatmapData['component'])->toBeInstanceOf(ProjectEditor::class)
