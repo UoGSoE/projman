@@ -27,7 +27,7 @@
                 <flux:sidebar.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home
                 </flux:sidebar.item>
                 <flux:separator class="my-2" />
-                <flux:sidebar.item badge="3" icon="list-bullet" href="/projects"
+                <flux:sidebar.item badge="3" icon="list-bullet" :href="route('projects')"
                     :current="request()->routeIs('projects')" wire:navigate>
                     All work packages
                 </flux:sidebar.item>

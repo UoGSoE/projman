@@ -6,7 +6,6 @@ require __DIR__.'/sso-auth.php';
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', \App\Livewire\HomePage::class)->name('home');
-    Route::get('/work-packages', \App\Livewire\ProjectList::class)->name('projects');
     Route::get('/work-package/create', \App\Livewire\ProjectCreator::class)->name('project.create');
     Route::get('/work-package/{project}', \App\Livewire\ProjectViewer::class)->name('project.show');
     Route::get('/work-package/{project}/edit', \App\Livewire\ProjectEditor::class)->name('project.edit');
@@ -14,6 +13,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/profile', \App\Livewire\Profile::class)->name('profile');
 
     Route::middleware(['admin'])->group(function () {
+        Route::get('/work-packages', \App\Livewire\ProjectList::class)->name('projects');
         Route::get('/staff', \App\Livewire\UserList::class)->name('users.list');
         Route::get('/staff/heatmap', \App\Livewire\HeatMapViewer::class)->name('project.heatmap');
         Route::get('/roles', \App\Livewire\RolesList::class)->name('roles.list');
