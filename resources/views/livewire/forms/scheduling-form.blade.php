@@ -154,14 +154,36 @@
 
 @if($showHeatmap)
     <div class="mt-8">
-        <flux:heading size="lg">Staff Heatmap</flux:heading>
-        <flux:text class="mt-2 mb-4">
-            @if($this->heatmapData['hasAssignedStaff'])
-                Assigned staff are shown first, followed by all other staff members.
-            @else
-                All staff members are shown alphabetically.
-            @endif
-        </flux:text>
-        @include('components.heatmap-table', $this->heatmapData)
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <flux:heading size="lg">Staff Heatmap</flux:heading>
+                <flux:text class="mt-2">
+                    @if($this->heatmapData['hasAssignedStaff'])
+                        Assigned staff are shown first, followed by all other staff members.
+                    @else
+                        All staff members are shown alphabetically.
+                    @endif
+                </flux:text>
+            </div>
+
+            <div class="flex flex-col items-end gap-2">
+                <flux:radio.group wire:model.live="viewMode" variant="segmented" size="sm">
+                    <flux:radio value="days" label="Days" />
+                    <flux:radio value="weeks" label="Weeks" />
+                    <flux:radio value="months" label="Months" />
+                </flux:radio.group>
+                <flux:text variant="subtle" class="text-xs">
+                    @if ($viewMode === 'days')
+                        Showing manually reported busyness.
+                    @else
+                        Showing busyness from project assignments.
+                    @endif
+                </flux:text>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            @include('components.heatmap-table', $this->heatmapData)
+        </div>
     </div>
 @endif

@@ -61,6 +61,8 @@ class ProjectEditor extends Component
 
     public bool $showHeatmap = false;
 
+    public string $viewMode = 'days';
+
     public array $originalAssignedStaffIds = [];
 
     public function mount(Project $project)
