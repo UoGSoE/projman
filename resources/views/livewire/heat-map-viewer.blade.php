@@ -16,19 +16,30 @@
             </flux:text>
         </div>
 
-        <div class="flex flex-col items-end gap-2">
-            <flux:radio.group wire:model.live="viewMode" variant="segmented" size="sm">
-                <flux:radio value="days" label="Days" />
-                <flux:radio value="weeks" label="Weeks" />
-                <flux:radio value="months" label="Months" />
-            </flux:radio.group>
-            <flux:text variant="subtle" class="text-xs">
-                @if ($viewMode === 'days')
-                    Showing manually reported busyness from staff profiles.
-                @else
-                    Showing busyness calculated from project assignments.
-                @endif
-            </flux:text>
+        <div class="flex flex-col items-end gap-4">
+            <div class="flex flex-col items-end gap-2">
+                <flux:radio.group wire:model.live="viewMode" variant="segmented" size="sm">
+                    <flux:radio value="days" label="Days" />
+                    <flux:radio value="weeks" label="Weeks" />
+                    <flux:radio value="months" label="Months" />
+                </flux:radio.group>
+                <flux:text variant="subtle" class="text-xs">
+                    @if ($viewMode === 'days')
+                        Showing manually reported busyness from staff profiles.
+                    @else
+                        Showing busyness calculated from project assignments.
+                    @endif
+                </flux:text>
+            </div>
+
+            <flux:pillbox wire:model.live="nameFilter" multiple searchable placeholder="Filter by staff..." class="min-w-64">
+                @foreach ($allStaff as $staffMember)
+                    <flux:pillbox.option :value="$staffMember->id">
+                        {{ $staffMember->surname }}, {{ $staffMember->forenames }}
+                    </flux:pillbox.option>
+                @endforeach
+            </flux:pillbox>
+
         </div>
     </div>
 

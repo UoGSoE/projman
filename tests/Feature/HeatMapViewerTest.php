@@ -194,3 +194,85 @@ it('persists view mode in URL', function () {
     // Assert
     expect($component->get('viewMode'))->toBe('months');
 });
+
+it('can filter staff by name using the name filter', function () {
+    // Arrange
+    $staffAdams = User::factory()->create([
+        'is_staff' => true,
+        'forenames' => 'Zara',
+        'surname' => 'Adams',
+    ]);
+
+    $staffSmith = User::factory()->create([
+        'is_staff' => true,
+        'forenames' => 'Bob',
+        'surname' => 'Smith',
+    ]);
+
+    // Act - filter to only show Adams
+    $component = Livewire::test(HeatMapViewer::class)
+        ->set('nameFilter', [$staffAdams->id]);
+
+    // Assert - only Adams should be in the filtered staff list
+    $staff = $component->viewData('staff');
+    expect($staff)->toHaveCount(1);
+    expect($staff->first()['user']->id)->toBe($staffAdams->id);
+});
+
+it('shows all staff when name filter is empty', function () {
+    // Arrange
+    User::factory()->create(['is_staff' => true]);
+    User::factory()->create(['is_staff' => true]);
+
+    // Act - no filter applied
+    $component = Livewire::test(HeatMapViewer::class);
+
+    // Assert - all staff should be shown (admin from beforeEach + 2 created)
+    $staff = $component->viewData('staff');
+    expect($staff)->toHaveCount(3);
+});
+
+it('can filter multiple staff members', function () {
+    // Arrange
+    $staffAdams = User::factory()->create([
+        'is_staff' => true,
+        'surname' => 'Adams',
+    ]);
+
+    $staffSmith = User::factory()->create([
+        'is_staff' => true,
+        'surname' => 'Smith',
+    ]);
+
+    $staffJones = User::factory()->create([
+        'is_staff' => true,
+        'surname' => 'Jones',
+    ]);
+
+    // Act - filter to show Adams and Jones
+    $component = Livewire::test(HeatMapViewer::class)
+        ->set('nameFilter', [$staffAdams->id, $staffJones->id]);
+
+    // Assert - only Adams and Jones should be shown
+    $staff = $component->viewData('staff');
+    expect($staff)->toHaveCount(2);
+
+    $surnames = $staff->pluck('user.surname')->toArray();
+    expect($surnames)->toContain('Adams');
+    expect($surnames)->toContain('Jones');
+    expect($surnames)->not->toContain('Smith');
+});
+
+it('provides all staff for the pillbox options regardless of filter', function () {
+    // Arrange
+    $staffAdams = User::factory()->create(['is_staff' => true, 'surname' => 'Adams']);
+    $staffSmith = User::factory()->create(['is_staff' => true, 'surname' => 'Smith']);
+
+    // Act - filter to only show Adams
+    $component = Livewire::test(HeatMapViewer::class)
+        ->set('nameFilter', [$staffAdams->id]);
+
+    // Assert - allStaff should contain all staff (for pillbox options)
+    $allStaff = $component->viewData('allStaff');
+    expect($allStaff)->toHaveCount(3); // admin + 2 created
+});
