@@ -1,7 +1,7 @@
 #
 # Variables which should be set in the gitlab project or group :
 #
-# PHP_VERSION (eg '8.1')
+# PHP_VERSION (eg '8.4')
 # STACK_NAME (eg, 'amazingapp' - as in 'docker stack deploy $STACK_NAME')
 # TRAEFIK_BACKEND (eg 'amazingapp-web' - label for traefik dashboard)
 # TRAEFIK_QA_HOSTNAME (eg, amazing.qa-domain.ac.uk - hostname your app will be available on)
@@ -29,6 +29,10 @@ variables:
   PROD_IMAGE_NAME: $CI_REGISTRY/$CI_PROJECT_PATH:prod-$CI_COMMIT_SHA
   LOCAL_QA_IMAGE_NAME: localhost:5000/$CI_PROJECT_PATH:qa-$CI_COMMIT_SHA
   LOCAL_PROD_IMAGE_NAME: localhost:5000/$CI_PROJECT_PATH:prod-$CI_COMMIT_SHA
+
+default:
+  tags:
+    - cupcake
 
 cache:
   paths:
@@ -61,28 +65,39 @@ php-codestyle-check:
   stage: test
   image: $QA_IMAGE_NAME
   script:
-    - if [[ -f /usr/local/bin/phpcs ]]; then php /usr/local/bin/phpcs --config-set ignore_warnings_on_exit 1 ; php /usr/local/bin/phpcs --standard=PSR12 app ; fi
+    - cd /var/www/html
+    - vendor/bin/pint --test
 
 stray-die-and-dump-check:
   stage: test
   image: $QA_IMAGE_NAME
   script:
+    - cd /var/www/html
     - egrep -r '[^a-zA-Z](dd\(|dump\()' app || exit 0
 
 php-security-scan:
   stage: test
   image: $QA_IMAGE_NAME
+  variables:
+    FLUX_USERNAME: ${FLUX_USERNAME}
+    FLUX_LICENSE_KEY: ${FLUX_LICENSE_KEY}
   script:
+    - cd /var/www/html
+    - composer config http-basic.composer.fluxui.dev "${FLUX_USERNAME}" "${FLUX_LICENSE_KEY}"
     - composer audit
 
 dotenv-example-missing-keys-check:
   stage: test
   image: $QA_IMAGE_NAME
+  variables:
+    PROD_DOTENV: ${PROD_DOTENV}
+    QA_DOTENV: ${QA_DOTENV}
   artifacts:
     paths:
       - envdiff.txt
     expire_in: 1 week
   script:
+    - cd /var/www/html
     - set +eo pipefail
     - echo 'diff --new-line-format='\'''\'' --unchanged-line-format='\'''\'' <(sort $1 | egrep -v '\''^#'\'' | sed -e '\''s/=.*//'\'') <(sort $2 | egrep -v '\''^#'\'' | sed -e '\''s/=.*//'\'')' > envdiff.sh
     - chmod +x envdiff.sh
@@ -120,15 +135,17 @@ build-prod:
   variables:
     DOCKER_TARGET: prod
     IMAGE_NAME: $PROD_IMAGE_NAME
+    FLUX_USERNAME: ${FLUX_USERNAME}
+    FLUX_LICENSE_KEY: ${FLUX_LICENSE_KEY}
 
 deploy_to_qa:
   stage: deploy
   extends:
     - .deployment
   when: manual
-  environment: 
+  environment:
     name: qa
-    url: http://${TRAEFIK_QA_HOSTNAME}
+    url: https://${TRAEFIK_QA_HOSTNAME}
   needs:
   - build-qa
   variables:
@@ -149,7 +166,7 @@ deploy_to_prod:
   - master
   needs:
   - build-prod
-  environment: 
+  environment:
     name: prod
     url: https://${TRAEFIK_PROD_HOSTNAME}
   variables:
@@ -162,18 +179,18 @@ deploy_to_prod:
     DOTENV: ${PROD_DOTENV}
 
 .build:
-  image: docker:stable
+  image: docker:28
   variables:
     DOCKER_TARGET: ""
     IMAGE_NAME: ""
   script:
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-  - DOCKER_BUILDKIT=1 docker build --build-arg PHP_VERSION=${PHP_VERSION} --build-arg FLUX_USERNAME=${FLUX_USERNAME} --build-arg FLUX_LICENSE_KEY=${FLUX_LICENSE_KEY}  --target="${DOCKER_TARGET}" -t $IMAGE_NAME .
+  - DOCKER_BUILDKIT=1 docker build --build-arg PHP_VERSION=${PHP_VERSION} --build-arg FLUX_USERNAME=${FLUX_USERNAME} --build-arg FLUX_LICENSE_KEY=${FLUX_LICENSE_KEY} --target="${DOCKER_TARGET}" -t $IMAGE_NAME .
   - docker push $IMAGE_NAME
 
 .deployment:
   when: manual
-  image: docker:stable
+  image: docker:28
   variables:
     IMAGE_NAME: ""
     TRAEFIK_BACKEND: ""
@@ -202,4 +219,3 @@ deploy_to_prod:
       CLEAN_COMMIT_MESSAGE=$(echo "${CI_COMMIT_MESSAGE}" | tr '\n' ' ' | sed 's/"/\\"/g')
       curl -X POST -H "Content-Type: application/json" -d '{"embeds": [{"title": "'"${STACK_NAME}"' deployed", "description": "'"${CLEAN_COMMIT_MESSAGE}"'", "color": 3447003, "fields": [{"name": "Environment", "value": "'"${CI_ENVIRONMENT_NAME}"'", "inline": true}, {"name": "Deployed By", "value": "'"${GITLAB_USER_NAME:-unknown}"'", "inline": true}], "timestamp": "'"$(date -u +'%Y-%m-%dT%H:%M:%SZ')"'"}]}' "${DISCORD_WEBHOOK}";
     fi
-

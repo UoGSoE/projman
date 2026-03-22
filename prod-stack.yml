@@ -11,9 +11,6 @@ x-deploy-php:
   replicas: 1
   labels:
     - "traefik.enable=false"
-  placement:
-    constraints:
-      - "node.labels.weaksauce==false"
   resources:
     limits:
       memory: 2048M
@@ -29,9 +26,6 @@ x-deploy:
   replicas: 1
   labels:
     - "traefik.enable=false"
-  placement:
-    constraints:
-      - "node.labels.weaksauce==false"
   resources:
     limits:
       memory: 2048M
@@ -39,6 +33,11 @@ x-deploy:
     parallelism: 1
     failure_action: rollback
     order: start-first
+x-proxy-env:
+  &proxy-env
+  HTTP_PROXY: "http://wwwcache.gla.ac.uk:8080"
+  HTTPS_PROXY: "http://wwwcache.gla.ac.uk:8080"
+  NO_PROXY: "localhost,127.0.0.1,130.209.0.0/16,*.gla.ac.uk"
 
 services:
   app:
@@ -49,17 +48,13 @@ services:
     expose:
       - "80"
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: app
     secrets:
       - source: dotenv
         target: .env
     deploy:
-      replicas: 2
-      placement:
-        constraints:
-          - "node.labels.weaksauce==false"
-        preferences:
-          - spread: node.labels.site
+      replicas: 1
       update_config:
         parallelism: 1
         failure_action: rollback
@@ -70,15 +65,12 @@ services:
         reservations:
           memory: 128M
       labels:
-        # note: this assumes traefik v2
         - "traefik.enable=true"
-        - "traefik.http.routers.${TRAEFIK_BACKEND}.rule=Host(`${TRAEFIK_HOSTNAME}`)"
-        - "traefik.http.routers.${TRAEFIK_BACKEND}.entrypoints=web"
-        - "traefik.http.services.${TRAEFIK_BACKEND}.loadbalancer.server.port=80" # it seems you always need to give traefik a port so it 'notices' the service
+        - "traefik.http.services.${TRAEFIK_BACKEND}.loadbalancer.server.port=80"
         - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.rule=Host(`${TRAEFIK_HOSTNAME}`)"
         - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.entrypoints=web-secured"
-        - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.tls.certresolver=mytlschallenge"
-    stop_grace_period: 2m
+        - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.tls=true"
+    stop_grace_period: 1m
     logging: *default-logging
 
   scheduler:
@@ -88,6 +80,7 @@ services:
     networks:
       - default
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: scheduler
     secrets:
       - source: dotenv
@@ -101,6 +94,7 @@ services:
     networks:
       - default
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: queue
     secrets:
       - source: dotenv
@@ -114,6 +108,7 @@ services:
     networks:
       - default
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: migrations
     secrets:
       - source: dotenv

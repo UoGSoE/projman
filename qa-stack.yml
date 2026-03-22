@@ -15,6 +15,11 @@ x-deploy:
     parallelism: 1
     failure_action: rollback
     order: start-first
+x-proxy-env:
+  &proxy-env
+  HTTP_PROXY: "http://wwwcache.gla.ac.uk:8080"
+  HTTPS_PROXY: "http://wwwcache.gla.ac.uk:8080"
+  NO_PROXY: "localhost,127.0.0.1,130.209.0.0/16,*.gla.ac.uk"
 
 
 services:
@@ -22,6 +27,7 @@ services:
     image: ${IMAGE_NAME}
     logging: *default-logging
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: app
     build:
       context: .
@@ -44,20 +50,18 @@ services:
         order: start-first
       replicas: 1
       labels:
-        # note: this assumes traefik v2
         - "traefik.enable=true"
-        - "traefik.http.routers.${TRAEFIK_BACKEND}.rule=Host(`${TRAEFIK_HOSTNAME}`)"
-        - "traefik.http.routers.${TRAEFIK_BACKEND}.entrypoints=web"
-        - "traefik.http.services.${TRAEFIK_BACKEND}.loadbalancer.server.port=80" # it seems you always need to give traefik a port so it 'notices' the service
+        - "traefik.http.services.${TRAEFIK_BACKEND}.loadbalancer.server.port=80"
         - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.rule=Host(`${TRAEFIK_HOSTNAME}`)"
         - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.entrypoints=web-secured"
-        - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.tls.certresolver=mytlschallenge"
+        - "traefik.http.routers.${TRAEFIK_BACKEND}-secured.tls=true"
 
   scheduler:
     image: ${IMAGE_NAME}
     logging: *default-logging
     deploy: *default-deploy
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: scheduler
     depends_on:
       - app
@@ -73,6 +77,7 @@ services:
     deploy: *default-deploy
     stop_grace_period: 30s
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: queue
     depends_on:
       - app
@@ -89,6 +94,7 @@ services:
     networks:
       - private
     environment:
+      <<: *proxy-env
       CONTAINER_ROLE: migrations
     depends_on:
       - app
@@ -123,14 +129,11 @@ services:
     image: mailhog/mailhog
     deploy:
       labels:
-        # note: this assumes traefik v2
         - "traefik.enable=true"
-        - "traefik.http.routers.mailhog-${TRAEFIK_BACKEND}.rule=Host(`mail-${TRAEFIK_HOSTNAME}`)"
-        - "traefik.http.routers.mailhog-${TRAEFIK_BACKEND}.entrypoints=web"
-        - "traefik.http.services.mailhog-${TRAEFIK_BACKEND}.loadbalancer.server.port=8025" # it seems you always need to give traefik a port so it 'notices' the service
+        - "traefik.http.services.mailhog-${TRAEFIK_BACKEND}.loadbalancer.server.port=8025"
         - "traefik.http.routers.mailhog-${TRAEFIK_BACKEND}-secured.rule=Host(`mail-${TRAEFIK_HOSTNAME}`)"
         - "traefik.http.routers.mailhog-${TRAEFIK_BACKEND}-secured.entrypoints=web-secured"
-        - "traefik.http.routers.mailhog-${TRAEFIK_BACKEND}-secured.tls.certresolver=mytlschallenge"
+        - "traefik.http.routers.mailhog-${TRAEFIK_BACKEND}-secured.tls=true"
     expose:
       - "8025"
     networks:

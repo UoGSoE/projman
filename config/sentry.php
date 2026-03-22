@@ -7,6 +7,8 @@
  */
 return [
 
+    'http_proxy' => env('HTTPS_PROXY'),
+
     // @see https://docs.sentry.io/product/sentry-basics/dsn-explainer/
     'dsn' => env('SENTRY_LARAVEL_DSN', env('SENTRY_DSN')),
 
