@@ -164,7 +164,7 @@ it('initializes with a default date range of 3 months', function () {
     expect($component->instance()->dateRange->start()->format('Y-m-d'))
         ->toBe(now()->startOfWeek()->format('Y-m-d'));
     expect($component->instance()->dateRange->end()->format('Y-m'))
-        ->toBe(now()->addMonths(3)->format('Y-m'));
+        ->toBe(now()->addMonths(3)->endOfWeek()->format('Y-m'));
 });
 
 it('filters projects by selected date range', function () {
