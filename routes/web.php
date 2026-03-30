@@ -1,27 +1,42 @@
 <?php
 
+use App\Http\Controllers\ProjectExportController;
+use App\Livewire\BacklogList;
+use App\Livewire\ChangeOnAPage;
+use App\Livewire\HeatMapViewer;
+use App\Livewire\HomePage;
+use App\Livewire\Profile;
+use App\Livewire\ProjectCreator;
+use App\Livewire\ProjectEditor;
+use App\Livewire\ProjectList;
+use App\Livewire\ProjectViewer;
+use App\Livewire\RoadmapView;
+use App\Livewire\RolesList;
+use App\Livewire\SkillsManager;
+use App\Livewire\UserList;
+use App\Livewire\UserViewer;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/sso-auth.php';
 
 Route::group(['middleware' => 'auth'], function () {
-    Route::get('/', \App\Livewire\HomePage::class)->name('home');
-    Route::get('/work-package/create', \App\Livewire\ProjectCreator::class)->name('project.create');
-    Route::get('/work-package/{project}', \App\Livewire\ProjectViewer::class)->name('project.show');
-    Route::get('/work-package/{project}/edit', \App\Livewire\ProjectEditor::class)->name('project.edit');
+    Route::get('/', HomePage::class)->name('home');
+    Route::get('/work-package/create', ProjectCreator::class)->name('project.create');
+    Route::get('/work-package/{project}', ProjectViewer::class)->name('project.show');
+    Route::get('/work-package/{project}/edit', ProjectEditor::class)->name('project.edit');
 
-    Route::get('/profile', \App\Livewire\Profile::class)->name('profile');
+    Route::get('/profile', Profile::class)->name('profile');
 
     Route::middleware(['admin'])->group(function () {
-        Route::get('/work-packages', \App\Livewire\ProjectList::class)->name('projects');
-        Route::get('/staff', \App\Livewire\UserList::class)->name('users.list');
-        Route::get('/staff/heatmap', \App\Livewire\HeatMapViewer::class)->name('project.heatmap');
-        Route::get('/roles', \App\Livewire\RolesList::class)->name('roles.list');
-        Route::get('/skills', \App\Livewire\SkillsManager::class)->name('skills.manage');
-        Route::get('/user/{user}', \App\Livewire\UserViewer::class)->name('user.show');
-        Route::get('/portfolio/backlog', \App\Livewire\BacklogList::class)->name('portfolio.backlog');
-        Route::get('/portfolio/change-on-a-page/{project}', \App\Livewire\ChangeOnAPage::class)->name('portfolio.change-on-a-page');
-        Route::get('/portfolio/roadmap', \App\Livewire\RoadmapView::class)->name('portfolio.roadmap');
-        Route::get('/work-package/{project}/export', \App\Http\Controllers\ProjectExportController::class)->name('project.export');
+        Route::get('/work-packages', ProjectList::class)->name('projects');
+        Route::get('/staff', UserList::class)->name('users.list');
+        Route::get('/staff/heatmap', HeatMapViewer::class)->name('project.heatmap');
+        Route::get('/roles', RolesList::class)->name('roles.list');
+        Route::get('/skills', SkillsManager::class)->name('skills.manage');
+        Route::get('/user/{user}', UserViewer::class)->name('user.show');
+        Route::get('/portfolio/backlog', BacklogList::class)->name('portfolio.backlog');
+        Route::get('/portfolio/change-on-a-page/{project}', ChangeOnAPage::class)->name('portfolio.change-on-a-page');
+        Route::get('/portfolio/roadmap', RoadmapView::class)->name('portfolio.roadmap');
+        Route::get('/work-package/{project}/export', ProjectExportController::class)->name('project.export');
     });
 });

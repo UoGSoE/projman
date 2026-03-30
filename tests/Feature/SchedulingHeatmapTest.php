@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\Priority;
 use App\Livewire\ProjectEditor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 
 use function Pest\Livewire\livewire;
 
@@ -247,7 +249,7 @@ describe('Scheduling Heatmap Integration', function () {
             ->set('schedulingForm.estimatedStartDate', now()->addDays(5)->format('Y-m-d'))
             ->set('schedulingForm.estimatedCompletionDate', now()->addDays(15)->format('Y-m-d'))
             ->set('schedulingForm.changeBoardDate', now()->addDays(3)->format('Y-m-d'))
-            ->set('schedulingForm.priority', \App\Enums\Priority::PRIORITY_2->value)
+            ->set('schedulingForm.priority', Priority::PRIORITY_2->value)
             ->set('schedulingForm.assignedTo', $joeBlogs->id)
             ->set('schedulingForm.coseItStaff', [$jennySmith->id])
             ->call('save', 'scheduling');
@@ -293,8 +295,8 @@ describe('Scheduling Heatmap Integration', function () {
         expect($heatmapData)->toHaveKeys(['buckets', 'staff', 'projects', 'component', 'hasAssignedStaff'])
             ->and($heatmapData['buckets'])->toBeArray()
             ->and($heatmapData['buckets'])->toHaveCount(10) // 10 working days
-            ->and($heatmapData['staff'])->toBeInstanceOf(\Illuminate\Support\Collection::class)
-            ->and($heatmapData['projects'])->toBeInstanceOf(\Illuminate\Support\Collection::class)
+            ->and($heatmapData['staff'])->toBeInstanceOf(Collection::class)
+            ->and($heatmapData['projects'])->toBeInstanceOf(Collection::class)
             ->and($heatmapData['component'])->toBeInstanceOf(ProjectEditor::class)
             ->and($heatmapData['hasAssignedStaff'])->toBeBool();
     });

@@ -10,7 +10,7 @@ enum SkillLevel: string
      * Working	    - You can use the skill in a limited capacity with guidance.
      * Practitioner	- You have a good level of expertise and can apply skills effectively
      * Expert	    - You are highly proficient and can teach or mentor others in this skill.
-    */
+     */
     case BEGINNER = 'beginner';
     case INTERMEDIATE = 'intermediate';
     case ADVANCED = 'advanced';

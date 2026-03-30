@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\EffortScale;
+use App\Enums\ProjectStatus;
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
 use App\Models\Skill;
@@ -25,7 +27,7 @@ describe('Software Development vs Build Toggle', function () {
         $this->setupValidScoping = function (Project $project, User $assessor) {
             $project->scoping->update([
                 'assessed_by' => $assessor->id,
-                'estimated_effort' => \App\Enums\EffortScale::MEDIUM,
+                'estimated_effort' => EffortScale::MEDIUM,
                 'in_scope' => 'Test scope',
                 'out_of_scope' => 'Out of scope',
                 'assumptions' => 'Test assumptions',
@@ -190,31 +192,31 @@ describe('Software Development vs Build Toggle', function () {
     describe('Stage Progression Skip', function () {
         it('skips Development stage when requires_software_dev is false', function () {
             // Arrange
-            $project = $this->createProject(['status' => \App\Enums\ProjectStatus::DETAILED_DESIGN]);
+            $project = $this->createProject(['status' => ProjectStatus::DETAILED_DESIGN]);
             $project->scoping->update(['requires_software_dev' => false]);
 
             // Act
             $project->advanceToNextStage();
 
             // Assert - Should skip Development and go straight to Build
-            expect($project->fresh()->status)->toBe(\App\Enums\ProjectStatus::BUILD);
+            expect($project->fresh()->status)->toBe(ProjectStatus::BUILD);
         });
 
         it('does not skip Development stage when requires_software_dev is true', function () {
             // Arrange
-            $project = $this->createProject(['status' => \App\Enums\ProjectStatus::DETAILED_DESIGN]);
+            $project = $this->createProject(['status' => ProjectStatus::DETAILED_DESIGN]);
             $project->scoping->update(['requires_software_dev' => true]);
 
             // Act
             $project->advanceToNextStage();
 
             // Assert - Should go to Development as normal
-            expect($project->fresh()->status)->toBe(\App\Enums\ProjectStatus::DEVELOPMENT);
+            expect($project->fresh()->status)->toBe(ProjectStatus::DEVELOPMENT);
         });
 
         it('skips Development via Livewire advanceToNextStage when requires_software_dev is false', function () {
             // Arrange
-            $project = $this->createProject(['status' => \App\Enums\ProjectStatus::DETAILED_DESIGN]);
+            $project = $this->createProject(['status' => ProjectStatus::DETAILED_DESIGN]);
             $project->scoping->update(['requires_software_dev' => false]);
 
             // Act
@@ -223,7 +225,7 @@ describe('Software Development vs Build Toggle', function () {
                 ->assertHasNoErrors();
 
             // Assert
-            expect($project->fresh()->status)->toBe(\App\Enums\ProjectStatus::BUILD);
+            expect($project->fresh()->status)->toBe(ProjectStatus::BUILD);
         });
     });
 

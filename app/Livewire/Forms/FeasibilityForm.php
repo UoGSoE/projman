@@ -2,7 +2,11 @@
 
 namespace App\Livewire\Forms;
 
+use App\Events\FeasibilityApproved;
+use App\Events\FeasibilityRejected;
+use App\Events\ProjectUpdated;
 use App\Models\Project;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -126,15 +130,15 @@ class FeasibilityForm extends Form
         $this->project->feasibility->update([
             'approval_status' => 'approved',
             'approved_at' => now(),
-            'actioned_by' => \Illuminate\Support\Facades\Auth::id(),
+            'actioned_by' => Auth::id(),
         ]);
 
         $this->approvalStatus = 'approved';
 
         $this->setProject($this->project->fresh());
 
-        event(new \App\Events\FeasibilityApproved($this->project));
-        event(new \App\Events\ProjectUpdated($this->project, 'Approved feasibility'));
+        event(new FeasibilityApproved($this->project));
+        event(new ProjectUpdated($this->project, 'Approved feasibility'));
     }
 
     public function reject(): void
@@ -146,14 +150,14 @@ class FeasibilityForm extends Form
         $this->project->feasibility->update([
             'approval_status' => 'rejected',
             'reject_reason' => $this->rejectReason,
-            'actioned_by' => \Illuminate\Support\Facades\Auth::id(),
+            'actioned_by' => Auth::id(),
         ]);
 
         $this->approvalStatus = 'rejected';
 
         $this->setProject($this->project->fresh());
 
-        event(new \App\Events\FeasibilityRejected($this->project));
-        event(new \App\Events\ProjectUpdated($this->project, 'Rejected feasibility'));
+        event(new FeasibilityRejected($this->project));
+        event(new ProjectUpdated($this->project, 'Rejected feasibility'));
     }
 }

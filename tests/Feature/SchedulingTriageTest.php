@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ChangeBoardOutcome;
+use App\Enums\Priority;
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
 use App\Models\User;
@@ -18,7 +19,7 @@ describe('Scheduling Triage Fields', function () {
         $this->setupValidScheduling = function (Project $project, User $assignedUser) {
             $project->scheduling->update([
                 'key_skills' => 'Laravel, PHP',
-                'priority' => \App\Enums\Priority::PRIORITY_2->value,
+                'priority' => Priority::PRIORITY_2->value,
                 'assigned_to' => $assignedUser->id,
                 'estimated_start_date' => now()->addDays(7),
                 'estimated_completion_date' => now()->addDays(30),

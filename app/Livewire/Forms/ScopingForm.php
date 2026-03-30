@@ -3,6 +3,8 @@
 namespace App\Livewire\Forms;
 
 use App\Enums\EffortScale;
+use App\Events\ProjectUpdated;
+use App\Events\ScopingSubmitted;
 use App\Models\Project;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -87,7 +89,7 @@ class ScopingForm extends Form
     {
         $this->validate();
 
-        event(new \App\Events\ScopingSubmitted($this->project));
-        event(new \App\Events\ProjectUpdated($this->project, 'Submitted scoping for review'));
+        event(new ScopingSubmitted($this->project));
+        event(new ProjectUpdated($this->project, 'Submitted scoping for review'));
     }
 }

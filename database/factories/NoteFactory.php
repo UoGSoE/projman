@@ -2,12 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Models\Build;
 use App\Models\Development;
+use App\Models\Note;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Note>
+ * @extends Factory<Note>
  */
 class NoteFactory extends Factory
 {
@@ -34,10 +36,10 @@ class NoteFactory extends Factory
         ]);
     }
 
-    public function forBuild(\App\Models\Build $build): static
+    public function forBuild(Build $build): static
     {
         return $this->state(fn (array $attributes) => [
-            'noteable_type' => \App\Models\Build::class,
+            'noteable_type' => Build::class,
             'noteable_id' => $build->id,
         ]);
     }

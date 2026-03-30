@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\ChangeBoardOutcome;
+use App\Enums\Priority;
 use App\Models\Traits\CanCheckIfEdited;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,8 +41,8 @@ class Scheduling extends Model
         'estimated_completion_date' => 'date',
         'change_board_date' => 'date',
         'cose_it_staff' => 'array',
-        'change_board_outcome' => \App\Enums\ChangeBoardOutcome::class,
-        'priority' => \App\Enums\Priority::class,
+        'change_board_outcome' => ChangeBoardOutcome::class,
+        'priority' => Priority::class,
         'fields_locked' => 'boolean',
         'submitted_to_dcgg_at' => 'datetime',
         'scheduled_at' => 'datetime',

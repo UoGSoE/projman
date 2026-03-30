@@ -6,6 +6,8 @@ namespace App\Models;
 use App\Enums\Busyness;
 use App\Enums\ProjectStatus;
 use App\Enums\ServiceFunction;
+use App\Enums\SkillLevel;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -161,7 +163,7 @@ class User extends Authenticatable
      */
     public static function isValidSkillLevel(string $level): bool
     {
-        return in_array($level, \App\Enums\SkillLevel::getAll());
+        return in_array($level, SkillLevel::getAll());
     }
 
     public function getSkillLevel(Skill $skill): string

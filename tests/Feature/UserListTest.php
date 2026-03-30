@@ -4,6 +4,7 @@ use App\Livewire\UserList;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 
 use function Pest\Livewire\livewire;
 
@@ -301,12 +302,12 @@ describe('User Role Management', function () {
     });
 
     it('opens change user role modal and loads roles correctly', function () {
-        livewire(App\Livewire\UserList::class)
+        livewire(UserList::class)
             ->call('openChangeUserRoleModal', $this->regularUser->id)
             ->assertSet('selectedUser.id', $this->regularUser->id)
             ->assertSet(
                 'availableRoles',
-                fn ($roles) => $roles instanceof \Illuminate\Support\Collection &&
+                fn ($roles) => $roles instanceof Collection &&
                 collect([$this->adminRole->name, $this->userRole->name, $this->managerRole->name])->diff($roles->pluck('name'))->isEmpty()
             )
             ->assertSet('userRoles', []);

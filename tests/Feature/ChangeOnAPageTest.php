@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\EffortScale;
+use App\Enums\Priority;
 use App\Livewire\ChangeOnAPage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -140,7 +141,7 @@ test('displays priority, effort, and start date in pink section', function () {
     $project = $this->createProject();
 
     $project->scheduling->update([
-        'priority' => \App\Enums\Priority::PRIORITY_2->value,
+        'priority' => Priority::PRIORITY_2->value,
         'estimated_start_date' => now()->addDays(10),
     ]);
 
@@ -257,7 +258,7 @@ test('shows all stage data correctly in comprehensive view', function () {
 
     // Scheduling stage
     $project->scheduling->update([
-        'priority' => \App\Enums\Priority::PRIORITY_1->value,
+        'priority' => Priority::PRIORITY_1->value,
         'assigned_to' => $technicalOwner->id,
         'estimated_start_date' => now()->addDays(7),
         'estimated_completion_date' => now()->addDays(45),

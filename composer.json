@@ -16,7 +16,7 @@
         "livewire/flux-pro": "^2.1",
         "livewire/livewire": "^3.6",
         "ohffs/simple-spout": "^2.0",
-        "sentry/sentry-laravel": "^4.16",
+        "sentry/sentry-laravel": "^4.24",
         "socialiteproviders/keycloak": "^5.3"
     },
     "require-dev": {

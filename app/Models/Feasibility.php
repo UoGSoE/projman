@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\CanCheckIfEdited;
+use Database\Factories\FeasibilityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ class Feasibility extends Model
 {
     use CanCheckIfEdited;
 
-    /** @use HasFactory<\Database\Factories\FeasibilityFactory> */
+    /** @use HasFactory<FeasibilityFactory> */
     use HasFactory;
 
     protected $touches = ['project'];

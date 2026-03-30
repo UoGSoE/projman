@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EffortScale;
 use App\Enums\ProjectStatus;
 use App\Livewire\BacklogList;
 use App\Models\User;
@@ -100,7 +101,7 @@ test('displays project details in table columns', function () {
     ]);
 
     $project->scoping->update([
-        'estimated_effort' => \App\Enums\EffortScale::MEDIUM,
+        'estimated_effort' => EffortScale::MEDIUM,
     ]);
 
     $project->scheduling->update([

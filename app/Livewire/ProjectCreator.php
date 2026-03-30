@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
@@ -24,7 +25,7 @@ class ProjectCreator extends Component
         $project = Project::create([
             'user_id' => Auth::id(),
             'title' => $this->projectName,
-            'status' => \App\Enums\ProjectStatus::IDEATION,
+            'status' => ProjectStatus::IDEATION,
         ]);
 
         $project->addHistory(Auth::user(), 'Created');

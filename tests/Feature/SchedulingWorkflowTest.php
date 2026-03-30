@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Priority;
 use App\Events\SchedulingScheduled;
 use App\Events\SchedulingSubmittedToDCGG;
 use App\Livewire\ProjectEditor;
@@ -25,7 +26,7 @@ describe('Scheduling DCGG Workflow', function () {
         $project = Project::factory()->create();
         $project->scheduling->update([
             'key_skills' => 'Laravel, PHP',
-            'priority' => \App\Enums\Priority::PRIORITY_2->value,
+            'priority' => Priority::PRIORITY_2->value,
             'assigned_to' => $assignedUser->id,
             'estimated_start_date' => now()->addDays(7),
             'estimated_completion_date' => now()->addDays(30),
@@ -66,7 +67,7 @@ describe('Scheduling DCGG Workflow', function () {
         $project = Project::factory()->create();
         $project->scheduling->update([
             'key_skills' => 'Laravel, PHP',
-            'priority' => \App\Enums\Priority::PRIORITY_2->value,
+            'priority' => Priority::PRIORITY_2->value,
             'assigned_to' => $assignedUser->id,
             'estimated_start_date' => now()->addDays(7),
             'estimated_completion_date' => now()->addDays(30),
@@ -91,7 +92,7 @@ describe('Scheduling DCGG Workflow', function () {
         $project = Project::factory()->create();
         $project->scheduling->update([
             'key_skills' => 'Laravel, PHP',
-            'priority' => \App\Enums\Priority::PRIORITY_2->value,
+            'priority' => Priority::PRIORITY_2->value,
             'assigned_to' => $assignedUser->id,
             'estimated_start_date' => now()->addDays(7),
             'estimated_completion_date' => now()->addDays(30),
@@ -117,7 +118,7 @@ describe('Scheduling DCGG Workflow', function () {
         $project = Project::factory()->create();
         $project->scheduling->update([
             'key_skills' => 'Laravel, PHP',
-            'priority' => \App\Enums\Priority::PRIORITY_2->value,
+            'priority' => Priority::PRIORITY_2->value,
             'assigned_to' => $assignedUser->id,
             'estimated_start_date' => now()->addDays(7),
             'estimated_completion_date' => now()->addDays(30),
@@ -312,7 +313,7 @@ describe('Scheduling DCGG Workflow', function () {
         $projectToSubmit = Project::factory()->create();
         $projectToSubmit->scheduling->update([
             'key_skills' => 'Laravel, PHP',
-            'priority' => \App\Enums\Priority::PRIORITY_2->value,
+            'priority' => Priority::PRIORITY_2->value,
             'assigned_to' => $assignedUser->id,
             'estimated_start_date' => now()->addDays(7),
             'estimated_completion_date' => now()->addDays(30),

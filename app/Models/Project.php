@@ -6,6 +6,7 @@ use App\Enums\ProjectStatus;
 use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Models\Traits\CanCheckIfEdited;
+use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ class Project extends Model
 {
     use CanCheckIfEdited;
 
-    /** @use HasFactory<\Database\Factories\ProjectFactory> */
+    /** @use HasFactory<ProjectFactory> */
     use HasFactory;
 
     protected $dispatchesEvents = [

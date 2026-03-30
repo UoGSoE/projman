@@ -4,8 +4,15 @@ use App\Enums\EffortScale;
 use App\Enums\Priority;
 use App\Livewire\ProjectCreator;
 use App\Livewire\ProjectEditor;
+use App\Models\Deployed;
+use App\Models\Development;
+use App\Models\Feasibility;
+use App\Models\Ideation;
 use App\Models\Project;
+use App\Models\Scheduling;
+use App\Models\Scoping;
 use App\Models\Skill;
+use App\Models\Testing;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -28,13 +35,13 @@ describe('Project Creation', function () {
             ->assertHasNoErrors();
         $project = Project::where('title', 'Test Project')->firstOrFail();
         expect($project->user_id)->toBe($this->user->id);
-        expect($project->ideation)->toBeInstanceOf(\App\Models\Ideation::class);
-        expect($project->feasibility)->toBeInstanceOf(\App\Models\Feasibility::class);
-        expect($project->testing)->toBeInstanceOf(\App\Models\Testing::class);
-        expect($project->deployed)->toBeInstanceOf(\App\Models\Deployed::class);
-        expect($project->scoping)->toBeInstanceOf(\App\Models\Scoping::class);
-        expect($project->scheduling)->toBeInstanceOf(\App\Models\Scheduling::class);
-        expect($project->development)->toBeInstanceOf(\App\Models\Development::class);
+        expect($project->ideation)->toBeInstanceOf(Ideation::class);
+        expect($project->feasibility)->toBeInstanceOf(Feasibility::class);
+        expect($project->testing)->toBeInstanceOf(Testing::class);
+        expect($project->deployed)->toBeInstanceOf(Deployed::class);
+        expect($project->scoping)->toBeInstanceOf(Scoping::class);
+        expect($project->scheduling)->toBeInstanceOf(Scheduling::class);
+        expect($project->development)->toBeInstanceOf(Development::class);
     });
 
     it('validates required fields for project creation', function () {

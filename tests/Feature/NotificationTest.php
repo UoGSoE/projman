@@ -215,7 +215,7 @@ describe('Config-based notifications', function () {
 
         // Now test that FeasibilityApproved throws when there are no recipients
         expect(fn () => event(new FeasibilityApproved($project)))
-            ->toThrow(\RuntimeException::class, 'No recipients found');
+            ->toThrow(RuntimeException::class, 'No recipients found');
     });
 
     it('sends notification only to users with the correct role', function () {

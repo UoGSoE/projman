@@ -4,6 +4,9 @@ namespace App\Livewire\Forms;
 
 use App\Enums\ChangeBoardOutcome;
 use App\Enums\Priority;
+use App\Events\ProjectUpdated;
+use App\Events\SchedulingScheduled;
+use App\Events\SchedulingSubmittedToDCGG;
 use App\Models\Project;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -123,8 +126,8 @@ class SchedulingForm extends Form
 
         $this->setProject($this->project->fresh());
 
-        event(new \App\Events\SchedulingSubmittedToDCGG($this->project));
-        event(new \App\Events\ProjectUpdated($this->project, 'Submitted scheduling to DCGG for approval'));
+        event(new SchedulingSubmittedToDCGG($this->project));
+        event(new ProjectUpdated($this->project, 'Submitted scheduling to DCGG for approval'));
     }
 
     public function schedule(): void
@@ -141,7 +144,7 @@ class SchedulingForm extends Form
 
         $this->setProject($this->project->fresh());
 
-        event(new \App\Events\SchedulingScheduled($this->project));
-        event(new \App\Events\ProjectUpdated($this->project, 'Scheduling approved and scheduled'));
+        event(new SchedulingScheduled($this->project));
+        event(new ProjectUpdated($this->project, 'Scheduling approved and scheduled'));
     }
 }
