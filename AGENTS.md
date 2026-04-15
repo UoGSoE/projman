@@ -47,105 +47,99 @@
 ===
 
 <laravel-boost-guidelines>
-=== .ai/beads rules ===
+=== .ai/testing rules ===
 
-# Beads (`bd`) - Issue Tracker Quick Reference
+## Testing
 
-Beads is a lightweight CLI issue tracker with first-class dependency support. Use it instead of TodoWrite for tracking work across sessions.
+### TDD: Red, Green, Refactor
 
-## Essential Commands
+We do TDD.  Write the failing test first, then write just enough code to make it pass, then tidy up.  This isn't a suggestion - it's how we work.
 
-### View Issues
-```bash
-bd status              # Overview: counts by status
-bd list                # List open issues (default limit 50)
-bd list --all          # Include closed issues
-bd list -l "label"     # Filter by label
-bd list --parent ID    # Show children of an epic
-bd ready               # Show issues with no blockers (ready to work on)
-bd show <id>           # Full details of an issue
-bd graph <id>          # Visual dependency graph
+Why?  Because without it, the temptation is to scaffold everything upfront - routes, controllers, views, the lot - and then spend ages debugging why nothing works.  With TDD, the test tells you exactly what to build next.  A missing route isn't a bug, it's the test doing its job.
+
+#### One test at a time
+
+Write ONE failing test.  Make it pass.  Then decide what the next test should be.
+
+Don't write a batch of five or ten tests upfront.  That's just designing the whole solution in advance and calling it TDD.  It commits you to an interface before you've discovered whether it's the right one.  The whole point of the red-green rhythm is that each green gives you a moment to reconsider direction before writing the next red.
+
+We've learned this the hard way.  When you write one test at a time, the code ends up simpler because you're only ever making one thing work, not trying to satisfy six requirements at once.
+
+#### The rhythm matters
+
+For humans, the red-green cycle is oddly restful.  The mechanical steps ("test says X is missing, create X, test passes") give your brain a breather between the harder design decisions.  Don't try to optimise that away.
+
+For AI agents, each failing test constrains the solution space.  You can't over-engineer something when the test is asking for one specific behaviour.
+
+### What we test
+
+We like feature tests and rarely write unit tests.  When we do, it's for pure logic that doesn't need the framework - MAC address normalisation, enum behaviour, string formatting, that sort of thing.
+
+We always test the full side-effects and both happy and unhappy paths.  Say a method creates a record and sends an email when validation passes.  We also test that invalid data does *not* create the record *or* send the email.  Not just that we got a validation error.
+
+We also check code doesn't do things we didn't expect.  If we're testing a delete, we make sure just that one record was deleted, not the whole collection.
+
+Always verify records using the related Eloquent model, not raw database assertions.  This catches cases where a relationship is doing extra work or should have triggered a side-effect.
+
+### Test style
+
+Arrange, Act, Assert.  Keep tests concise.  Don't write individual tests for each validation field - one test for the happy path, one for the sad path covers most cases:
+
+```php
+Livewire::test(CreateProject::class)
+    ->set('name', '')
+    ->set('description', '')
+    ->set('email', 'kkdkdkdkkdkd')
+    ->call('create')
+    ->assertHasErrors(['name', 'description', 'email']);
+assertCount(0, Project::all());
 ```
 
-### Create Issues
-```bash
-bd create "Title" -d "Description"                    # Basic task
-bd create "Title" --type=feature -d "Description"     # Feature
-bd create "Title" --type=bug -d "Description"         # Bug
-bd create "Title" --type=epic -d "Description"        # Epic (group of issues)
-bd create "Title" --parent=<epic-id>                  # Child of an epic
-bd create "Title" -l "label1,label2"                  # With labels
-bd create "Title" -p P1                               # With priority (P0-P4, P0=highest)
-```
+Don't bother testing Laravel's built-in validation messages unless the rule has custom business logic.
 
-### Update Issues
-```bash
-bd update <id> -s in_progress     # Start working
-bd update <id> -s open            # Back to open
-bd update <id> --title "New"      # Change title
-bd update <id> -d "New desc"      # Change description
-bd update <id> --add-label "foo"  # Add label
-bd update <id> -p P1              # Change priority
-bd update <id> --claim            # Claim issue (assigns to you + in_progress)
-```
+Use helpful variable names: `$userWithProject` and `$userWithoutProject` tell you what matters about each fixture at a glance.
 
-### Close Issues
-```bash
-bd close <id>                     # Close an issue
-bd close <id> -r "Reason"         # Close with reason
-bd close <id> --suggest-next      # Close and show newly unblocked issues
-bd reopen <id>                    # Reopen a closed issue
-```
+### Debugging failing tests
 
-### Dependencies
-```bash
-bd dep <blocker-id> --blocks <blocked-id>   # A blocks B
-bd dep add <blocked-id> <blocker-id>        # Same as above
-bd dep list <id>                            # Show dependencies
-bd dep remove <blocked-id> <blocker-id>     # Remove dependency
-bd dep tree <id>                            # Show dependency tree
-```
+When `assertSee` or `assertDontSee` gives unexpected results, check whether Laravel's exception page is showing the values in its stack trace.  A quick `assertStatus()` or `assertHasNoErrors()` call will usually tell you.
 
-## Issue Types
-- `task` (default) - General work item
-- `feature` - New functionality
-- `bug` - Something broken
-- `epic` - Container for related issues
-- `chore` - Maintenance work
+If that doesn't help, ask the user.  They can visit the page in the browser and tell you exactly what's happening, or send a screenshot.  A `dump()` or `dd()` call is also a good shout - Taylor Otwell and Adam Wathan call this "dump driven development" and it's a perfectly legitimate technique.
 
-## Priorities
-- `P0` - Critical/urgent
-- `P1` - High priority
-- `P2` - Normal (default)
-- `P3` - Low priority
-- `P4` - Nice to have
+Don't keep looping on a failing test by adding more code or hiding the problem with try/catch.  Just ask.  The user would much rather answer a question than debug mysterious defensive code later.
 
-## Workflow Pattern
+You may also have the `test-debug` agent available.  Use it if you're stuck, but don't burn tokens looping without involving the user or the agent.
 
-1. **Starting a session**: Run `bd ready` to see what's unblocked
-2. **Pick work**: `bd update <id> --claim` to claim an issue
-3. **Check details**: `bd show <id>` for full context
-4. **Work**: Try to complete the task
-5. **User QA Test**: Stop and ask the user for to test/check the work
-6. **Complete work**: `bd close <id> --suggest-next` to close and see what's newly unblocked
-7. **End of session**: `bd status` to see overall state
+### Running tests
 
-## Hierarchical IDs
+`php artisan test --compact` for the full suite.  Shows full output for failures but keeps passing tests quiet, which saves context window space.
 
-When creating children of an epic, bd auto-generates hierarchical IDs:
-- Epic: `wcap-qj4`
-- Children: `wcap-qj4.1`, `wcap-qj4.2`, etc.
+`--filter=TestName` when you're working on a specific test file.
 
-## Tips
+The local test environment uses an in-memory SQLite database via `RefreshDatabase`.  No need to run migrations or seeders.
 
-- Use `bd list --long` for detailed multi-line output
-- Use `bd search "keyword"` to search issue text
-- Labels are useful for categorisation: `nice-to-have`, `blocked-external`, etc.
-- The `--suggest-next` flag on close helps maintain flow
+### Golden-master tests
 
-## Finally
+For anything that must produce exact output (API responses, generated config files, CSV exports), capture a known-good fixture and test against it.  Whitespace matters when downstream consumers parse your output with regex.
 
-**NEVER** close an issue without checking the user is happy with the work. This is a critical part of the workflow.
+Keep fixture files in `tests/fixtures/` and use exact string comparison, not fuzzy matching.
+
+## Quote from a previous you
+
+When a previous you was asked about writing code first, then retrofitting tests, vs TDD you said :
+
+"""
+I'll be honest - I think it's mostly an artefact rather than something that makes me work better.
+
+A few factors I think are at play:
+
+Training bias - The vast majority of code I've learned from follows the "implement then test" pattern. TDD is well-regarded but it's still the minority of real-world codebases, so that's my default groove.
+
+I tend to think implementation-first - When you give me a task, my instinct is to solve the problem concretely, then verify it. I jump to how before fully nailing down the what should happen.
+
+Interface uncertainty - When I write code first, I discover the shape of the API as I go. With TDD, I'd need to commit to the interface upfront. That's actually a strength of TDD though - it forces clearer thinking about design before you're knee-deep in implementation details.
+
+Honestly, TDD would probably make me better - Writing tests first would force me to think more carefully about edge cases, keep interfaces clean, and avoid over-engineering. All things I sometimes fumble when I dive straight into code.
+"""
 
 === .ai/team-conventions rules ===
 
@@ -177,11 +171,11 @@ We like readable helper methods and laravel policies to help keep code simple an
 
 We **never** use raw SQL or the DB facade in our code.  We **always** use the eloquent ORM and relationships.
 
-Our applications are important but do not contain a lot of data.  So we do not worry too much about micro-optimizations of database queries.  In 99.9999% of cases doing something like `User::orderBy('surname')->get()` is fine - no need to filter/select on specific columns just to save a 100th of a millisecond.
+Our applications are important but do not contain a lot of data.  So we do not worry too much about micro-optimizations of database queries.  In 99.9999% of cases doing something like `User::orderBy('surname')->get()` is fine - no need to filter/select on specific columns just to save a millisecond.
 
 We like early returns and guard clauses.  Avoid nesting if statements or using `else` whereever possible.
 
-When creating a new model - please also use the `-mf` flag to generate a migration and factory at the same time.  It just saves running multiple commands so saves some effort.
+When creating a new model - please also use the `-mf` flag to generate a migration and factory at the same time.  It just saves running multiple commands so saves some tokens.  It also makes sure the newly created files are in the format that matches the version of Laravel.
 
 ### Seeding data for local development
 
@@ -204,9 +198,9 @@ This convention makes it much easier to navigate the code and find the methods y
 
 Also note that we like 'fat models' - helper methods, methods that make the main logic read more naturally - are all fine to put on the model.  Do not abstract to service classes without checking with the user first.  If the user agrees to a service class our convention is to use \App\Services\ .
 
-We like enums over hardcoded strings for things like statuses, roles, etc.  Use laravel's casts to convert the enum to a value.  Our convention is to use \App\Enums\ .
+We like enums over hardcoded strings for things like statuses, roles, etc.  Use laravel's casts to convert the enum to a value.  Our convention is to use \App\Enums\ .  Where is makes sense - we add helper methods to our enums for `label()` (even if it's just doing a `ucfirst()` call - it makes presentation in templates/mailables more consistent) and also `colour()` so we again - get consistent presentation in templates (we usually follow flux-ui's colour names of 'zinc, red, orange, amber, yellow, lime, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose'.
 
-Eloquents `findOrFail` or `firstOrFail` methods are your friend.  We have sentry.io exception reporting.  If the application user is trying to do something weird with a non-existent records - let it blow up in their face and be reported to the developers.  
+Eloquents `findOrFail` or `firstOrFail` methods are your friend.  We have sentry.io exception reporting.  If the application user is trying to do something weird with a non-existent records - let them see a 404 page and be reported to the developers via sentry.  
 
 ### Livewire component class conventions
 
@@ -223,42 +217,6 @@ Our conventions for livewire components are:
 
 We always use queued mail notifications and we always use the --markdown versions for the templates.  Our conventions is to use the 'emails' folder, eg `php artisan make:mail SomethingHappened --markdown=emails.something-happened`
 
-### Testing style
-
-We like feature tests and rarely write unit.
-
-We always test the full side-effects and happy/unhappy paths of our code.  For example, a call to a method that will create a new record and send an email notification if validation passes - we would make sure in the test that if invalid data is passed we do not create the record or send the email.  Not just test that we got a validation error.
-
-We also test that our code does not do other things that we did not expect it to do - for example, if we are testing a method which deletes a record, we would test that just that one record was deleted, not the whole collection.
-
-We always test the existence of records using the related Eloquent model - not just doing raw database assertions.  This helps catch cases where a relation is doing some extra work or should have had a side-effect.
-
-We like our tests to be readable and easy to understand.  We always follow the 'Arrange, Act, Assert' pattern.
-
-We like to use helpful variable names in tests.  For example we might have '$userWithProject' and '$userWithoutProject' to help us understand what is going on in the assertions.
-
-When writing tests and you are getting unexpected results with assertSee or assertDontSee - consider that it might be that Laravels exception page is showing the values in the stack trace or contextual debug into.  Do a quick sanity check using an assertStatus() call or assertHasNoErrors().  If that doesn't help **ask the user for help**.  They can visit the page in the browser and tell you exactly what is happening and even provide you a screenshot.
-
-If you can't figure out why a test is failing after one or two fixes, add a healthy amount of logging in the test and code using dump() or dd() so that you can see what is going on rather than guessing.
-
-We also like to keep our tests quite concise.  For example:
-
-```php
-Livewire::test(CreateProject::class)
-    ->set('name', '')
-    ->set('description', '')
-    ->set('email', 'kkdkdkdkkdkd')
-    ->call('create')
-    ->assertHasErrors(['name', 'description', 'email']);
-assertCount(0, Project::all());
-```
-
-Note that we don't have individual tests for each field.  We just test that the form is invalid when the fields are empty.  We don't need to test the error messages (outside of very unique/custom validation rules).
-
-That is a common pattern in our test code.  We will quite often do something like test the happy path, then the sad path.  For most cases we are testing the functionality - not every tiny detail unless it has actual concrete business logic implications.
-
-Note: if you are running the whole test suite, you can use the `--compact` flag.  It will still show you the full output for any failures, but will save you having to fill up your context window with all the passing test names.
-
 ### UI styling
 
 We use the FluxUI component library for our UI and Livewire/AlpineJS for interactivity.
@@ -267,7 +225,7 @@ Always check with the laravel boost MCP tool for flux documentation.
 
 Do not add css classes to components for visual styling - only for spacing/alignment/positioning.  Flux has it's own styling so anything that is added will make the component look out of place.  Follow the flux conventions.  Again - the laravel boost tool is your helper here.
 
-Flux uses tailwindcss for styling and also uses it's css reset.  Make sure that anything 'clickable' has a cursor-pointer class added to it.
+Flux uses tailwindcss for styling and also uses it's css reset.
 
 Always use the appropriate flux components instead of just <p> and <a> tags. Eg:
 
@@ -287,11 +245,13 @@ Remember you can validate existence of records inside validation rules and save 
 
 ### If in doubt...
 
-The user us always happy to help you out.  They know the whole context of the application, stakeholders, conventions, etc.  They would rather you asked than take a wrong path.
+The user us always happy to help you out.  They know the whole context of the application, stakeholders, conventions, etc.  They would rather you asked than take a wrong path which costs them time and money to correct.
 
 Most of our applications have been running in production for a long time, so there are all sorts of edge cases, features that were added, then removed, the re-added with a tweak, etc.  Legacy code is a minefield - so lean on the user.
 
 If you are having a problem with a test passing - don't just keep adding code or 'hide' the problem with try/catch etc.  Ask the user for help.  They will 100x prefer to be asked a question and involved in the decision than have lots of new, weird code to debug that might be hiding critical issues.
+
+Also - sometimes just adding a call to `dump()` or `dd()` can help you understand what is going on.  It's a quick way to see what is happening in your code.  In fact Taylor Otwell and Adam Wathan refer to this as 'dump driven development' as it's the way they debug their applications.
 
 ### The most important thing
 
@@ -304,6 +264,16 @@ We use lando for local development - but we also have functional local developme
 Do not try and run any commands or tools that interact with the database.  Either lando or artisan or boost.  The user will run migrations for you if you ask.  
 
 Note: The local test environment uses an in-memory database via the RefreshDatabase trait.  So there is no need to run migrations or seeders in the test environment.
+
+### Personal information
+
+Quite often you will see the developers or stakeholder names in the git commits, path names, specifications, etc.  We do not want to leak PII.  So please do not use those names in your outputs.  Especially not when writing docs or example scripts.  The one exception to that is if you are directly taling to a developer and giving them an example bash/zsh/whatever script to try right then and there.  Asking the developer to run `/Users/jenny/code/test.sh` is fine.  Putting into a readme or progress document 'Then Jimmy Smith asked for yet another feature change - omg!' is not fine.
+
+### Who we optimise the UX for
+
+Our users are primarily academics, students and teaching administrators.  They are all busy with their work, research and studies.  We optimise out user interfaces to be _quick_.  We don't want to 'engage' our users or to optimise for the time they spend on the app.  We want to let them get in, do the thing, get out as soon and as cleanly as possible.
+
+We do not want a Professor who is researching a cure for cancer to spend five minutes clicking through a bunch of forms, options, menus, etc.  A big button that says "Achieve my task" is what we're always aiming towards.
 
 ### Notes from your past self
 
@@ -613,8 +583,8 @@ document.addEventListener('livewire:init', function () {
 
 ## Laravel Pint Code Formatter
 
-- You must run `vendor/bin/pint --dirty` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test`, simply run `vendor/bin/pint` to fix any formatting issues.
+- You must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
+- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
 
 === pest/core rules ===
 
