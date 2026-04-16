@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Role;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,6 +24,16 @@ class UserList extends Component
     public $userRoles = [];
 
     public $availableRoles = [];
+
+    public $newUsername = '';
+
+    public $newEmail = '';
+
+    public $newSurname = '';
+
+    public $newForenames = '';
+
+    public $newIsAdmin = false;
 
     public function render()
     {
@@ -113,6 +124,32 @@ class UserList extends Component
 
         Flux::modal('change-user-role')->close();
         Flux::toast('User roles updated successfully', variant: 'success');
+    }
+
+    public function createUser(): void
+    {
+        $this->validate([
+            'newUsername' => 'required|string|max:255|unique:users,username',
+            'newEmail' => 'required|email|max:255|unique:users,email',
+            'newSurname' => 'required|string|max:255',
+            'newForenames' => 'required|string|max:255',
+            'newIsAdmin' => 'boolean',
+        ]);
+
+        User::create([
+            'username' => $this->newUsername,
+            'email' => Str::lower($this->newEmail),
+            'surname' => $this->newSurname,
+            'forenames' => $this->newForenames,
+            'is_admin' => $this->newIsAdmin,
+            'is_staff' => true,
+            'password' => Str::random(64),
+        ]);
+
+        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin');
+
+        Flux::modal('create-user')->close();
+        Flux::toast('User created successfully', variant: 'success');
     }
 
     public function updatedSearch()
