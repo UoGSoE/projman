@@ -134,4 +134,23 @@ class Skill extends Model
             ELSE 5
         END";
     }
+
+    /**
+     * Count users per skill level for this skill (expects users relation to be loaded).
+     *
+     * @return array{awareness: int, working: int, practitioner: int, expert: int}
+     */
+    public function levelCounts(): array
+    {
+        $counts = ['awareness' => 0, 'working' => 0, 'practitioner' => 0, 'expert' => 0];
+
+        foreach ($this->users as $user) {
+            $level = $user->pivot->skill_level;
+            if (isset($counts[$level])) {
+                $counts[$level]++;
+            }
+        }
+
+        return $counts;
+    }
 }
