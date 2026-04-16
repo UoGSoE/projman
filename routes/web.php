@@ -12,6 +12,7 @@ use App\Livewire\ProjectList;
 use App\Livewire\ProjectViewer;
 use App\Livewire\RoadmapView;
 use App\Livewire\RolesList;
+use App\Livewire\Settings;
 use App\Livewire\SkillsImporter;
 use App\Livewire\SkillsManager;
 use App\Livewire\UserList;
@@ -40,5 +41,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/portfolio/change-on-a-page/{project}', ChangeOnAPage::class)->name('portfolio.change-on-a-page');
         Route::get('/portfolio/roadmap', RoadmapView::class)->name('portfolio.roadmap');
         Route::get('/work-package/{project}/export', ProjectExportController::class)->name('project.export');
+        Route::get('/settings', Settings::class)->name('settings');
     });
 });

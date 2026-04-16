@@ -51,7 +51,10 @@
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="user" href="{{ route('profile') }}" :current="request()->routeIs('profile')"
                     wire:navigate>Profile</flux:sidebar.item>
-                <flux:sidebar.item icon="cog-6-tooth" href="#">Settings</flux:sidebar.item>
+                @if (auth()->user()->is_admin)
+                    <flux:sidebar.item icon="cog-6-tooth" :href="route('settings')"
+                        :current="request()->routeIs('settings')" wire:navigate>Settings</flux:sidebar.item>
+                @endif
                 <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
             </flux:sidebar.nav>
             <flux:sidebar.nav>
