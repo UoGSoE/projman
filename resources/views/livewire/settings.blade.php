@@ -44,37 +44,46 @@
 
     <flux:modal name="add-token" variant="flyout" wire:close="resetTokenModal">
         <div class="space-y-6">
-            @if ($plainTextToken)
-                <div>
-                    <flux:heading size="lg">Token created</flux:heading>
-                    <flux:text class="mt-2">Copy this token now — it will not be shown again.</flux:text>
+            <div>
+                <flux:heading size="lg">Create API token</flux:heading>
+                <flux:text class="mt-2">Name the token so you can identify it later (e.g. "PowerBI Production").</flux:text>
+            </div>
+            <form wire:submit="createToken">
+                <div class="space-y-4 max-w-sm">
+                    <flux:input wire:model="newTokenName" label="Token name" placeholder="e.g. PowerBI Production" />
                 </div>
-                <flux:callout icon="key" variant="success">
-                    <flux:text class="font-mono break-all">{{ $plainTextToken }}</flux:text>
-                </flux:callout>
-                <div class="flex gap-3">
+                <div class="flex gap-3 mt-6">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button variant="primary">Done</flux:button>
+                        <flux:button variant="ghost">
+                            {{ $plainTextToken ? 'Close' : 'Cancel' }}
+                        </flux:button>
                     </flux:modal.close>
+                    <flux:button variant="primary" type="submit">Create token</flux:button>
                 </div>
-            @else
-                <div>
-                    <flux:heading size="lg">Create API token</flux:heading>
-                    <flux:text class="mt-2">Name the token so you can identify it later (e.g. "PowerBI Production").</flux:text>
-                </div>
-                <form wire:submit="createToken">
-                    <div class="space-y-4 max-w-sm">
-                        <flux:input wire:model="newTokenName" label="Token name" placeholder="e.g. PowerBI Production" />
+            </form>
+
+            @if ($plainTextToken)
+                <flux:separator variant="subtle" />
+                <flux:callout icon="key" variant="success">
+                    <flux:callout.heading>Token created</flux:callout.heading>
+                    <flux:callout.text>Copy this token now — it will not be shown again.</flux:callout.text>
+                    <div x-data="{
+                            copied: false,
+                            copy() {
+                                navigator.clipboard.writeText(@js($plainTextToken)).then(() => {
+                                    this.copied = true;
+                                    setTimeout(() => this.copied = false, 2000);
+                                });
+                            }
+                         }"
+                         class="mt-3 flex items-center gap-3">
+                        <flux:text class="font-mono break-all flex-1">{{ $plainTextToken }}</flux:text>
+                        <flux:button size="sm" icon="clipboard" x-on:click="copy()">
+                            <span x-text="copied ? 'Copied!' : 'Copy'"></span>
+                        </flux:button>
                     </div>
-                    <div class="flex gap-3 mt-6">
-                        <flux:spacer />
-                        <flux:modal.close>
-                            <flux:button variant="ghost">Cancel</flux:button>
-                        </flux:modal.close>
-                        <flux:button variant="primary" type="submit">Create token</flux:button>
-                    </div>
-                </form>
+                </flux:callout>
             @endif
         </div>
     </flux:modal>
