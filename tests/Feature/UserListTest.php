@@ -89,7 +89,7 @@ describe('UserList Component', function () {
                 ->assertSeeText('Smith')
                 ->assertDontSeeText('Jane')
                 ->assertDontSeeText('Doe')
-                ->assertDontSeeText('Admin');
+                ->assertDontSeeText('admin.user@example.ac.uk');
         });
 
         it('filters users by forenames', function () {
@@ -99,7 +99,7 @@ describe('UserList Component', function () {
                 ->assertSeeText('Doe')
                 ->assertDontSeeText('John')
                 ->assertDontSeeText('Smith')
-                ->assertDontSeeText('Admin');
+                ->assertDontSeeText('admin.user@example.ac.uk');
         });
 
         it('is case insensitive', function () {
@@ -145,7 +145,7 @@ describe('UserList Component', function () {
                 ->assertDontSeeText('Smith')
                 ->assertDontSeeText('Jane')
                 ->assertDontSeeText('Doe')
-                ->assertDontSeeText('Admin');
+                ->assertDontSeeText('admin.user@example.ac.uk');
         });
     });
 
@@ -272,6 +272,70 @@ describe('UserList Component', function () {
             // Verify the user exists in the database
             expect(User::where('surname', "Test's")->exists())->toBe(true);
         });
+    });
+});
+
+describe('Create User', function () {
+    beforeEach(function () {
+        $this->adminUser = User::factory()->create(['is_admin' => true]);
+    });
+
+    it('validates required fields and does not create a user', function () {
+        livewire(UserList::class)
+            ->set('newUsername', '')
+            ->set('newEmail', '')
+            ->set('newSurname', '')
+            ->set('newForenames', '')
+            ->call('createUser')
+            ->assertHasErrors(['newUsername', 'newEmail', 'newSurname', 'newForenames']);
+
+        // Only the admin from beforeEach should exist
+        expect(User::count())->toBe(1);
+    });
+
+    it('prevents duplicate usernames and emails', function () {
+        User::factory()->create(['username' => 'taken', 'email' => 'taken@example.ac.uk']);
+
+        livewire(UserList::class)
+            ->set('newUsername', 'taken')
+            ->set('newEmail', 'taken@example.ac.uk')
+            ->set('newSurname', 'Test')
+            ->set('newForenames', 'User')
+            ->call('createUser')
+            ->assertHasErrors(['newUsername', 'newEmail']);
+    });
+
+    it('resets form fields after successful creation', function () {
+        livewire(UserList::class)
+            ->set('newUsername', 'resettest')
+            ->set('newEmail', 'reset@example.ac.uk')
+            ->set('newSurname', 'Reset')
+            ->set('newForenames', 'Test')
+            ->call('createUser')
+            ->assertSet('newUsername', '')
+            ->assertSet('newEmail', '')
+            ->assertSet('newSurname', '')
+            ->assertSet('newForenames', '')
+            ->assertSet('newIsAdmin', false);
+    });
+
+    it('creates a user with valid data and lowercases the email', function () {
+        livewire(UserList::class)
+            ->set('newUsername', 'newuser')
+            ->set('newEmail', 'New.User@Example.AC.UK')
+            ->set('newSurname', 'Bloggs')
+            ->set('newForenames', 'Joe')
+            ->set('newIsAdmin', false)
+            ->call('createUser')
+            ->assertHasNoErrors();
+
+        $user = User::where('username', 'newuser')->first();
+        expect($user)->not->toBeNull();
+        expect($user->email)->toBe('new.user@example.ac.uk');
+        expect($user->surname)->toBe('Bloggs');
+        expect($user->forenames)->toBe('Joe');
+        expect($user->is_staff)->toBeTrue();
+        expect($user->is_admin)->toBeFalse();
     });
 });
 

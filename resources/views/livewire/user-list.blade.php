@@ -1,5 +1,10 @@
 <div>
-    <flux:heading size="xl" level="1">Staff</flux:heading>
+    <div class="flex items-center justify-between">
+        <flux:heading size="xl" level="1">Staff</flux:heading>
+        <flux:modal.trigger name="create-user">
+            <flux:button variant="primary" size="sm" icon="plus">Create User</flux:button>
+        </flux:modal.trigger>
+    </div>
 
     <flux:separator variant="subtle" class="mt-6" />
 
@@ -99,6 +104,32 @@
             @endforeach
         </flux:table.rows>
     </flux:table>
+    <flux:modal name="create-user" variant="flyout">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Create User</flux:heading>
+                <flux:text class="mt-2">Create a new staff user account.</flux:text>
+            </div>
+            <form wire:submit="createUser">
+                <div class="space-y-4 max-w-sm">
+                    <flux:input wire:model="newUsername" label="Username" placeholder="e.g. jsmith" />
+                    <flux:input wire:model="newEmail" label="Email" type="email" placeholder="e.g. john.smith@example.ac.uk" />
+                    <flux:input wire:model="newSurname" label="Surname" />
+                    <flux:input wire:model="newForenames" label="Forenames" />
+                    <flux:checkbox wire:model="newIsAdmin" label="Administrator" description="Grant this user admin privileges" />
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <flux:spacer />
+                    <flux:modal.close>
+                        <flux:button variant="ghost">Cancel</flux:button>
+                    </flux:modal.close>
+                    <flux:button variant="primary" type="submit">Create User</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+
     <flux:modal name="change-user-role" variant="flyout">
         <div class="space-y-6">
             <div>
