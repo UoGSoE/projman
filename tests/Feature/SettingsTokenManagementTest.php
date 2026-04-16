@@ -57,6 +57,19 @@ it('rejects empty token names and creates no token', function () {
     expect($admin->tokens()->count())->toBe(0);
 });
 
+it('clears the plaintext token and pending name when the modal closes', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
+    $this->actingAs($admin);
+
+    livewire(Settings::class)
+        ->set('newTokenName', 'PowerBI Production')
+        ->call('createToken')
+        ->assertSet('plainTextToken', fn ($value) => is_string($value) && ! empty($value))
+        ->call('resetTokenModal')
+        ->assertSet('plainTextToken', null)
+        ->assertSet('newTokenName', '');
+});
+
 it('blocks non-admin staff from reaching the token management page', function () {
     $staff = User::factory()->create(['is_admin' => false, 'is_staff' => true]);
 

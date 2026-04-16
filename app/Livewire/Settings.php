@@ -25,12 +25,13 @@ class Settings extends Component
     public function revokeToken(int $tokenId): void
     {
         auth()->user()->tokens()->whereKey($tokenId)->delete();
-        $this->plainTextToken = null;
     }
 
-    public function dismissPlainTextToken(): void
+    public function resetTokenModal(): void
     {
         $this->plainTextToken = null;
+        $this->newTokenName = '';
+        $this->resetValidation();
     }
 
     public function render()
