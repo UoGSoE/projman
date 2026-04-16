@@ -148,7 +148,9 @@ class TestDataSeeder extends Seeder
     {
         $allRoles = Role::all();
         $allSkills = $this->skills();
-        $skillLevels = collect(SkillLevel::cases());
+        $skillLevels = collect(SkillLevel::cases())->filter(
+            fn (SkillLevel $level) => $level !== SkillLevel::NO_KNOWLEDGE
+        );
 
         foreach ($staffMembers as $member) {
             if ($allRoles->isNotEmpty()) {

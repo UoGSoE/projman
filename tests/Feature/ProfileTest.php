@@ -48,8 +48,8 @@ describe('Profile Component', function () {
             'skill_category' => 'Programming',
         ]);
         $this->actingAs($this->user);
-        $this->user->updateSkill($this->skill1->id, SkillLevel::BEGINNER->value);
-        $this->user->updateSkill($this->skill2->id, SkillLevel::INTERMEDIATE->value);
+        $this->user->updateSkill($this->skill1->id, SkillLevel::AWARENESS->value);
+        $this->user->updateSkill($this->skill2->id, SkillLevel::WORKING->value);
 
     });
 
@@ -89,10 +89,11 @@ describe('Profile Component', function () {
         it('renders skill level radio group in correct position', function () {
             livewire(Profile::class)
                 ->assertSee('Level')
-                ->assertSee('None')
-                ->assertSee('Beginner')
-                ->assertSee('Intermediate')
-                ->assertSee('Advanced');
+                ->assertSee('No Knowledge')
+                ->assertSee('Awareness')
+                ->assertSee('Working')
+                ->assertSee('Practitioner')
+                ->assertSee('Expert');
         });
     });
 
@@ -175,12 +176,12 @@ describe('Profile Component', function () {
         it('updates user skill when radio group is changed', function () {
             // dd($this->skill1->id);
             $component = livewire(Profile::class)
-                ->set("userSkill.{$this->skill1->id}.skill_level", SkillLevel::INTERMEDIATE->value)
+                ->set("userSkill.{$this->skill1->id}.skill_level", SkillLevel::WORKING->value)
                 ->call('updateUserSkill', $this->skill1->id)
                 ->assertSeeText('Laravel');
 
             $this->user->refresh();
-            expect($this->user->getSkillLevel($this->skill1))->toBe(SkillLevel::INTERMEDIATE->value);
+            expect($this->user->getSkillLevel($this->skill1))->toBe(SkillLevel::WORKING->value);
         });
 
         it('removes user skill when radio group is changed to none', function () {

@@ -99,7 +99,7 @@ it('deletes a skill without users', function () {
 it('prevents deleting skill with assigned users', function () {
     $skill = Skill::factory()->create();
     $user = User::factory()->create(['is_staff' => true]);
-    $user->updateSkill($skill->id, SkillLevel::INTERMEDIATE->value);
+    $user->updateSkill($skill->id, SkillLevel::WORKING->value);
 
     livewire(SkillsManager::class)
         ->call('deleteSkill', $skill);
@@ -185,30 +185,30 @@ it('assigns skill to user with level', function () {
     livewire(SkillsManager::class)
         ->call('openUserSkillModal', $user)
         ->call('toggleSkillSelection', $skill->id)
-        ->set('newSkillLevel', SkillLevel::INTERMEDIATE->value)
+        ->set('newSkillLevel', SkillLevel::WORKING->value)
         ->call('addSkillWithLevel');
 
     $user->refresh();
     expect($user->skills)->toHaveCount(1);
-    expect($user->skills->first()->pivot->skill_level)->toBe(SkillLevel::INTERMEDIATE->value);
+    expect($user->skills->first()->pivot->skill_level)->toBe(SkillLevel::WORKING->value);
 });
 
 it('updates user skill level', function () {
     $user = User::factory()->create(['is_staff' => true]);
     $skill = Skill::factory()->create();
-    $user->updateSkill($skill->id, SkillLevel::BEGINNER->value);
+    $user->updateSkill($skill->id, SkillLevel::AWARENESS->value);
 
     livewire(SkillsManager::class)
         ->call('openUserSkillModal', $user)
-        ->call('updateSkillLevel', $skill->id, SkillLevel::ADVANCED->value);
+        ->call('updateSkillLevel', $skill->id, SkillLevel::EXPERT->value);
 
-    expect($user->fresh()->skills->first()->pivot->skill_level)->toBe(SkillLevel::ADVANCED->value);
+    expect($user->fresh()->skills->first()->pivot->skill_level)->toBe(SkillLevel::EXPERT->value);
 });
 
 it('removes skill from user', function () {
     $user = User::factory()->create(['is_staff' => true]);
     $skill = Skill::factory()->create();
-    $user->updateSkill($skill->id, SkillLevel::INTERMEDIATE->value);
+    $user->updateSkill($skill->id, SkillLevel::WORKING->value);
 
     livewire(SkillsManager::class)
         ->call('openUserSkillModal', $user)
@@ -232,7 +232,7 @@ it('creates new skill while assigning to user', function () {
         ->set('userSkillForm.newSkillName', 'Docker')
         ->set('userSkillForm.newSkillDescription', 'Container platform')
         ->set('userSkillForm.newSkillCategory', 'DevOps')
-        ->set('userSkillForm.newSkillLevel', SkillLevel::INTERMEDIATE)
+        ->set('userSkillForm.newSkillLevel', SkillLevel::WORKING)
         ->call('createAndAssignSkill');
 
     expect(Skill::where('name', 'Docker')->exists())->toBeTrue();
@@ -275,7 +275,7 @@ it('exports skills to file', function (string $format, string $method) {
 it('exports user skills to file', function (string $format, string $method) {
     $user = User::factory()->create(['is_staff' => true]);
     $skill = Skill::factory()->create();
-    $user->updateSkill($skill->id, SkillLevel::INTERMEDIATE->value);
+    $user->updateSkill($skill->id, SkillLevel::WORKING->value);
 
     livewire(SkillsManager::class)
         ->set('activeTab', 'user-skills')
@@ -294,8 +294,8 @@ it('shows correct user count per skill', function () {
     $skill = Skill::factory()->create(['name' => 'Laravel']);
     $user1 = User::factory()->create(['is_staff' => true]);
     $user2 = User::factory()->create(['is_staff' => true]);
-    $user1->updateSkill($skill->id, SkillLevel::BEGINNER->value);
-    $user2->updateSkill($skill->id, SkillLevel::ADVANCED->value);
+    $user1->updateSkill($skill->id, SkillLevel::AWARENESS->value);
+    $user2->updateSkill($skill->id, SkillLevel::EXPERT->value);
 
     $component = livewire(SkillsManager::class);
 
@@ -316,7 +316,7 @@ it('updates count when users assigned or removed', function () {
     expect($row[3])->toBe(0);
 
     // Assign user
-    $user->updateSkill($skill->id, SkillLevel::BEGINNER->value);
+    $user->updateSkill($skill->id, SkillLevel::AWARENESS->value);
 
     $component = livewire(SkillsManager::class);
     $exportData = $component->instance()->getSkillsExportData();

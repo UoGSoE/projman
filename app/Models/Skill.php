@@ -128,9 +128,9 @@ class Skill extends Model
     {
         return "CASE
             WHEN skill_level = 'expert' THEN 1
-            WHEN skill_level = 'advanced' THEN 2
-            WHEN skill_level = 'intermediate' THEN 3
-            WHEN skill_level = 'beginner' THEN 4
+            WHEN skill_level = 'practitioner' THEN 2
+            WHEN skill_level = 'working' THEN 3
+            WHEN skill_level = 'awareness' THEN 4
             ELSE 5
         END";
     }

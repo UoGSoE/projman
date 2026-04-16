@@ -64,7 +64,6 @@
                                         wire:model.live="userSkill.{{ $skill->id }}.skill_level"
                                         wire:change="updateUserSkill({{ $skill->id }})" size="sm"
                                         variant="pills">
-                                        <flux:radio label="None" value="none" />
                                         @foreach ($skillLevels as $level)
                                             <flux:radio label="{{ $level->getDisplayName() }}"
                                                 value="{{ $level->value }}" />

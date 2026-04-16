@@ -40,7 +40,7 @@ it('shows user details, roles, skills, requests, and IT assignments for admins',
     $targetUser->roles()->attach($role);
 
     $skill = Skill::factory()->create(['name' => 'Networking']);
-    $targetUser->skills()->attach($skill->id, ['skill_level' => SkillLevel::ADVANCED->value]);
+    $targetUser->skills()->attach($skill->id, ['skill_level' => SkillLevel::EXPERT->value]);
 
     $requestedProject = Project::factory()->for($targetUser)->create([
         'title' => 'Campus WiFi Refresh',
@@ -107,7 +107,7 @@ it('can toggle to include completed and cancelled assignments', function () {
     ]);
 
     $skill = Skill::factory()->create(['name' => 'Systems']);
-    $targetUser->skills()->attach($skill->id, ['skill_level' => SkillLevel::BEGINNER->value]);
+    $targetUser->skills()->attach($skill->id, ['skill_level' => SkillLevel::AWARENESS->value]);
 
     $projectOwner = User::factory()->create();
 

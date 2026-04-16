@@ -20,7 +20,7 @@ class SkillFactory extends Factory
         return [
             'name' => $this->faker->unique()->words(2, true),
             'description' => $this->faker->sentence(),
-            'skill_category' => $this->faker->randomElement(['Programming Languages', 'Frameworks', 'Databases', 'DevOps', 'Design', 'Project Management', 'Testing']),
+            'skill_category' => $this->faker->randomElement(['Core', 'Service', 'Security', 'Management', 'Governance', 'Technical', 'Business']),
         ];
     }
 }

@@ -24,11 +24,11 @@ describe('Skill Matching', function () {
         $user3 = User::factory()->create();
         $user4 = User::factory()->create();
         $user5 = User::factory()->create();
-        $user1->skills()->attach($skill1->id, ['skill_level' => SkillLevel::BEGINNER->value]);
-        $user2->skills()->attach($skill2->id, ['skill_level' => SkillLevel::INTERMEDIATE->value]);
-        $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::ADVANCED->value]);
-        $user5->skills()->attach($skill3->id, ['skill_level' => SkillLevel::INTERMEDIATE->value]);
-        $user5->skills()->attach($skill2->id, ['skill_level' => SkillLevel::INTERMEDIATE->value]);
+        $user1->skills()->attach($skill1->id, ['skill_level' => SkillLevel::AWARENESS->value]);
+        $user2->skills()->attach($skill2->id, ['skill_level' => SkillLevel::WORKING->value]);
+        $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::EXPERT->value]);
+        $user5->skills()->attach($skill3->id, ['skill_level' => SkillLevel::WORKING->value]);
+        $user5->skills()->attach($skill2->id, ['skill_level' => SkillLevel::WORKING->value]);
         // dd($user5->hasSkill($skill3->id));
 
         $project = Project::factory()->create();
@@ -75,15 +75,15 @@ describe('Skill Matching', function () {
         $user2 = User::factory()->create(['forenames' => 'Jane', 'surname' => 'Smith']);
         $user3 = User::factory()->create(['forenames' => 'Bob', 'surname' => 'Johnson']);
 
-        $user1->skills()->attach($skill1->id, ['skill_level' => SkillLevel::ADVANCED->value]); // Score: 3
-        $user1->skills()->attach($skill2->id, ['skill_level' => SkillLevel::INTERMEDIATE->value]); // Score: 2
-        // Total: 5
+        $user1->skills()->attach($skill1->id, ['skill_level' => SkillLevel::EXPERT->value]); // Score: 4
+        $user1->skills()->attach($skill2->id, ['skill_level' => SkillLevel::WORKING->value]); // Score: 2
+        // Total: 6
 
-        $user2->skills()->attach($skill1->id, ['skill_level' => SkillLevel::INTERMEDIATE->value]); // Score: 2
-        $user2->skills()->attach($skill3->id, ['skill_level' => SkillLevel::ADVANCED->value]); // Score: 3
+        $user2->skills()->attach($skill1->id, ['skill_level' => SkillLevel::WORKING->value]); // Score: 2
+        $user2->skills()->attach($skill3->id, ['skill_level' => SkillLevel::EXPERT->value]); // Score: 4
         // Total: 2 (only skill1 matches required skills)
 
-        $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::BEGINNER->value]); // Score: 1
+        $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::AWARENESS->value]); // Score: 1
         // Total: 1
 
         // Test matching for skills 1 and 2
@@ -91,8 +91,8 @@ describe('Skill Matching', function () {
 
         // Now returns ALL staff (4 total: user1, user2, user3 + 1 from fakeNotifications)
         expect($matchedUsers)->toHaveCount(4);
-        expect($matchedUsers->first()->id)->toBe($user1->id); // user1 should be first (score: 5)
-        expect($matchedUsers->first()->total_skill_score)->toBe(5);
+        expect($matchedUsers->first()->id)->toBe($user1->id); // user1 should be first (score: 6)
+        expect($matchedUsers->first()->total_skill_score)->toBe(6);
         expect($matchedUsers[1]->id)->toBe($user2->id); // user2 second (score: 2)
         expect($matchedUsers[1]->total_skill_score)->toBe(2);
         expect($matchedUsers[2]->id)->toBe($user3->id); // user3 third (score: 1)
@@ -130,17 +130,17 @@ describe('Skill Matching', function () {
         $user2 = User::factory()->create(['forenames' => 'Jane', 'surname' => 'Smith']);
         $user3 = User::factory()->create(['forenames' => 'Bob', 'surname' => 'Johnson']);
 
-        $user1->skills()->attach($skill1->id, ['skill_level' => SkillLevel::ADVANCED->value]);
-        $user1->skills()->attach($skill2->id, ['skill_level' => SkillLevel::INTERMEDIATE->value]);
+        $user1->skills()->attach($skill1->id, ['skill_level' => SkillLevel::EXPERT->value]);
+        $user1->skills()->attach($skill2->id, ['skill_level' => SkillLevel::WORKING->value]);
 
-        $user2->skills()->attach($skill3->id, ['skill_level' => SkillLevel::ADVANCED->value]);
+        $user2->skills()->attach($skill3->id, ['skill_level' => SkillLevel::EXPERT->value]);
 
         $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([$skill1->id, $skill2->id]);
 
         // Now returns ALL staff (4 total), with user1 first (score 5), others with score 0
         expect($matchedUsers)->toHaveCount(4);
         expect($matchedUsers->first()->id)->toBe($user1->id);
-        expect($matchedUsers->first()->total_skill_score)->toBe(5); // 3 + 2
+        expect($matchedUsers->first()->total_skill_score)->toBe(6); // 4 + 2
         // Remaining users have score 0
         expect($matchedUsers[1]->total_skill_score)->toBe(0);
         expect($matchedUsers[2]->total_skill_score)->toBe(0);

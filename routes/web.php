@@ -12,6 +12,7 @@ use App\Livewire\ProjectList;
 use App\Livewire\ProjectViewer;
 use App\Livewire\RoadmapView;
 use App\Livewire\RolesList;
+use App\Livewire\SkillsImporter;
 use App\Livewire\SkillsManager;
 use App\Livewire\UserList;
 use App\Livewire\UserViewer;
@@ -33,6 +34,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/staff/heatmap', HeatMapViewer::class)->name('project.heatmap');
         Route::get('/roles', RolesList::class)->name('roles.list');
         Route::get('/skills', SkillsManager::class)->name('skills.manage');
+        Route::get('/skills/import', SkillsImporter::class)->name('skills.import');
         Route::get('/user/{user}', UserViewer::class)->name('user.show');
         Route::get('/portfolio/backlog', BacklogList::class)->name('portfolio.backlog');
         Route::get('/portfolio/change-on-a-page/{project}', ChangeOnAPage::class)->name('portfolio.change-on-a-page');

@@ -178,7 +178,7 @@ class SkillsManager extends Component
         }
 
         $this->selectedSkillForAssignment = Skill::find($skillId);
-        $this->newSkillLevel = SkillLevel::BEGINNER->value;
+        $this->newSkillLevel = SkillLevel::AWARENESS->value;
     }
 
     public function cancelSkillSelection(): void
@@ -205,7 +205,7 @@ class SkillsManager extends Component
 
         if ($this->showCreateSkillForm) {
             $this->userSkillForm->newSkillName = $this->skillSearchForAssignment;
-            $this->userSkillForm->newSkillLevel = SkillLevel::BEGINNER;
+            $this->userSkillForm->newSkillLevel = SkillLevel::AWARENESS;
         } else {
             $this->userSkillForm->clearNewSkillFields();
         }

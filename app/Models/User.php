@@ -138,7 +138,7 @@ class User extends Authenticatable
 
     public function updateSkill(int $skillId, string $level): void
     {
-        if ($level == 'none') {
+        if ($level == 'none' || $level == SkillLevel::NO_KNOWLEDGE->value) {
             $this->removeSkill($skillId);
 
             return;
