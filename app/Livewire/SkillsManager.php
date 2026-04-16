@@ -3,11 +3,8 @@
 namespace App\Livewire;
 
 use App\Enums\SkillLevel;
-use App\Livewire\Forms\SkillForm;
-use App\Livewire\Forms\UserSkillForm;
 use App\Models\Skill;
 use App\Models\User;
-use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Ohffs\SimpleSpout\ExcelSheet;
@@ -15,10 +12,6 @@ use Ohffs\SimpleSpout\ExcelSheet;
 class SkillsManager extends Component
 {
     use WithPagination;
-
-    public SkillForm $skillForm;
-
-    public UserSkillForm $userSkillForm;
 
     public string $sortColumn = 'name';
 
@@ -30,23 +23,12 @@ class SkillsManager extends Component
 
     public string $activeTab = 'available-skills';
 
-    // UI state for user skill modal
-    public bool $showCreateSkillForm = false;
-
-    public ?Skill $selectedSkillForAssignment = null;
-
-    public string $skillSearchForAssignment = '';
-
-    public string $newSkillLevel = '';
-
     public function render()
     {
         return view('livewire.skills-manager', [
             'skills' => $this->getSkills(),
             'users' => $this->getStaffUsers(),
-            'filteredSkills' => $this->getFilteredSkillsForAssignment(),
             'maxDisplayedSkills' => 3,
-            'filteredCategories' => Skill::getAvailableSkillCategories(),
         ]);
     }
 
@@ -67,7 +49,6 @@ class SkillsManager extends Component
                 strlen($this->userSearchQuery) >= 2,
                 function ($query) {
                     $query->where(function ($q) {
-                        // Search each word independently to support "John Doe" style searches
                         $words = preg_split('/\s+/', trim($this->userSearchQuery));
                         foreach ($words as $word) {
                             $q->where(function ($inner) use ($word) {
@@ -78,19 +59,10 @@ class SkillsManager extends Component
                     });
                 }
             )
-            ->with(['skills' => fn ($query) => $query->orderByRaw(Skill::getSkillLevelOrdering())])
+            ->with(['skills' => fn ($query) => $query->orderBy('name')])
             ->orderBy('surname')
             ->orderBy('forenames')
             ->get();
-    }
-
-    private function getFilteredSkillsForAssignment()
-    {
-        if (strlen($this->skillSearchForAssignment) < 2) {
-            return collect();
-        }
-
-        return Skill::searchSkill($this->skillSearchForAssignment, 10);
     }
 
     public function sort(string $column): void
@@ -108,130 +80,6 @@ class SkillsManager extends Component
     public function updatedSkillSearchQuery(): void
     {
         $this->resetPage();
-    }
-
-    public function updatedSkillSearchForAssignment(): void
-    {
-        $this->userSkillForm->newSkillName = $this->skillSearchForAssignment;
-    }
-
-    // Skill CRUD
-
-    public function openAddSkillModal(): void
-    {
-        $this->skillForm->clear();
-        Flux::modal('add-skill-form')->show();
-    }
-
-    public function openEditSkillModal(Skill $skill): void
-    {
-        $this->skillForm->setSkill($skill);
-        Flux::modal('edit-skill-form')->show();
-    }
-
-    public function saveSkill(): void
-    {
-        $this->skillForm->save();
-
-        if ($this->skillForm->isEditing()) {
-            Flux::toast('Skill updated successfully', variant: 'success');
-            Flux::modal('edit-skill-form')->close();
-        } else {
-            Flux::toast('Skill created successfully', variant: 'success');
-            Flux::modal('add-skill-form')->close();
-        }
-
-        $this->skillForm->clear();
-    }
-
-    public function deleteSkill(Skill $skill): void
-    {
-        if ($skill->isAssignedToUsers()) {
-            Flux::toast('Cannot delete skill that is assigned to users', variant: 'danger');
-
-            return;
-        }
-
-        $skill->delete();
-        Flux::toast('Skill deleted successfully', variant: 'success');
-    }
-
-    // User skill management
-
-    public function openUserSkillModal(User $user): void
-    {
-        $this->userSkillForm->setUser($user);
-        $this->skillSearchForAssignment = '';
-        $this->selectedSkillForAssignment = null;
-        $this->newSkillLevel = '';
-        $this->showCreateSkillForm = false;
-        Flux::modal('user-skills-form')->show();
-    }
-
-    public function toggleSkillSelection(int $skillId): void
-    {
-        if ($this->selectedSkillForAssignment?->id === $skillId) {
-            $this->selectedSkillForAssignment = null;
-            $this->newSkillLevel = '';
-
-            return;
-        }
-
-        $this->selectedSkillForAssignment = Skill::find($skillId);
-        $this->newSkillLevel = SkillLevel::AWARENESS->value;
-    }
-
-    public function cancelSkillSelection(): void
-    {
-        $this->selectedSkillForAssignment = null;
-        $this->newSkillLevel = '';
-    }
-
-    public function addSkillWithLevel(): void
-    {
-        $this->userSkillForm->addSkill(
-            $this->selectedSkillForAssignment,
-            SkillLevel::from($this->newSkillLevel)
-        );
-        $this->selectedSkillForAssignment = null;
-        $this->newSkillLevel = '';
-
-        Flux::toast('Skill added successfully', variant: 'success');
-    }
-
-    public function toggleCreateSkillForm(): void
-    {
-        $this->showCreateSkillForm = ! $this->showCreateSkillForm;
-
-        if ($this->showCreateSkillForm) {
-            $this->userSkillForm->newSkillName = $this->skillSearchForAssignment;
-            $this->userSkillForm->newSkillLevel = SkillLevel::AWARENESS;
-        } else {
-            $this->userSkillForm->clearNewSkillFields();
-        }
-    }
-
-    public function createAndAssignSkill(): void
-    {
-        $this->userSkillForm->createAndAssign();
-        $this->skillSearchForAssignment = '';
-        $this->showCreateSkillForm = false;
-
-        Flux::toast('Skill created and assigned successfully', variant: 'success');
-    }
-
-    public function updateSkillLevel(int $skillId, string $level): void
-    {
-        $this->userSkillForm->updateLevel($skillId, SkillLevel::from($level));
-
-        Flux::toast('Skill level updated successfully', variant: 'success');
-    }
-
-    public function removeUserSkill(int $skillId): void
-    {
-        $this->userSkillForm->removeSkill($skillId);
-
-        Flux::toast('Skill removed successfully', variant: 'success');
     }
 
     // Export functionality

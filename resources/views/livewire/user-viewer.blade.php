@@ -20,7 +20,7 @@
 
     <flux:separator variant="subtle" />
 
-    <div @class(['grid gap-6', 'lg:grid-cols-2' => $skills->isNotEmpty()])>
+    <div class="grid gap-6">
         <flux:card>
             <div class="space-y-6">
                 <div>
@@ -65,30 +65,15 @@
                 </div>
             </div>
         </flux:card>
-        @if ($skills->isNotEmpty())
-            <flux:card class="space-y-6">
-                <div>
-                    <flux:heading size="lg">Skills</flux:heading>
-                    <flux:text variant="subtle" class="mt-1 text-sm">Expertise recorded against this profile.</flux:text>
-                </div>
-
-                <div class="flex flex-wrap gap-2">
-                    @foreach ($skills as $skill)
-                        <flux:badge size="sm" variant="subtle" class="py-1 px-3" :key="'skill-' . $skill->id">
-                            {{ $skill->name }}
-                        </flux:badge>
-                    @endforeach
-                </div>
-            </flux:card>
-        @endif
     </div>
 
-    @if ($skills->isEmpty())
-        <flux:callout variant="secondary" icon="sparkles">
-            <flux:callout.heading>No skills recorded</flux:callout.heading>
-            <flux:callout.text>Add skills from the Skills Manager to start matching this user to work packages.</flux:callout.text>
-        </flux:callout>
-    @endif
+    <flux:card class="space-y-6">
+        <div>
+            <flux:heading size="lg">Skills</flux:heading>
+            <flux:text variant="subtle" class="mt-1 text-sm">Expertise recorded against this profile.</flux:text>
+        </div>
+        @include('partials.user-skills-grid', ['skills' => $skills])
+    </flux:card>
 
     <flux:card class="space-y-6">
         <div>

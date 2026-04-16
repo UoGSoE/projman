@@ -18,7 +18,7 @@ class UserViewer extends Component
     {
         $user = $this->user->load([
             'roles:id,name',
-            'skills:id,name',
+            'skills',
             'projects' => fn ($query) => $query->with([
                 'scheduling:id,project_id,cose_it_staff',
             ])->latest(),
