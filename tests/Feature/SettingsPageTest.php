@@ -27,3 +27,27 @@ it('redirects guests away from settings', function () {
     $this->get(route('settings'))
         ->assertRedirect(route('login'));
 });
+
+it('renders a PowerBI setup guide for admins', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
+
+    $this->actingAs($admin)
+        ->get(route('settings'))
+        ->assertOk()
+        ->assertSeeText('Connecting PowerBI')
+        ->assertSeeText('Get Data')
+        ->assertSeeText('Web')
+        ->assertSeeText('Bearer');
+});
+
+it('lists the shipped API endpoints with curl examples', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
+
+    $response = $this->actingAs($admin)->get(route('settings'))->assertOk();
+
+    foreach (['/api/ping', '/api/skills', '/api/users', '/api/projects', '/api/stats/skills-gap'] as $path) {
+        $response->assertSeeText($path);
+    }
+    $response->assertSeeText('curl');
+    $response->assertSeeText('Authorization: Bearer');
+});
