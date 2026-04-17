@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     {
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
+            request()->server->set('HTTPS', 'on');
         }
 
         if (config('proxy.https')) {
