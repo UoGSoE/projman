@@ -14,7 +14,6 @@
 
             <div class="mt-6 space-y-4">
                 <flux:input type="file" wire:model="spreadsheet" accept=".xlsx" label="Spreadsheet file" />
-                <flux:error name="spreadsheet" />
 
                 <flux:button variant="primary" wire:click="parseSpreadsheet" wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="parseSpreadsheet">Parse Spreadsheet</span>
