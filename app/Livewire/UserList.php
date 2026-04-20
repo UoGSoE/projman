@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -36,6 +37,8 @@ class UserList extends Component
     public $newIsAdmin = false;
 
     public $newIsItStaff = false;
+
+    public ?int $editingUserId = null;
 
     public function render()
     {
@@ -140,32 +143,58 @@ class UserList extends Component
         Flux::toast('User roles updated successfully', variant: 'success');
     }
 
-    public function createUser(): void
+    public function openEditUserModal(User $user): void
+    {
+        $this->editingUserId = $user->id;
+        $this->newUsername = $user->username;
+        $this->newEmail = $user->email;
+        $this->newSurname = $user->surname;
+        $this->newForenames = $user->forenames;
+        $this->newIsAdmin = $user->is_admin;
+        $this->newIsItStaff = $user->is_itstaff;
+    }
+
+    public function resetUserForm(): void
+    {
+        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin', 'newIsItStaff', 'editingUserId');
+        $this->resetValidation();
+    }
+
+    public function saveUser(): void
     {
         $this->validate([
-            'newUsername' => 'required|string|max:255|unique:users,username',
-            'newEmail' => 'required|email|max:255|unique:users,email',
+            'newUsername' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($this->editingUserId)],
+            'newEmail' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingUserId)],
             'newSurname' => 'required|string|max:255',
             'newForenames' => 'required|string|max:255',
             'newIsAdmin' => 'boolean',
             'newIsItStaff' => 'boolean',
         ]);
 
-        User::create([
+        $attributes = [
             'username' => $this->newUsername,
             'email' => Str::lower($this->newEmail),
             'surname' => $this->newSurname,
             'forenames' => $this->newForenames,
             'is_admin' => $this->newIsAdmin,
             'is_itstaff' => $this->newIsItStaff,
-            'is_staff' => true,
-            'password' => Str::random(64),
-        ]);
+        ];
 
-        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin', 'newIsItStaff');
+        if ($this->editingUserId) {
+            User::findOrFail($this->editingUserId)->update($attributes);
+            $message = 'User updated successfully';
+        } else {
+            User::create($attributes + [
+                'is_staff' => true,
+                'password' => Str::random(64),
+            ]);
+            $message = 'User created successfully';
+        }
+
+        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin', 'newIsItStaff', 'editingUserId');
 
         Flux::modal('create-user')->close();
-        Flux::toast('User created successfully', variant: 'success');
+        Flux::toast($message, variant: 'success');
     }
 
     public function updatedSearch()

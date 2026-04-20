@@ -286,7 +286,7 @@ describe('Create User', function () {
             ->set('newEmail', '')
             ->set('newSurname', '')
             ->set('newForenames', '')
-            ->call('createUser')
+            ->call('saveUser')
             ->assertHasErrors(['newUsername', 'newEmail', 'newSurname', 'newForenames']);
 
         // Only the admin from beforeEach should exist
@@ -301,7 +301,7 @@ describe('Create User', function () {
             ->set('newEmail', 'taken@example.ac.uk')
             ->set('newSurname', 'Test')
             ->set('newForenames', 'User')
-            ->call('createUser')
+            ->call('saveUser')
             ->assertHasErrors(['newUsername', 'newEmail']);
     });
 
@@ -311,7 +311,7 @@ describe('Create User', function () {
             ->set('newEmail', 'reset@example.ac.uk')
             ->set('newSurname', 'Reset')
             ->set('newForenames', 'Test')
-            ->call('createUser')
+            ->call('saveUser')
             ->assertSet('newUsername', '')
             ->assertSet('newEmail', '')
             ->assertSet('newSurname', '')
@@ -326,7 +326,7 @@ describe('Create User', function () {
             ->set('newSurname', 'Bloggs')
             ->set('newForenames', 'Joe')
             ->set('newIsAdmin', false)
-            ->call('createUser')
+            ->call('saveUser')
             ->assertHasNoErrors();
 
         $user = User::where('username', 'newuser')->first();
@@ -417,9 +417,68 @@ describe('IT Staff Toggling', function () {
             ->set('newSurname', 'Bloggs')
             ->set('newForenames', 'Joe')
             ->set('newIsItStaff', true)
-            ->call('createUser')
+            ->call('saveUser')
             ->assertHasNoErrors();
 
         expect(User::where('username', 'newitstaff')->first()->is_itstaff)->toBeTrue();
+    });
+
+    it('shows an IT Staff badge for IT-staff users who are not admins', function () {
+        User::factory()->staff()->create(['surname' => 'ItPersonBadgeTest']);
+
+        livewire(UserList::class)
+            ->assertSeeText('IT Staff');
+    });
+});
+
+describe('Editing Users', function () {
+    beforeEach(function () {
+        $this->adminUser = User::factory()->admin()->create();
+        $this->actingAs($this->adminUser);
+    });
+
+    it('populates the modal form fields when opening the edit modal', function () {
+        $target = User::factory()->create([
+            'username' => 'original.name',
+            'email' => 'original@example.ac.uk',
+            'surname' => 'Original',
+            'forenames' => 'Name',
+        ]);
+
+        livewire(UserList::class)
+            ->call('openEditUserModal', $target)
+            ->assertSet('newUsername', 'original.name')
+            ->assertSet('newEmail', 'original@example.ac.uk')
+            ->assertSet('newSurname', 'Original')
+            ->assertSet('newForenames', 'Name');
+    });
+
+    it('updates the existing user when saving from the edit modal', function () {
+        $target = User::factory()->create(['surname' => 'Original']);
+        $countBefore = User::count();
+
+        livewire(UserList::class)
+            ->call('openEditUserModal', $target)
+            ->set('newSurname', 'Updated')
+            ->call('saveUser')
+            ->assertHasNoErrors();
+
+        expect($target->fresh()->surname)->toBe('Updated');
+        expect(User::count())->toBe($countBefore);
+    });
+
+    it('allows keeping the same username and email when editing', function () {
+        $target = User::factory()->create([
+            'username' => 'keepme',
+            'email' => 'keep.me@example.ac.uk',
+        ]);
+
+        livewire(UserList::class)
+            ->call('openEditUserModal', $target)
+            ->set('newSurname', 'NewName')
+            ->call('saveUser')
+            ->assertHasNoErrors();
+
+        expect($target->fresh()->username)->toBe('keepme');
     });
 });

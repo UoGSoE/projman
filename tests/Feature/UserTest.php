@@ -34,3 +34,9 @@ it('factory requester state produces university staff who are not IT staff', fun
     expect($requester->is_staff)->toBeTrue();
     expect($requester->is_itstaff)->toBeFalse();
 });
+
+it('shows Admin on the type label when a user is both admin and IT staff', function () {
+    $user = User::factory()->admin()->create();
+
+    expect($user->typeLabel())->toBe('Admin');
+});

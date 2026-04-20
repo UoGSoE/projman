@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between">
         <flux:heading size="xl" level="1">Staff</flux:heading>
         <flux:modal.trigger name="create-user">
-            <flux:button variant="primary" size="sm" icon="plus">Create User</flux:button>
+            <flux:button variant="primary" size="sm" icon="plus" wire:click="resetUserForm">Create User</flux:button>
         </flux:modal.trigger>
     </div>
 
@@ -37,8 +37,8 @@
 
                     <flux:table.cell>
                         <flux:badge size="sm" class="transition-all duration-300"
-                            :color="$user->isAdmin() ? 'green' : 'gray'" inset="top bottom">
-                            {{ $user->isAdmin() ? 'Admin' : 'User' }}
+                            :color="$user->typeColour()" inset="top bottom">
+                            {{ $user->typeLabel() }}
                         </flux:badge>
                     </flux:table.cell>
 
@@ -79,6 +79,12 @@
                         <flux:dropdown>
                             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
                             <flux:menu>
+                                <flux:menu.item icon="pencil-square">
+                                    <flux:modal.trigger name="create-user"
+                                        wire:click="openEditUserModal({{ $user->id }})">
+                                        Edit User
+                                    </flux:modal.trigger>
+                                </flux:menu.item>
                                 <flux:menu.item icon="plus" wire:click="toggleAdmin({{ $user->id }})">Toggle
                                     admin</flux:menu.item>
                                 <flux:menu.item icon="wrench-screwdriver" wire:click="toggleItStaff({{ $user->id }})">Toggle
@@ -109,10 +115,12 @@
     <flux:modal name="create-user" variant="flyout">
         <div class="space-y-6">
             <div>
-                <flux:heading size="lg">Create User</flux:heading>
-                <flux:text class="mt-2">Create a new staff user account.</flux:text>
+                <flux:heading size="lg">{{ $editingUserId ? 'Edit User' : 'Create User' }}</flux:heading>
+                <flux:text class="mt-2">
+                    {{ $editingUserId ? 'Update this user\'s details.' : 'Create a new staff user account.' }}
+                </flux:text>
             </div>
-            <form wire:submit="createUser">
+            <form wire:submit="saveUser">
                 <div class="space-y-4 max-w-sm">
                     <flux:input wire:model="newUsername" label="Username" placeholder="e.g. jsmith" />
                     <flux:input wire:model="newEmail" label="Email" type="email" placeholder="e.g. john.smith@example.ac.uk" />
@@ -127,7 +135,9 @@
                     <flux:modal.close>
                         <flux:button variant="ghost">Cancel</flux:button>
                     </flux:modal.close>
-                    <flux:button variant="primary" type="submit">Create User</flux:button>
+                    <flux:button variant="primary" type="submit">
+                        {{ $editingUserId ? 'Save Changes' : 'Create User' }}
+                    </flux:button>
                 </div>
             </form>
         </div>

@@ -133,6 +133,24 @@ class User extends Authenticatable
         return ! $this->isItStaff();
     }
 
+    public function typeLabel(): string
+    {
+        return match (true) {
+            $this->isAdmin() => 'Admin',
+            $this->isItStaff() => 'IT Staff',
+            default => 'User',
+        };
+    }
+
+    public function typeColour(): string
+    {
+        return match (true) {
+            $this->isAdmin() => 'green',
+            $this->isItStaff() => 'blue',
+            default => 'gray',
+        };
+    }
+
     public function getFirstNameAttribute()
     {
         return explode(' ', $this->forenames)[0];
