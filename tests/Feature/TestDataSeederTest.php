@@ -74,7 +74,8 @@ it('allocates staff to projects from the scheduling stage onwards', function () 
     expect($scheduledProjects)->not->toBeEmpty();
 
     foreach ($scheduledProjects as $project) {
-        expect($project->scheduling?->assigned_to)->not->toBeNull();
+        expect($project->scheduling)->not->toBeNull();
+        expect($project->scheduling->assigned_to)->not->toBeNull();
     }
 });
 

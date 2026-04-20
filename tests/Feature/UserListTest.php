@@ -295,6 +295,7 @@ describe('Create User', function () {
 
     it('prevents duplicate usernames and emails', function () {
         User::factory()->create(['username' => 'taken', 'email' => 'taken@example.ac.uk']);
+        $countBefore = User::count();
 
         livewire(UserList::class)
             ->set('userAttributes.username', 'taken')
@@ -303,6 +304,8 @@ describe('Create User', function () {
             ->set('userAttributes.forenames', 'User')
             ->call('saveUser')
             ->assertHasErrors(['userAttributes.username', 'userAttributes.email']);
+
+        expect(User::count())->toBe($countBefore);
     });
 
     it('clears form fields when opening the create modal', function () {
@@ -401,13 +404,16 @@ describe('IT Staff Toggling', function () {
         $this->actingAs($this->adminUser);
     });
 
-    it('toggles a user\'s IT staff status', function () {
+    it('toggles a user\'s IT staff status both ways', function () {
         $target = User::factory()->requester()->create();
 
         livewire(UserList::class)
             ->call('toggleItStaff', $target);
-
         expect($target->fresh()->is_itstaff)->toBeTrue();
+
+        livewire(UserList::class)
+            ->call('toggleItStaff', $target->fresh());
+        expect($target->fresh()->is_itstaff)->toBeFalse();
     });
 
     it('persists the IT Staff checkbox when creating a user', function () {
@@ -427,7 +433,7 @@ describe('IT Staff Toggling', function () {
         User::factory()->staff()->create(['surname' => 'ItPersonBadgeTest']);
 
         livewire(UserList::class)
-            ->assertSeeText('IT Staff');
+            ->assertSeeTextInOrder(['ItPersonBadgeTest', 'IT Staff']);
     });
 });
 

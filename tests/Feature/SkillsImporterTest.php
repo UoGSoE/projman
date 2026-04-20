@@ -125,6 +125,7 @@ it('leaves a spreadsheet name unmatched when forename and surname are also ambig
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
     User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'John']);
     User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'John']);
+    $marple = User::factory()->create(['is_staff' => true, 'surname' => 'Marple', 'forenames' => 'Jane']);
     $this->actingAs($admin);
 
     $file = UploadedFile::fake()->createWithContent(
@@ -138,4 +139,9 @@ it('leaves a spreadsheet name unmatched when forename and surname are also ambig
 
     expect($component->get('autoMatched'))->not->toHaveKey('John Watson');
     expect($component->get('unmatched'))->toContain('John Watson');
+
+    // Control: an unrelated unambiguous match still auto-matches, so a bug dumping
+    // everyone into unmatched would fail this test.
+    expect($component->get('autoMatched'))->toHaveKey('Jane Marple');
+    expect($component->get('autoMatched')['Jane Marple']['userId'])->toBe($marple->id);
 });
