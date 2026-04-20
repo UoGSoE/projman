@@ -487,4 +487,14 @@ describe('Editing Users', function () {
 
         expect($target->fresh()->username)->toBe('keepme');
     });
+
+    it('does not change an admins own is_admin when they save their own edit', function () {
+        livewire(UserList::class)
+            ->call('openUserModal', $this->adminUser)
+            ->set('userAttributes.is_admin', false)
+            ->call('saveUser')
+            ->assertHasNoErrors();
+
+        expect($this->adminUser->fresh()->is_admin)->toBeTrue();
+    });
 });

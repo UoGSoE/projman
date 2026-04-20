@@ -78,8 +78,10 @@
                             <flux:menu>
                                 <flux:menu.item icon="pencil-square"
                                     wire:click="openUserModal({{ $user->id }})">Edit User</flux:menu.item>
-                                <flux:menu.item icon="plus" wire:click="toggleAdmin({{ $user->id }})">Toggle
-                                    admin</flux:menu.item>
+                                @unless ($user->is(auth()->user()))
+                                    <flux:menu.item icon="plus" wire:click="toggleAdmin({{ $user->id }})">Toggle
+                                        admin</flux:menu.item>
+                                @endunless
                                 <flux:menu.item icon="wrench-screwdriver" wire:click="toggleItStaff({{ $user->id }})">Toggle
                                     IT staff</flux:menu.item>
                                 <flux:menu.item icon="user-group">
@@ -109,7 +111,9 @@
                     <flux:input wire:model="userAttributes.email" label="Email" type="email" placeholder="e.g. john.smith@example.ac.uk" />
                     <flux:input wire:model="userAttributes.surname" label="Surname" />
                     <flux:input wire:model="userAttributes.forenames" label="Forenames" />
-                    <flux:checkbox wire:model="userAttributes.is_admin" label="Administrator" description="Grant this user admin privileges" />
+                    @unless ($userAttributes['id'] === auth()->id())
+                        <flux:checkbox wire:model="userAttributes.is_admin" label="Administrator" description="Grant this user admin privileges" />
+                    @endunless
                     <flux:checkbox wire:model="userAttributes.is_itstaff" label="IT staff" description="Show this user in IT-team project assignment dropdowns" />
                 </div>
 

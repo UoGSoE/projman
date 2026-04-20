@@ -156,6 +156,18 @@ describe('Admin Toggle', function () {
         $targetUser->refresh();
         expect($targetUser->is_admin)->toBeFalse();
     });
+
+    it('prevents an admin from demoting themselves', function () {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin);
+
+        livewire(UserList::class)
+            ->call('toggleAdmin', $admin)
+            ->assertForbidden();
+
+        expect($admin->fresh()->is_admin)->toBeTrue();
+    });
 });
 
 describe('Search and Sort', function () {

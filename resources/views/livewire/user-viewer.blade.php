@@ -1,11 +1,11 @@
 <div class="space-y-8">
     <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div class="space-y-2">
-            <flux:heading size="xl" level="1">{{ $user->full_name }}</flux:heading>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-3">
                 <flux:badge size="sm" :color="$user->typeColour()" inset="top bottom">
                     {{ $user->typeLabel() }}
                 </flux:badge>
+                <flux:heading size="xl" level="1">{{ $user->full_name }}</flux:heading>
                 @foreach ($roles as $role)
                     <flux:badge size="sm" inset="top bottom" wire:key="role-badge-{{ $role->id }}">
                         {{ $role->name }}

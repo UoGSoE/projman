@@ -83,7 +83,7 @@ class UserList extends Component
 
     public function toggleAdmin(User $user): void
     {
-        if (! auth()->user()?->isAdmin()) {
+        if (! auth()->user()?->isAdmin() || $user->is(auth()->user())) {
             abort(403);
         }
 
@@ -156,7 +156,13 @@ class UserList extends Component
         $attributes['email'] = Str::lower($attributes['email']);
 
         if ($userId) {
-            User::findOrFail($userId)->update($attributes);
+            $user = User::findOrFail($userId);
+
+            if ($user->is(auth()->user())) {
+                unset($attributes['is_admin']);
+            }
+
+            $user->update($attributes);
             $message = 'User updated successfully';
         } else {
             User::create($attributes + [
