@@ -1,7 +1,11 @@
 <?php
 
+use App\Enums\ProjectStatus;
+use App\Events\ProjectCreated;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
@@ -39,4 +43,42 @@ it('shows Admin on the type label when a user is both admin and IT staff', funct
     $user = User::factory()->admin()->create();
 
     expect($user->typeLabel())->toBe('Admin');
+});
+
+it('returns only active IT assignments by default', function () {
+    Event::fake([ProjectCreated::class]);
+
+    $user = User::factory()->create();
+    $owner = User::factory()->create();
+
+    $active = Project::factory()->for($owner)->create(['status' => ProjectStatus::IDEATION]);
+    $active->scheduling()->create(['cose_it_staff' => [$user->id]]);
+
+    $completed = Project::factory()->for($owner)->create(['status' => ProjectStatus::COMPLETED]);
+    $completed->scheduling()->create(['cose_it_staff' => [$user->id]]);
+
+    $cancelled = Project::factory()->for($owner)->create(['status' => ProjectStatus::CANCELLED]);
+    $cancelled->scheduling()->create(['cose_it_staff' => [$user->id]]);
+
+    $assignments = $user->itAssignments();
+
+    expect($assignments)->toHaveCount(1)
+        ->and($assignments->first()->id)->toBe($active->id);
+});
+
+it('returns all IT assignments including completed and cancelled when asked', function () {
+    Event::fake([ProjectCreated::class]);
+
+    $user = User::factory()->create();
+    $owner = User::factory()->create();
+
+    $active = Project::factory()->for($owner)->create(['status' => ProjectStatus::IDEATION]);
+    $active->scheduling()->create(['cose_it_staff' => [$user->id]]);
+
+    $completed = Project::factory()->for($owner)->create(['status' => ProjectStatus::COMPLETED]);
+    $completed->scheduling()->create(['cose_it_staff' => [$user->id]]);
+
+    $assignments = $user->itAssignments(includeCompleted: true);
+
+    expect($assignments->pluck('id'))->toContain($active->id, $completed->id);
 });

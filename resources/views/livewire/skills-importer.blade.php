@@ -15,9 +15,8 @@
             <div class="mt-6 space-y-4">
                 <flux:input type="file" wire:model="spreadsheet" accept=".xlsx" label="Spreadsheet file" />
 
-                <flux:button variant="primary" wire:click="parseSpreadsheet" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="parseSpreadsheet">Parse Spreadsheet</span>
-                    <span wire:loading wire:target="parseSpreadsheet">Parsing...</span>
+                <flux:button variant="primary" wire:click="parseSpreadsheet" wire:loading.attr="disabled" wire:target="parseSpreadsheet">
+                    Parse Spreadsheet
                 </flux:button>
             </div>
         </flux:card>
@@ -30,8 +29,8 @@
                 <flux:text class="mt-1">{{ count($parsedSkills) }} skills will be imported or updated.</flux:text>
 
                 <div class="mt-4 flex flex-wrap gap-2">
-                    @foreach ($skillsByCategory as $category => $count)
-                        <flux:badge color="blue">{{ $category }}: {{ $count }}</flux:badge>
+                    @foreach ($this->skillsByCategory as $category => $count)
+                        <flux:badge color="blue" wire:key="skill-category-{{ $category }}">{{ $category }}: {{ $count }}</flux:badge>
                     @endforeach
                 </div>
             </flux:card>
@@ -79,10 +78,10 @@
                                 <flux:table.row wire:key="unmatched-{{ $loop->index }}">
                                     <flux:table.cell>{{ $spreadsheetName }}</flux:table.cell>
                                     <flux:table.cell>
-                                        <flux:select wire:change="updateUserSelection('{{ $spreadsheetName }}', $event.target.value)" size="sm">
-                                            <flux:select.option value="not_in_system" selected>Not in system</flux:select.option>
+                                        <flux:select wire:model.live="userSelections.{{ $spreadsheetName }}" size="sm">
+                                            <flux:select.option value="not_in_system">Not in system</flux:select.option>
                                             @foreach ($staffUsers as $user)
-                                                <flux:select.option :value="$user->id">{{ $user->full_name }}</flux:select.option>
+                                                <flux:select.option :value="$user->id" wire:key="option-{{ $spreadsheetName }}-{{ $user->id }}">{{ $user->full_name }}</flux:select.option>
                                             @endforeach
                                         </flux:select>
                                     </flux:table.cell>
@@ -94,20 +93,20 @@
             @endif
 
             {{-- Not in system callout --}}
-            @if ($notInSystemCount > 0)
-                <flux:callout color="amber" icon="exclamation-triangle">
-                    <flux:callout.heading>Users not in system ({{ $notInSystemCount }})</flux:callout.heading>
+            @if ($this->notInSystemCount > 0)
+                <flux:callout variant="warning" icon="exclamation-triangle">
+                    <flux:callout.heading>Users not in system ({{ $this->notInSystemCount }})</flux:callout.heading>
                     <flux:callout.text>
                         The following people will be skipped during import. You'll need to create their accounts first if you want to import their skills:
-                        {{ $notInSystemNames }}
+                        {{ $this->notInSystemNames }}
                     </flux:callout.text>
                 </flux:callout>
             @endif
 
             {{-- Skipped staff callout --}}
-            @if (count($skippedStaff) > 0)
-                <flux:callout color="zinc" icon="information-circle">
-                    <flux:callout.heading>Staff with no assessment data ({{ count($skippedStaff) }})</flux:callout.heading>
+            @if ($this->skippedStaffCount > 0)
+                <flux:callout variant="secondary" icon="information-circle">
+                    <flux:callout.heading>Staff with no assessment data ({{ $this->skippedStaffCount }})</flux:callout.heading>
                     <flux:callout.text>
                         These staff members had no competency assessments in the spreadsheet (all marked as not yet assessed) and will be skipped:
                         {{ implode(', ', $skippedStaff) }}
@@ -127,18 +126,18 @@
 
             <div class="mt-4 space-y-2">
                 <flux:text>
-                    <strong>{{ $importSummary['skills_imported'] ?? 0 }}</strong> skills imported or updated.
+                    <flux:text variant="strong" inline>{{ $importSummary['skills_imported'] ?? 0 }}</flux:text> skills imported or updated.
                 </flux:text>
                 <flux:text>
-                    <strong>{{ $importSummary['users_updated'] ?? 0 }}</strong> users updated with skill levels.
+                    <flux:text variant="strong" inline>{{ $importSummary['users_updated'] ?? 0 }}</flux:text> users updated with skill levels.
                 </flux:text>
                 <flux:text>
-                    <strong>{{ $importSummary['users_skipped'] ?? 0 }}</strong> users skipped.
+                    <flux:text variant="strong" inline>{{ $importSummary['users_skipped'] ?? 0 }}</flux:text> users skipped.
                 </flux:text>
             </div>
 
             <div class="mt-6 flex gap-3">
-                <flux:link :href="route('skills.manage')" variant="primary">View Skills Manager</flux:link>
+                <flux:button variant="primary" :href="route('skills.manage')">View Skills Manager</flux:button>
                 <flux:button variant="ghost" wire:click="resetImport">Import Another</flux:button>
             </div>
         </flux:card>

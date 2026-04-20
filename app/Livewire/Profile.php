@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\Busyness;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class Profile extends Component
@@ -11,15 +12,7 @@ class Profile extends Component
 
     public ?Busyness $busynessWeek2 = null;
 
-    public string $week1Start = '';
-
-    public string $week1End = '';
-
-    public string $week2Start = '';
-
-    public string $week2End = '';
-
-    public function render()
+    public function render(): View
     {
         $user = auth()->user()->load(['skills' => fn ($q) => $q->orderBy('name')]);
 
@@ -29,10 +22,9 @@ class Profile extends Component
         ]);
     }
 
-    public function mount()
+    public function mount(): void
     {
         $this->loadBusynessData();
-        $this->calculateWeekRanges();
     }
 
     public function loadBusynessData(): void
@@ -50,33 +42,13 @@ class Profile extends Component
         ]);
     }
 
-    public function updatedBusynessWeek1($value): void
+    public function updatedBusynessWeek1(): void
     {
-        $this->busynessWeek1 = $value instanceof Busyness ? $value : Busyness::from((int) $value);
         $this->updateBusyness();
     }
 
-    public function updatedBusynessWeek2($value): void
+    public function updatedBusynessWeek2(): void
     {
-        $this->busynessWeek2 = $value instanceof Busyness ? $value : Busyness::from((int) $value);
         $this->updateBusyness();
-    }
-
-    public function calculateWeekRanges(): void
-    {
-        $today = now();
-
-        // Get the start of the current week (Monday)
-        $currentWeekStart = $today->startOfWeek();
-        $currentWeekEnd = $currentWeekStart->copy()->addDays(4); // Friday
-
-        // Get next week (Monday to Friday)
-        $nextWeekStart = $currentWeekStart->copy()->addWeek();
-        $nextWeekEnd = $nextWeekStart->copy()->addDays(4); // Friday
-
-        $this->week1Start = $currentWeekStart->format('M j');
-        $this->week1End = $currentWeekEnd->format('M j');
-        $this->week2Start = $nextWeekStart->format('M j');
-        $this->week2End = $nextWeekEnd->format('M j');
     }
 }

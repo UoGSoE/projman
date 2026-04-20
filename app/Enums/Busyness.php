@@ -19,7 +19,7 @@ enum Busyness: int
         };
     }
 
-    public function color(): string
+    public function colour(): string
     {
         return match (true) {
             $this === self::UNKNOWN => 'bg-gray-600',

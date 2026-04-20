@@ -80,7 +80,7 @@
 
                             <div class="flex items-center gap-3">
                                 <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
-                                    {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
+                                    {{ $project->status->label() }}
                                 </flux:badge>
                                 @if ($project->deadline)
                                     <flux:badge size="sm" icon="calendar-days" variant="solid" color="amber">

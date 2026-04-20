@@ -6,14 +6,18 @@ use App\Models\Skill;
 use App\Models\User;
 use App\Services\SkillsSpreadsheetParser;
 use Flux\Flux;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class SkillsImporter extends Component
 {
     use WithFileUploads;
 
-    public $spreadsheet;
+    public ?TemporaryUploadedFile $spreadsheet = null;
 
     public string $step = 'upload';
 
@@ -31,18 +35,42 @@ class SkillsImporter extends Component
 
     public array $importSummary = [];
 
-    public function render()
+    public function render(): View
     {
-        $notInSystem = collect($this->userSelections)->filter(fn ($v) => $v === 'not_in_system')->keys();
-
         return view('livewire.skills-importer', [
             'staffUsers' => $this->step === 'preview'
                 ? User::itStaff()->orderBy('surname')->orderBy('forenames')->get()
                 : collect(),
-            'skillsByCategory' => collect($this->parsedSkills)->groupBy('category')->map->count(),
-            'notInSystemCount' => $notInSystem->count(),
-            'notInSystemNames' => $notInSystem->join(', '),
         ]);
+    }
+
+    #[Computed]
+    public function skillsByCategory(): Collection
+    {
+        return collect($this->parsedSkills)->groupBy('category')->map->count();
+    }
+
+    #[Computed]
+    public function notInSystemNames(): string
+    {
+        return collect($this->userSelections)
+            ->filter(fn ($value) => $value === 'not_in_system')
+            ->keys()
+            ->join(', ');
+    }
+
+    #[Computed]
+    public function notInSystemCount(): int
+    {
+        return collect($this->userSelections)
+            ->filter(fn ($value) => $value === 'not_in_system')
+            ->count();
+    }
+
+    #[Computed]
+    public function skippedStaffCount(): int
+    {
+        return count($this->skippedStaff);
     }
 
     public function parseSpreadsheet(): void
@@ -62,11 +90,6 @@ class SkillsImporter extends Component
         $this->step = 'preview';
     }
 
-    public function updateUserSelection(string $spreadsheetName, string $value): void
-    {
-        $this->userSelections[$spreadsheetName] = $value;
-    }
-
     public function confirmImport(): void
     {
         foreach ($this->parsedSkills as $skill) {
@@ -77,24 +100,16 @@ class SkillsImporter extends Component
         }
 
         $skillLookup = Skill::pluck('id', 'name');
-
         $usersUpdated = 0;
-        $usersSkipped = 0;
 
-        $resolvedUsers = $this->getResolvedUsers();
-
-        foreach ($resolvedUsers as $spreadsheetName => $userId) {
+        foreach ($this->getResolvedUsers() as $spreadsheetName => $userId) {
             $user = User::find($userId);
             if (! $user) {
-                $usersSkipped++;
-
                 continue;
             }
 
-            $staffSkills = $this->parsedStaffSkills[$spreadsheetName] ?? [];
             $syncArray = [];
-
-            foreach ($staffSkills as $skillName => $level) {
+            foreach ($this->parsedStaffSkills[$spreadsheetName] ?? [] as $skillName => $level) {
                 $skillId = $skillLookup[$skillName] ?? null;
                 if ($skillId) {
                     $syncArray[$skillId] = ['skill_level' => $level];
@@ -105,13 +120,10 @@ class SkillsImporter extends Component
             $usersUpdated++;
         }
 
-        $notInSystem = collect($this->userSelections)->filter(fn ($v) => $v === 'not_in_system')->count();
-        $notInSystem += count($this->unmatched) - collect($this->userSelections)->filter(fn ($v) => $v !== 'not_in_system')->count();
-
         $this->importSummary = [
             'skills_imported' => count($this->parsedSkills),
             'users_updated' => $usersUpdated,
-            'users_skipped' => count($this->skippedStaff) + max(0, collect($this->userSelections)->filter(fn ($v) => $v === 'not_in_system')->count()),
+            'users_skipped' => $this->skippedStaffCount() + $this->notInSystemCount(),
         ];
 
         $this->step = 'complete';

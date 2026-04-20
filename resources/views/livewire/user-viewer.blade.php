@@ -1,20 +1,18 @@
 <div class="space-y-8">
     <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-            <flux:heading size="xl" level="1" class="flex flex-wrap items-center gap-2">
-                {{ $user->full_name }}
-                @if ($user->isAdmin())
-                    <flux:badge size="sm" variant="solid" color="green" icon="shield-check">Administrator</flux:badge>
-                @endif
+        <div class="space-y-2">
+            <flux:heading size="xl" level="1">{{ $user->full_name }}</flux:heading>
+            <div class="flex flex-wrap items-center gap-2">
+                <flux:badge size="sm" :color="$user->typeColour()" inset="top bottom">
+                    {{ $user->typeLabel() }}
+                </flux:badge>
                 @foreach ($roles as $role)
-                    <flux:badge size="sm" inset="top bottom">
+                    <flux:badge size="sm" inset="top bottom" wire:key="role-badge-{{ $role->id }}">
                         {{ $role->name }}
                     </flux:badge>
                 @endforeach
-            </flux:heading>
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-                <a href="mailto:{{ $user->email }}" class="hover:underline">{{ $user->email }}</a>
             </div>
+            <flux:link href="mailto:{{ $user->email }}">{{ $user->email }}</flux:link>
         </div>
     </div>
 
@@ -37,7 +35,7 @@
                     <div class="space-y-1">
                         <flux:text class="text-xs font-medium uppercase tracking-wide text-zinc-500">Email</flux:text>
                         <flux:text class="text-base font-medium">
-                            <a href="mailto:{{ $user->email }}" class="hover:underline">{{ $user->email }}</a>
+                            <flux:link href="mailto:{{ $user->email }}">{{ $user->email }}</flux:link>
                         </flux:text>
                     </div>
 
@@ -49,7 +47,7 @@
                     <div class="space-y-1">
                         <flux:text class="text-xs font-medium uppercase tracking-wide text-zinc-500">Account created</flux:text>
                         <flux:text class="text-base font-medium">
-                            {{ optional($user->created_at)->format('d M Y') ?? '—' }}
+                            {{ $user->created_at->format('d M Y') }}
                         </flux:text>
                     </div>
 
@@ -98,11 +96,11 @@
                             </flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge size="sm" variant="pill" color="{{ $project->status->colour() }}">
-                                    {{ ucfirst(str_replace('-', ' ', $project->status->value)) }}
+                                    {{ $project->status->label() }}
                                 </flux:badge>
                             </flux:table.cell>
                             <flux:table.cell class="text-right">
-                                {{ optional($project->created_at)->format('d M Y') ?? '—' }}
+                                {{ $project->created_at->format('d M Y') }}
                             </flux:table.cell>
                         </flux:table.row>
                     @endforeach
@@ -133,6 +131,7 @@
                 </div>
             </div>
 
+            <div wire:loading.class="opacity-60 transition-opacity" wire:target="showAllAssignments">
             @if ($itAssignments->isNotEmpty())
                 <flux:table>
                     <flux:table.columns>
@@ -160,11 +159,11 @@
                                 </flux:table.cell>
                                 <flux:table.cell>
                                     <flux:badge size="sm" variant="pill" color="{{ $assignment->status->colour() }}">
-                                        {{ ucfirst(str_replace('-', ' ', $assignment->status->value)) }}
+                                        {{ $assignment->status->label() }}
                                     </flux:badge>
                                 </flux:table.cell>
                                 <flux:table.cell class="text-right">
-                                    {{ optional($assignment->deadline)?->format('d/m/Y') ?? '—' }}
+                                    {{ $assignment->deadline?->format('d/m/Y') ?? '—' }}
                                 </flux:table.cell>
                             </flux:table.row>
                         @endforeach
@@ -176,6 +175,7 @@
                     <flux:callout.text>This user isn't currently scheduled on any IT work packages.</flux:callout.text>
                 </flux:callout>
             @endif
+            </div>
         </flux:card>
     @endif
 </div>

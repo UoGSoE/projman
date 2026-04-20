@@ -43,7 +43,7 @@ enum SkillLevel: string
         };
     }
 
-    public function getColor(): string
+    public function colour(): string
     {
         return match ($this) {
             self::NO_KNOWLEDGE => 'zinc',

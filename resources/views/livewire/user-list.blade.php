@@ -12,11 +12,11 @@
 
     <flux:table :paginate="$users" class="mt-6" >
         <flux:table.columns>
-            <flux:table.column sortable wire:click="sort('surname')">Surname</flux:table.column>
-            <flux:table.column sortable wire:click="sort('forenames')">Forename</flux:table.column>
-            <flux:table.column sortable wire:click="sort('email')">Email</flux:table.column>
+            <flux:table.column sortable :sorted="$sortOn === 'surname'" :direction="$sortDirection" wire:click="sort('surname')">Surname</flux:table.column>
+            <flux:table.column sortable :sorted="$sortOn === 'forenames'" :direction="$sortDirection" wire:click="sort('forenames')">Forename</flux:table.column>
+            <flux:table.column sortable :sorted="$sortOn === 'email'" :direction="$sortDirection" wire:click="sort('email')">Email</flux:table.column>
             <flux:table.column>Type</flux:table.column>
-            <flux:table.column >Roles</flux:table.column>
+            <flux:table.column>Roles</flux:table.column>
             <flux:table.column>Actions</flux:table.column>
         </flux:table.columns>
 
@@ -24,18 +24,17 @@
             @foreach ($users as $user)
                 <flux:table.row :key="'user-' . $user->id">
                     <flux:table.cell>
-                        <flux:link :href="route('user.show', $user)" class="hover:underline">
+                        <flux:link :href="route('user.show', $user)">
                             {{ $user->surname }}
                         </flux:link>
                     </flux:table.cell>
                     <flux:table.cell>{{ $user->forenames }}</flux:table.cell>
                     <flux:table.cell class="whitespace-nowrap">
-                        <a href="mailto:{{ $user->email }}">{{ $user->email }}</a>
+                        <flux:link href="mailto:{{ $user->email }}">{{ $user->email }}</flux:link>
                     </flux:table.cell>
 
                     <flux:table.cell>
-                        <flux:badge size="sm" class="transition-all duration-300"
-                            :color="$user->typeColour()" inset="top bottom">
+                        <flux:badge size="sm" :color="$user->typeColour()" inset="top bottom">
                             {{ $user->typeLabel() }}
                         </flux:badge>
                     </flux:table.cell>
@@ -52,15 +51,15 @@
                                             +{{ $user->roles->count() - 1 }}
                                         </flux:badge>
                                         <flux:tooltip.content>
-                                            <div class="space-y-1 flex flex-wrap gap-3 flex-col">
-                                                <flux:text class="font-bold">Roles:</flux:text>
+                                            <div class="flex flex-col gap-2">
+                                                <flux:text variant="strong">Roles:</flux:text>
                                                 @foreach ($user->roles->take(10) as $role)
-                                                    <flux:badge size="sm" variant="outline" inset="top bottom">
+                                                    <flux:badge size="sm" variant="outline" inset="top bottom" wire:key="tooltip-role-{{ $user->id }}-{{ $role->id }}">
                                                         {{ $role->name }}
                                                     </flux:badge>
                                                 @endforeach
                                                 @if ($user->roles->count() > 11)
-                                                    <flux:text class="text-sm text-gray-500">... and
+                                                    <flux:text size="sm" variant="subtle">... and
                                                         {{ $user->roles->count() - 11 }} more</flux:text>
                                                 @endif
                                             </div>
@@ -69,7 +68,7 @@
                                 @endif
                             </div>
                         @else
-                            <flux:text class="text-gray-500 text-sm">No roles</flux:text>
+                            <flux:text size="sm" variant="subtle">No roles</flux:text>
                         @endif
                     </flux:table.cell>
 
@@ -89,16 +88,6 @@
                                         Change User Role
                                     </flux:modal.trigger>
                                 </flux:menu.item>
-                                <flux:menu.separator />
-                                <flux:menu.submenu heading="Sort by">
-                                    <flux:menu.radio.group>
-                                        <flux:menu.radio checked>Name</flux:menu.radio>
-                                        <flux:menu.radio>Date</flux:menu.radio>
-                                        <flux:menu.radio>Popularity</flux:menu.radio>
-                                    </flux:menu.radio.group>
-                                </flux:menu.submenu>
-                                <flux:menu.separator />
-                                <flux:menu.item variant="danger" icon="trash">Delete</flux:menu.item>
                             </flux:menu>
                         </flux:dropdown>
                     </flux:table.cell>

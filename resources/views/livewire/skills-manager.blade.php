@@ -68,7 +68,7 @@
                                         @if ($loop->index < $maxDisplayedSkills)
                                             <flux:tooltip>
                                                 <flux:badge size="sm" variant="outline" inset="top bottom"
-                                                    :color="\App\Enums\SkillLevel::from($skill->pivot->skill_level)->getColor()" class="cursor-help">
+                                                    :color="\App\Enums\SkillLevel::from($skill->pivot->skill_level)->colour()" class="cursor-help">
                                                     {{ $skill->name }}
                                                 </flux:badge>
                                                 <flux:tooltip.content>
@@ -95,7 +95,7 @@
                                                         <div class="flex">
                                                             <flux:tooltip>
                                                                 <flux:badge size="sm" variant="outline"
-                                                                    :color="\App\Enums\SkillLevel::from($skill->pivot->skill_level)->getColor()"
+                                                                    :color="\App\Enums\SkillLevel::from($skill->pivot->skill_level)->colour()"
                                                                     class="cursor-help">
                                                                     {{ $skill->name }}
                                                                 </flux:badge>

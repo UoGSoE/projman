@@ -9,7 +9,7 @@
                 <div>
                     <flux:radio.group wire:model.live="busynessWeek1" label="Week 1" variant="segmented" class="w-full">
                         @foreach ($busynessOptions as $option)
-                            @if ($option->value != 0)
+                            @if ($option !== \App\Enums\Busyness::UNKNOWN)
                                 <flux:radio :value="$option->value" :label="$option->label()" />
                             @endif
                         @endforeach
@@ -19,7 +19,7 @@
                 <div>
                     <flux:radio.group wire:model.live="busynessWeek2" label="Week 2" variant="segmented" class="w-full">
                         @foreach ($busynessOptions as $option)
-                            @if ($option->value != 0)
+                            @if ($option !== \App\Enums\Busyness::UNKNOWN)
                                 <flux:radio :value="$option->value" :label="$option->label()" />
                             @endif
                         @endforeach

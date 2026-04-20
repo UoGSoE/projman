@@ -8,6 +8,7 @@ use App\Enums\ProjectStatus;
 use App\Enums\ServiceFunction;
 use App\Enums\SkillLevel;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -213,24 +214,26 @@ class User extends Authenticatable
         return $currentSkill->pivot->skill_level;
     }
 
-    public function getBusynessWeek1Attribute($value): ?Busyness
+    /**
+     * Projects where this user appears in the scheduling `cose_it_staff` JSON list.
+     */
+    public function itAssignments(bool $includeCompleted = false): Collection
     {
-        return $value ? Busyness::from($value) : null;
-    }
-
-    public function setBusynessWeek1Attribute($value): void
-    {
-        $this->attributes['busyness_week_1'] = $value instanceof Busyness ? $value->value : $value;
-    }
-
-    public function getBusynessWeek2Attribute($value): ?Busyness
-    {
-        return $value ? Busyness::from($value) : null;
-    }
-
-    public function setBusynessWeek2Attribute($value): void
-    {
-        $this->attributes['busyness_week_2'] = $value instanceof Busyness ? $value->value : $value;
+        return Project::query()
+            ->with([
+                'user:id,forenames,surname',
+                'scheduling:id,project_id,cose_it_staff',
+            ])
+            ->whereHas(
+                'scheduling',
+                fn ($query) => $query->whereJsonContains('cose_it_staff', $this->id)
+            )
+            ->when(
+                ! $includeCompleted,
+                fn ($query) => $query->whereNotIn('status', [ProjectStatus::COMPLETED, ProjectStatus::CANCELLED])
+            )
+            ->orderByDesc('created_at')
+            ->get();
     }
 
     /**

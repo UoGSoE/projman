@@ -10,7 +10,7 @@
                         <flux:text class="text-sm" variant="subtle">{{ $skill->skill_category }}</flux:text>
                     </div>
                     @if ($skill->pivot?->skill_level)
-                        <flux:badge size="sm" :color="\App\Enums\SkillLevel::from($skill->pivot->skill_level)->getColor()">
+                        <flux:badge size="sm" :color="\App\Enums\SkillLevel::from($skill->pivot->skill_level)->colour()">
                             {{ \App\Enums\SkillLevel::from($skill->pivot->skill_level)->getDisplayName() }}
                         </flux:badge>
                     @endif

@@ -5,7 +5,10 @@ namespace App\Livewire;
 use App\Models\Role;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Contracts\View\View;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -15,17 +18,19 @@ class UserList extends Component
 {
     use WithPagination;
 
-    public $sortOn = 'surname';
+    public string $sortOn = 'surname';
 
-    public $sortDirection = 'asc';
+    public string $sortDirection = 'asc';
 
-    public $search = '';
+    public string $search = '';
 
-    public $selectedUser = null;
+    public ?User $selectedUser = null;
 
-    public $userRoles = [];
+    /** @var array<int, string> */
+    public array $userRoles = [];
 
-    public $availableRoles = [];
+    /** @var Collection<int, Role> */
+    public Collection $availableRoles;
 
     public array $userAttributes = [
         'id' => null,
@@ -37,14 +42,19 @@ class UserList extends Component
         'is_itstaff' => false,
     ];
 
-    public function render()
+    public function mount(): void
+    {
+        $this->availableRoles = collect();
+    }
+
+    public function render(): View
     {
         return view('livewire.user-list', [
             'users' => $this->getUsers(),
         ]);
     }
 
-    public function getUsers()
+    public function getUsers(): LengthAwarePaginator
     {
         $search = $this->search;
 
@@ -59,7 +69,7 @@ class UserList extends Component
             ->paginate(10);
     }
 
-    public function sort($column)
+    public function sort(string $column): void
     {
         if ($this->sortOn === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -71,11 +81,10 @@ class UserList extends Component
         $this->resetPage();
     }
 
-    public function toggleAdmin(User $user)
+    public function toggleAdmin(User $user): void
     {
-        // Additional validation to ensure only admins can modify admin status
         if (! auth()->user()?->isAdmin()) {
-            abort(403, 'Unauthorized action.');
+            abort(403);
         }
 
         $user->is_admin = ! $user->is_admin;
@@ -84,10 +93,10 @@ class UserList extends Component
         Flux::toast('Admin status updated', variant: 'success');
     }
 
-    public function toggleItStaff(User $user)
+    public function toggleItStaff(User $user): void
     {
         if (! auth()->user()?->isAdmin()) {
-            abort(403, 'Unauthorized action.');
+            abort(403);
         }
 
         $user->is_itstaff = ! $user->is_itstaff;
@@ -96,45 +105,23 @@ class UserList extends Component
         Flux::toast('IT staff status updated', variant: 'success');
     }
 
-    public function openChangeUserRoleModal(User $user)
+    public function openChangeUserRoleModal(User $user): void
     {
         $this->selectedUser = $user->fresh(['roles']);
         $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
         $this->availableRoles = Role::active()->get();
     }
 
-    public function saveUserRoles()
+    public function saveUserRoles(): void
     {
-        if (! $this->selectedUser) {
-            Flux::toast('No user selected', variant: 'danger');
+        $this->validate([
+            'userRoles' => ['array'],
+            'userRoles.*' => [Rule::exists('roles', 'name')->where('is_active', true)],
+        ]);
 
-            return;
-        }
-
-        // Ensure userRoles is an array
-        $userRoles = is_array($this->userRoles) ? $this->userRoles : [];
-
-        // Validate that all selected roles exist and are active
-        $validRoles = Role::query()
-            ->whereIn('name', $userRoles)
-            ->where('is_active', true)
-            ->pluck('id')
-            ->toArray();
-
-        if (count($validRoles) !== count($userRoles)) {
-            Flux::toast('Some selected roles are invalid', variant: 'danger');
-
-            return;
-        }
-
-        // Sync the user's roles (this will add/remove roles as needed)
-        $this->selectedUser->roles()->sync($validRoles);
-
-        // Refresh the user to get updated relationships from database
-        $this->selectedUser = $this->selectedUser->fresh(['roles']);
-
-        // Update the component state with fresh data
-        $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
+        $this->selectedUser->roles()->sync(
+            Role::whereIn('name', $this->userRoles)->pluck('id')
+        );
 
         Flux::modal('change-user-role')->close();
         Flux::toast('User roles updated successfully', variant: 'success');
@@ -183,7 +170,7 @@ class UserList extends Component
         Flux::toast($message, variant: 'success');
     }
 
-    public function updatedSearch()
+    public function updatedSearch(): void
     {
         $this->resetPage();
     }

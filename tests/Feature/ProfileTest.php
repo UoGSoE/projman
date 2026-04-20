@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Busyness;
 use App\Enums\SkillLevel;
 use App\Livewire\Profile;
 use App\Models\Skill;
@@ -72,5 +73,14 @@ describe('Profile Component', function () {
     it('displays busyness controls', function () {
         livewire(Profile::class)
             ->assertSeeText('My Busy-ness');
+    });
+
+    it('persists a busyness selection to the database as the matching enum', function () {
+        livewire(Profile::class)
+            ->set('busynessWeek1', Busyness::HIGH->value)
+            ->set('busynessWeek2', Busyness::MEDIUM->value);
+
+        expect($this->user->fresh()->busyness_week_1)->toBe(Busyness::HIGH)
+            ->and($this->user->fresh()->busyness_week_2)->toBe(Busyness::MEDIUM);
     });
 });
