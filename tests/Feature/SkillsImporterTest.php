@@ -102,10 +102,29 @@ it('overwrites existing skill levels on re-import', function () {
     expect($watsonLevel)->not->toBe('awareness'); // Should be updated from the spreadsheet
 });
 
-it('puts users with duplicate surnames in the unmatched list', function () {
+it('falls back to forename and surname when a surname has duplicates', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
+    $johnWatson = User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'John']);
+    User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'Mary']);
+    $this->actingAs($admin);
+
+    $file = UploadedFile::fake()->createWithContent(
+        'it_training_modeller.xlsx',
+        file_get_contents(__DIR__.'/../fixtures/it_training_modeller.xlsx')
+    );
+
+    $component = Livewire::test(SkillsImporter::class)
+        ->set('spreadsheet', $file)
+        ->call('parseSpreadsheet');
+
+    expect($component->get('autoMatched'))->toHaveKey('John Watson');
+    expect($component->get('autoMatched')['John Watson']['userId'])->toBe($johnWatson->id);
+});
+
+it('leaves a spreadsheet name unmatched when forename and surname are also ambiguous', function () {
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
     User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'John']);
-    User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'Mary']);
+    User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'John']);
     $this->actingAs($admin);
 
     $file = UploadedFile::fake()->createWithContent(

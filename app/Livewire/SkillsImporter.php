@@ -132,11 +132,20 @@ class SkillsImporter extends Component
 
         foreach (array_keys($this->parsedStaffSkills) as $spreadsheetName) {
             $parts = explode(' ', trim($spreadsheetName));
-            $surname = end($parts);
+            $surname = array_pop($parts);
+            $forenames = implode(' ', $parts);
 
             $matches = User::where('surname', $surname)
                 ->where('is_staff', true)
                 ->get();
+
+            if ($matches->count() > 1 && $forenames !== '') {
+                $byFullName = $matches->where('forenames', $forenames);
+
+                if ($byFullName->count() === 1) {
+                    $matches = $byFullName;
+                }
+            }
 
             if ($matches->count() === 1) {
                 $user = $matches->first();

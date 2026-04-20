@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,11 +25,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (str_starts_with((string) config('app.url'), 'https://')) {
-            URL::forceScheme('https');
-            request()->server->set('HTTPS', 'on');
-        }
-
         if (config('proxy.https')) {
             Http::globalOptions([
                 'proxy' => [
