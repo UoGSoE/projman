@@ -11,8 +11,7 @@ class UserIndexController extends Controller
 {
     public function __invoke(): ResourceCollection
     {
-        $users = User::query()
-            ->where('is_staff', true)
+        $users = User::itStaff()
             ->with('skills')
             ->orderBy('surname')
             ->paginate();

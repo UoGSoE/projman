@@ -394,3 +394,32 @@ describe('User Role Management', function () {
         $this->assertTrue($this->regularUser->roles()->where('name', 'Manager')->exists());
     });
 });
+
+describe('IT Staff Toggling', function () {
+    beforeEach(function () {
+        $this->adminUser = User::factory()->admin()->create();
+        $this->actingAs($this->adminUser);
+    });
+
+    it('toggles a user\'s IT staff status', function () {
+        $target = User::factory()->requester()->create();
+
+        livewire(UserList::class)
+            ->call('toggleItStaff', $target);
+
+        expect($target->fresh()->is_itstaff)->toBeTrue();
+    });
+
+    it('persists the IT Staff checkbox when creating a user', function () {
+        livewire(UserList::class)
+            ->set('newUsername', 'newitstaff')
+            ->set('newEmail', 'new.it@example.ac.uk')
+            ->set('newSurname', 'Bloggs')
+            ->set('newForenames', 'Joe')
+            ->set('newIsItStaff', true)
+            ->call('createUser')
+            ->assertHasNoErrors();
+
+        expect(User::where('username', 'newitstaff')->first()->is_itstaff)->toBeTrue();
+    });
+});

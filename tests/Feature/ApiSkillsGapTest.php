@@ -66,7 +66,7 @@ it('excludes non-staff users from the counts', function () {
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
     $skill = Skill::factory()->create(['name' => 'Python']);
     $staffer = User::factory()->create(['is_staff' => true]);
-    $nonStaff = User::factory()->create(['is_staff' => false]);
+    $nonStaff = User::factory()->requester()->create();
 
     $staffer->updateSkill($skill->id, SkillLevel::WORKING->value);
     $nonStaff->updateSkill($skill->id, SkillLevel::EXPERT->value);

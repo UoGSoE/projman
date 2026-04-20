@@ -44,7 +44,7 @@ class SkillsManager extends Component
 
     private function getStaffUsers()
     {
-        return User::where('is_staff', true)
+        return User::itStaff()
             ->when(
                 strlen($this->userSearchQuery) >= 2,
                 function ($query) {
@@ -146,7 +146,7 @@ class SkillsManager extends Component
     {
         $headers = [['User', 'Skill', 'Skill Level', 'Skill Level (Numeric)', 'Category']];
 
-        $rows = User::where('is_staff', true)
+        $rows = User::itStaff()
             ->with('skills')
             ->orderBy('surname')
             ->orderBy('forenames')

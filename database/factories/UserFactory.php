@@ -30,6 +30,7 @@ class UserFactory extends Factory
             'surname' => fake()->lastName(),
             'forenames' => fake()->firstName(),
             'is_staff' => true,
+            'is_itstaff' => true,
             'is_admin' => false,
             'email' => fake()->unique()->safeEmail(),
             'service_function' => fake()->randomElement(ServiceFunction::cases()),
@@ -45,6 +46,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_admin' => true,
+            'is_itstaff' => true,
         ]);
     }
 
@@ -52,6 +54,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_staff' => true,
+            'is_itstaff' => true,
             'is_admin' => false,
         ]);
     }
@@ -59,7 +62,8 @@ class UserFactory extends Factory
     public function requester(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_staff' => false,
+            'is_staff' => true,
+            'is_itstaff' => false,
             'is_admin' => false,
         ]);
     }

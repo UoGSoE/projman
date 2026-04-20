@@ -81,6 +81,8 @@
                             <flux:menu>
                                 <flux:menu.item icon="plus" wire:click="toggleAdmin({{ $user->id }})">Toggle
                                     admin</flux:menu.item>
+                                <flux:menu.item icon="wrench-screwdriver" wire:click="toggleItStaff({{ $user->id }})">Toggle
+                                    IT staff</flux:menu.item>
                                 <flux:menu.item icon="user-group">
                                     <flux:modal.trigger name="change-user-role"
                                         wire:click="openChangeUserRoleModal({{ $user->id }})">
@@ -117,6 +119,7 @@
                     <flux:input wire:model="newSurname" label="Surname" />
                     <flux:input wire:model="newForenames" label="Forenames" />
                     <flux:checkbox wire:model="newIsAdmin" label="Administrator" description="Grant this user admin privileges" />
+                    <flux:checkbox wire:model="newIsItStaff" label="IT staff" description="Show this user in IT-team project assignment dropdowns" />
                 </div>
 
                 <div class="flex gap-3 mt-6">

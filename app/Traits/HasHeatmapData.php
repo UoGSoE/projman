@@ -98,8 +98,7 @@ trait HasHeatmapData
     {
         $viewMode = property_exists($this, 'viewMode') ? $this->viewMode : 'days';
 
-        $staff = User::query()
-            ->where('is_staff', true)
+        $staff = User::itStaff()
             ->orderBy('surname')
             ->orderBy('forenames')
             ->get();
@@ -249,8 +248,7 @@ trait HasHeatmapData
      */
     protected function staffWithBusyness(array $days, ?array $assignedUserIds = null, array $busynessAdjustments = []): Collection
     {
-        $staff = User::query()
-            ->where('is_staff', true)
+        $staff = User::itStaff()
             ->orderBy('surname')
             ->orderBy('forenames')
             ->get();

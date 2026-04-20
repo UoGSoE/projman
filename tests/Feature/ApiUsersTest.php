@@ -19,7 +19,7 @@ function bearerFor(User $user): array
 it('lists staff users in a paginated response and excludes non-staff', function () {
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
     User::factory()->create(['is_staff' => true, 'surname' => 'Staffer']);
-    User::factory()->create(['is_staff' => false, 'surname' => 'NotStaff']);
+    User::factory()->requester()->create(['surname' => 'NotStaff']);
 
     $response = $this->withHeaders(bearerFor($admin))
         ->getJson('/api/users')

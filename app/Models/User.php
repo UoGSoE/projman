@@ -30,6 +30,7 @@ class User extends Authenticatable
         'surname',
         'forenames',
         'is_staff',
+        'is_itstaff',
         'is_admin',
         'email',
         'service_function',
@@ -59,6 +60,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_staff' => 'boolean',
+            'is_itstaff' => 'boolean',
             'is_admin' => 'boolean',
             'service_function' => ServiceFunction::class,
             'busyness_week_1' => Busyness::class,
@@ -78,6 +80,7 @@ class User extends Authenticatable
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'is_staff' => 'boolean',
+            'is_itstaff' => 'boolean',
             'is_admin' => 'boolean',
         ];
     }
@@ -110,9 +113,24 @@ class User extends Authenticatable
         return $query->where('is_admin', true);
     }
 
+    public function scopeItStaff($query)
+    {
+        return $query->where('is_itstaff', true);
+    }
+
     public function isAdmin(): bool
     {
         return (bool) $this->is_admin;
+    }
+
+    public function isItStaff(): bool
+    {
+        return (bool) $this->is_itstaff;
+    }
+
+    public function isntItStaff(): bool
+    {
+        return ! $this->isItStaff();
     }
 
     public function getFirstNameAttribute()

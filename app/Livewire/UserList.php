@@ -35,6 +35,8 @@ class UserList extends Component
 
     public $newIsAdmin = false;
 
+    public $newIsItStaff = false;
+
     public function render()
     {
         return view('livewire.user-list', [
@@ -80,6 +82,18 @@ class UserList extends Component
         $user->save();
 
         Flux::toast('Admin status updated', variant: 'success');
+    }
+
+    public function toggleItStaff(User $user)
+    {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $user->is_itstaff = ! $user->is_itstaff;
+        $user->save();
+
+        Flux::toast('IT staff status updated', variant: 'success');
     }
 
     public function openChangeUserRoleModal(User $user)
@@ -134,6 +148,7 @@ class UserList extends Component
             'newSurname' => 'required|string|max:255',
             'newForenames' => 'required|string|max:255',
             'newIsAdmin' => 'boolean',
+            'newIsItStaff' => 'boolean',
         ]);
 
         User::create([
@@ -142,11 +157,12 @@ class UserList extends Component
             'surname' => $this->newSurname,
             'forenames' => $this->newForenames,
             'is_admin' => $this->newIsAdmin,
+            'is_itstaff' => $this->newIsItStaff,
             'is_staff' => true,
             'password' => Str::random(64),
         ]);
 
-        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin');
+        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin', 'newIsItStaff');
 
         Flux::modal('create-user')->close();
         Flux::toast('User created successfully', variant: 'success');

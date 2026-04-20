@@ -23,8 +23,7 @@ class HeatMapViewer extends Component
         $staff = $this->staffWithBusynessForBuckets($buckets);
         $activeProjects = $this->activeProjects();
 
-        $allStaff = User::query()
-            ->where('is_staff', true)
+        $allStaff = User::itStaff()
             ->orderBy('surname')
             ->orderBy('forenames')
             ->get();

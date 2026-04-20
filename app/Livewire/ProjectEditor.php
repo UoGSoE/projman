@@ -306,7 +306,7 @@ class ProjectEditor extends Component
     {
         $searchTerm = $this->userSearch;
 
-        return User::query()
+        return User::itStaff()
             ->when(
                 strlen($searchTerm) > 1,
                 fn ($query) => $query->where('surname', 'like', '%'.$searchTerm.'%')
@@ -343,7 +343,7 @@ class ProjectEditor extends Component
     {
         // If no skills required, return all staff sorted alphabetically by surname
         if (empty($requiredSkillIds)) {
-            return User::where('is_staff', true)
+            return User::itStaff()
                 ->orderBy('surname')
                 ->orderBy('forenames')
                 ->get()
@@ -355,7 +355,7 @@ class ProjectEditor extends Component
         }
 
         // Get ALL staff users, not just those with matching skills
-        return User::where('is_staff', true)
+        return User::itStaff()
             ->with(['skills' => function ($query) use ($requiredSkillIds) {
                 // Eager load only the required skills for score calculation
                 $query->whereIn('skill_id', $requiredSkillIds);

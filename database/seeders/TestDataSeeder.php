@@ -40,8 +40,12 @@ class TestDataSeeder extends Seeder
         $this->seedAdditionalStaff(5);
         $this->seedRequesters(18);
 
-        $staffMembers = User::where('is_staff', true)->get();
-        $requesters = User::where('is_staff', false)->where('is_admin', false)->get();
+        $staffMembers = User::itStaff()->get();
+        $requesters = User::query()
+            ->where('is_staff', true)
+            ->where('is_itstaff', false)
+            ->where('is_admin', false)
+            ->get();
 
         $this->assignRolesAndSkills($staffMembers);
         $this->seedProjectPortfolio($staffMembers, $requesters);
@@ -124,6 +128,7 @@ class TestDataSeeder extends Seeder
             'forenames' => 'Test',
             'surname' => 'User',
             'is_staff' => true,
+            'is_itstaff' => true,
             'is_admin' => false,
             'password' => bcrypt('password'),
             'username' => 'testuser',
@@ -137,7 +142,7 @@ class TestDataSeeder extends Seeder
     {
         $levels = collect(Busyness::cases());
 
-        $users = User::factory()->count($count)->create();
+        $users = User::factory()->staff()->count($count)->create();
         $users->each(function (User $user) use ($levels) {
             $user->forceFill([
                 'busyness_week_1' => $levels->random(),

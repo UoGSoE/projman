@@ -10,7 +10,7 @@ class SkillsGapController extends Controller
     public function __invoke(): array
     {
         $skills = Skill::query()
-            ->with(['users' => fn ($q) => $q->where('is_staff', true)])
+            ->with(['users' => fn ($q) => $q->itStaff()])
             ->orderBy('name')
             ->get();
 

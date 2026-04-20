@@ -9,22 +9,24 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('seeds projects owned by non-staff requesters', function () {
+it('seeds projects owned by non-IT-staff requesters', function () {
     $this->seed(TestDataSeeder::class);
 
     expect(Project::count())->toBeGreaterThan(0);
 
-    $staffIds = User::where('is_staff', true)->pluck('id');
+    $itStaffIds = User::itStaff()->pluck('id');
 
-    $staffOwnedProjects = Project::whereIn('user_id', $staffIds)->count();
+    $itStaffOwnedProjects = Project::whereIn('user_id', $itStaffIds)->count();
 
-    expect($staffOwnedProjects)->toBe(0);
+    expect($itStaffOwnedProjects)->toBe(0);
 });
 
-it('creates a pool of non-staff requester users', function () {
+it('creates a pool of non-IT-staff requester users', function () {
     $this->seed(TestDataSeeder::class);
 
-    $requesters = User::where('is_staff', false)
+    $requesters = User::query()
+        ->where('is_staff', true)
+        ->where('is_itstaff', false)
         ->where('is_admin', false)
         ->count();
 
@@ -79,7 +81,7 @@ it('allocates staff to projects from the scheduling stage onwards', function () 
 it('sets staff busyness from assigned workload, not project ownership', function () {
     $this->seed(TestDataSeeder::class);
 
-    $busyStaff = User::where('is_staff', true)
+    $busyStaff = User::itStaff()
         ->whereNotIn('busyness_week_1', [Busyness::UNKNOWN->value])
         ->count();
 

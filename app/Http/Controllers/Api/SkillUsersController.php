@@ -12,7 +12,7 @@ class SkillUsersController extends Controller
 {
     public function __invoke(Skill $skill): ResourceCollection
     {
-        $users = User::query()
+        $users = User::itStaff()
             ->whereHas('skills', fn ($q) => $q->where('skills.id', $skill->id))
             ->with(['skills' => fn ($q) => $q->where('skills.id', $skill->id)])
             ->orderBy('surname')

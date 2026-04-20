@@ -37,7 +37,7 @@ class SkillsImporter extends Component
 
         return view('livewire.skills-importer', [
             'staffUsers' => $this->step === 'preview'
-                ? User::where('is_staff', true)->orderBy('surname')->orderBy('forenames')->get()
+                ? User::itStaff()->orderBy('surname')->orderBy('forenames')->get()
                 : collect(),
             'skillsByCategory' => collect($this->parsedSkills)->groupBy('category')->map->count(),
             'notInSystemCount' => $notInSystem->count(),
@@ -136,7 +136,7 @@ class SkillsImporter extends Component
             $forenames = implode(' ', $parts);
 
             $matches = User::where('surname', $surname)
-                ->where('is_staff', true)
+                ->itStaff()
                 ->get();
 
             if ($matches->count() > 1 && $forenames !== '') {
