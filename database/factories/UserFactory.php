@@ -55,4 +55,12 @@ class UserFactory extends Factory
             'is_admin' => false,
         ]);
     }
+
+    public function requester(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_staff' => false,
+            'is_admin' => false,
+        ]);
+    }
 }
