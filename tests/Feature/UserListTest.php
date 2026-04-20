@@ -282,12 +282,12 @@ describe('Create User', function () {
 
     it('validates required fields and does not create a user', function () {
         livewire(UserList::class)
-            ->set('newUsername', '')
-            ->set('newEmail', '')
-            ->set('newSurname', '')
-            ->set('newForenames', '')
+            ->set('userAttributes.username', '')
+            ->set('userAttributes.email', '')
+            ->set('userAttributes.surname', '')
+            ->set('userAttributes.forenames', '')
             ->call('saveUser')
-            ->assertHasErrors(['newUsername', 'newEmail', 'newSurname', 'newForenames']);
+            ->assertHasErrors(['userAttributes.username', 'userAttributes.email', 'userAttributes.surname', 'userAttributes.forenames']);
 
         // Only the admin from beforeEach should exist
         expect(User::count())->toBe(1);
@@ -297,35 +297,35 @@ describe('Create User', function () {
         User::factory()->create(['username' => 'taken', 'email' => 'taken@example.ac.uk']);
 
         livewire(UserList::class)
-            ->set('newUsername', 'taken')
-            ->set('newEmail', 'taken@example.ac.uk')
-            ->set('newSurname', 'Test')
-            ->set('newForenames', 'User')
+            ->set('userAttributes.username', 'taken')
+            ->set('userAttributes.email', 'taken@example.ac.uk')
+            ->set('userAttributes.surname', 'Test')
+            ->set('userAttributes.forenames', 'User')
             ->call('saveUser')
-            ->assertHasErrors(['newUsername', 'newEmail']);
+            ->assertHasErrors(['userAttributes.username', 'userAttributes.email']);
     });
 
-    it('resets form fields after successful creation', function () {
+    it('clears form fields when opening the create modal', function () {
         livewire(UserList::class)
-            ->set('newUsername', 'resettest')
-            ->set('newEmail', 'reset@example.ac.uk')
-            ->set('newSurname', 'Reset')
-            ->set('newForenames', 'Test')
-            ->call('saveUser')
-            ->assertSet('newUsername', '')
-            ->assertSet('newEmail', '')
-            ->assertSet('newSurname', '')
-            ->assertSet('newForenames', '')
-            ->assertSet('newIsAdmin', false);
+            ->set('userAttributes.username', 'leftover')
+            ->set('userAttributes.email', 'leftover@example.ac.uk')
+            ->call('openUserModal')
+            ->assertSet('userAttributes.username', '')
+            ->assertSet('userAttributes.email', '')
+            ->assertSet('userAttributes.surname', '')
+            ->assertSet('userAttributes.forenames', '')
+            ->assertSet('userAttributes.is_admin', false)
+            ->assertSet('userAttributes.is_itstaff', false)
+            ->assertSet('userAttributes.id', null);
     });
 
     it('creates a user with valid data and lowercases the email', function () {
         livewire(UserList::class)
-            ->set('newUsername', 'newuser')
-            ->set('newEmail', 'New.User@Example.AC.UK')
-            ->set('newSurname', 'Bloggs')
-            ->set('newForenames', 'Joe')
-            ->set('newIsAdmin', false)
+            ->set('userAttributes.username', 'newuser')
+            ->set('userAttributes.email', 'New.User@Example.AC.UK')
+            ->set('userAttributes.surname', 'Bloggs')
+            ->set('userAttributes.forenames', 'Joe')
+            ->set('userAttributes.is_admin', false)
             ->call('saveUser')
             ->assertHasNoErrors();
 
@@ -412,11 +412,11 @@ describe('IT Staff Toggling', function () {
 
     it('persists the IT Staff checkbox when creating a user', function () {
         livewire(UserList::class)
-            ->set('newUsername', 'newitstaff')
-            ->set('newEmail', 'new.it@example.ac.uk')
-            ->set('newSurname', 'Bloggs')
-            ->set('newForenames', 'Joe')
-            ->set('newIsItStaff', true)
+            ->set('userAttributes.username', 'newitstaff')
+            ->set('userAttributes.email', 'new.it@example.ac.uk')
+            ->set('userAttributes.surname', 'Bloggs')
+            ->set('userAttributes.forenames', 'Joe')
+            ->set('userAttributes.is_itstaff', true)
             ->call('saveUser')
             ->assertHasNoErrors();
 
@@ -446,11 +446,11 @@ describe('Editing Users', function () {
         ]);
 
         livewire(UserList::class)
-            ->call('openEditUserModal', $target)
-            ->assertSet('newUsername', 'original.name')
-            ->assertSet('newEmail', 'original@example.ac.uk')
-            ->assertSet('newSurname', 'Original')
-            ->assertSet('newForenames', 'Name');
+            ->call('openUserModal', $target)
+            ->assertSet('userAttributes.username', 'original.name')
+            ->assertSet('userAttributes.email', 'original@example.ac.uk')
+            ->assertSet('userAttributes.surname', 'Original')
+            ->assertSet('userAttributes.forenames', 'Name');
     });
 
     it('updates the existing user when saving from the edit modal', function () {
@@ -458,8 +458,8 @@ describe('Editing Users', function () {
         $countBefore = User::count();
 
         livewire(UserList::class)
-            ->call('openEditUserModal', $target)
-            ->set('newSurname', 'Updated')
+            ->call('openUserModal', $target)
+            ->set('userAttributes.surname', 'Updated')
             ->call('saveUser')
             ->assertHasNoErrors();
 
@@ -474,8 +474,8 @@ describe('Editing Users', function () {
         ]);
 
         livewire(UserList::class)
-            ->call('openEditUserModal', $target)
-            ->set('newSurname', 'NewName')
+            ->call('openUserModal', $target)
+            ->set('userAttributes.surname', 'NewName')
             ->call('saveUser')
             ->assertHasNoErrors();
 

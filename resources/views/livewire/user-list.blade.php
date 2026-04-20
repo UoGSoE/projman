@@ -1,9 +1,7 @@
 <div>
     <div class="flex items-center justify-between">
         <flux:heading size="xl" level="1">Staff</flux:heading>
-        <flux:modal.trigger name="create-user">
-            <flux:button variant="primary" size="sm" icon="plus" wire:click="resetUserForm">Create User</flux:button>
-        </flux:modal.trigger>
+        <flux:button variant="primary" size="sm" icon="plus" wire:click="openUserModal">Create User</flux:button>
     </div>
 
     <flux:separator variant="subtle" class="mt-6" />
@@ -79,12 +77,8 @@
                         <flux:dropdown>
                             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
                             <flux:menu>
-                                <flux:menu.item icon="pencil-square">
-                                    <flux:modal.trigger name="create-user"
-                                        wire:click="openEditUserModal({{ $user->id }})">
-                                        Edit User
-                                    </flux:modal.trigger>
-                                </flux:menu.item>
+                                <flux:menu.item icon="pencil-square"
+                                    wire:click="openUserModal({{ $user->id }})">Edit User</flux:menu.item>
                                 <flux:menu.item icon="plus" wire:click="toggleAdmin({{ $user->id }})">Toggle
                                     admin</flux:menu.item>
                                 <flux:menu.item icon="wrench-screwdriver" wire:click="toggleItStaff({{ $user->id }})">Toggle
@@ -112,22 +106,22 @@
             @endforeach
         </flux:table.rows>
     </flux:table>
-    <flux:modal name="create-user" variant="flyout">
+    <flux:modal name="user-form" variant="flyout">
         <div class="space-y-6">
             <div>
-                <flux:heading size="lg">{{ $editingUserId ? 'Edit User' : 'Create User' }}</flux:heading>
+                <flux:heading size="lg">{{ $userAttributes['id'] ? 'Edit User' : 'Create User' }}</flux:heading>
                 <flux:text class="mt-2">
-                    {{ $editingUserId ? 'Update this user\'s details.' : 'Create a new staff user account.' }}
+                    {{ $userAttributes['id'] ? 'Update this user\'s details.' : 'Create a new staff user account.' }}
                 </flux:text>
             </div>
             <form wire:submit="saveUser">
                 <div class="space-y-4 max-w-sm">
-                    <flux:input wire:model="newUsername" label="Username" placeholder="e.g. jsmith" />
-                    <flux:input wire:model="newEmail" label="Email" type="email" placeholder="e.g. john.smith@example.ac.uk" />
-                    <flux:input wire:model="newSurname" label="Surname" />
-                    <flux:input wire:model="newForenames" label="Forenames" />
-                    <flux:checkbox wire:model="newIsAdmin" label="Administrator" description="Grant this user admin privileges" />
-                    <flux:checkbox wire:model="newIsItStaff" label="IT staff" description="Show this user in IT-team project assignment dropdowns" />
+                    <flux:input wire:model="userAttributes.username" label="Username" placeholder="e.g. jsmith" />
+                    <flux:input wire:model="userAttributes.email" label="Email" type="email" placeholder="e.g. john.smith@example.ac.uk" />
+                    <flux:input wire:model="userAttributes.surname" label="Surname" />
+                    <flux:input wire:model="userAttributes.forenames" label="Forenames" />
+                    <flux:checkbox wire:model="userAttributes.is_admin" label="Administrator" description="Grant this user admin privileges" />
+                    <flux:checkbox wire:model="userAttributes.is_itstaff" label="IT staff" description="Show this user in IT-team project assignment dropdowns" />
                 </div>
 
                 <div class="flex gap-3 mt-6">
@@ -136,7 +130,7 @@
                         <flux:button variant="ghost">Cancel</flux:button>
                     </flux:modal.close>
                     <flux:button variant="primary" type="submit">
-                        {{ $editingUserId ? 'Save Changes' : 'Create User' }}
+                        {{ $userAttributes['id'] ? 'Save Changes' : 'Create User' }}
                     </flux:button>
                 </div>
             </form>

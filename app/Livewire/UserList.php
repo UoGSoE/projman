@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Role;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -26,19 +27,15 @@ class UserList extends Component
 
     public $availableRoles = [];
 
-    public $newUsername = '';
-
-    public $newEmail = '';
-
-    public $newSurname = '';
-
-    public $newForenames = '';
-
-    public $newIsAdmin = false;
-
-    public $newIsItStaff = false;
-
-    public ?int $editingUserId = null;
+    public array $userAttributes = [
+        'id' => null,
+        'username' => '',
+        'email' => '',
+        'surname' => '',
+        'forenames' => '',
+        'is_admin' => false,
+        'is_itstaff' => false,
+    ];
 
     public function render()
     {
@@ -143,45 +140,36 @@ class UserList extends Component
         Flux::toast('User roles updated successfully', variant: 'success');
     }
 
-    public function openEditUserModal(User $user): void
+    public function openUserModal(?User $user = null): void
     {
-        $this->editingUserId = $user->id;
-        $this->newUsername = $user->username;
-        $this->newEmail = $user->email;
-        $this->newSurname = $user->surname;
-        $this->newForenames = $user->forenames;
-        $this->newIsAdmin = $user->is_admin;
-        $this->newIsItStaff = $user->is_itstaff;
-    }
-
-    public function resetUserForm(): void
-    {
-        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin', 'newIsItStaff', 'editingUserId');
         $this->resetValidation();
+        $this->reset('userAttributes');
+
+        if ($user) {
+            $this->userAttributes = $user->only(array_keys($this->userAttributes));
+        }
+
+        Flux::modal('user-form')->show();
     }
 
     public function saveUser(): void
     {
+        $userId = $this->userAttributes['id'];
+
         $this->validate([
-            'newUsername' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($this->editingUserId)],
-            'newEmail' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingUserId)],
-            'newSurname' => 'required|string|max:255',
-            'newForenames' => 'required|string|max:255',
-            'newIsAdmin' => 'boolean',
-            'newIsItStaff' => 'boolean',
+            'userAttributes.username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($userId)],
+            'userAttributes.email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'userAttributes.surname' => 'required|string|max:255',
+            'userAttributes.forenames' => 'required|string|max:255',
+            'userAttributes.is_admin' => 'boolean',
+            'userAttributes.is_itstaff' => 'boolean',
         ]);
 
-        $attributes = [
-            'username' => $this->newUsername,
-            'email' => Str::lower($this->newEmail),
-            'surname' => $this->newSurname,
-            'forenames' => $this->newForenames,
-            'is_admin' => $this->newIsAdmin,
-            'is_itstaff' => $this->newIsItStaff,
-        ];
+        $attributes = Arr::except($this->userAttributes, 'id');
+        $attributes['email'] = Str::lower($attributes['email']);
 
-        if ($this->editingUserId) {
-            User::findOrFail($this->editingUserId)->update($attributes);
+        if ($userId) {
+            User::findOrFail($userId)->update($attributes);
             $message = 'User updated successfully';
         } else {
             User::create($attributes + [
@@ -191,9 +179,7 @@ class UserList extends Component
             $message = 'User created successfully';
         }
 
-        $this->reset('newUsername', 'newEmail', 'newSurname', 'newForenames', 'newIsAdmin', 'newIsItStaff', 'editingUserId');
-
-        Flux::modal('create-user')->close();
+        Flux::modal('user-form')->close();
         Flux::toast($message, variant: 'success');
     }
 
