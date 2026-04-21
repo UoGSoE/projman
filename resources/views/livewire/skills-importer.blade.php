@@ -13,7 +13,23 @@
             </flux:text>
 
             <div class="mt-6 space-y-4">
-                <flux:input type="file" wire:model="spreadsheet" accept=".xlsx" label="Spreadsheet file" />
+                <flux:file-upload wire:model="spreadsheet" accept=".xlsx" label="Spreadsheet file">
+                    <flux:file-upload.dropzone
+                        heading="Drop your spreadsheet here or click to browse"
+                        text="Only .xlsx files up to 10MB"
+                    />
+                </flux:file-upload>
+
+                @if ($spreadsheet)
+                    <flux:file-item
+                        heading="{{ $spreadsheet->getClientOriginalName() }}"
+                        size="{{ $spreadsheet->getSize() }}"
+                    >
+                        <x-slot name="actions">
+                            <flux:file-item.remove wire:click="$set('spreadsheet', null)" />
+                        </x-slot>
+                    </flux:file-item>
+                @endif
 
                 <flux:button variant="primary" wire:click="parseSpreadsheet" wire:loading.attr="disabled" wire:target="parseSpreadsheet">
                     Parse Spreadsheet
