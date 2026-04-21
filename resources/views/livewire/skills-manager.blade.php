@@ -2,7 +2,7 @@
     <div class="flex justify-between items-center">
         <flux:heading size="xl" level="1">Skills Management</flux:heading>
         <div class="flex items-center gap-2">
-            <flux:link :href="route('skills.import')" variant="ghost" icon="arrow-up-tray">Import from Spreadsheet</flux:link>
+            <flux:button :href="route('skills.import')" icon:trailing="arrow-up-tray">Import from Spreadsheet</flux:button>
             <flux:dropdown>
                 <flux:button icon="arrow-down-tray">Download</flux:button>
                 <flux:menu>
