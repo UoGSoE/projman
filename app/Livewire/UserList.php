@@ -27,7 +27,7 @@ class UserList extends Component
     public ?User $selectedUser = null;
 
     /** @var array<int, string> */
-    public array $userRoles = [];
+    public $userRoles = [];
 
     /** @var Collection<int, Role> */
     public Collection $availableRoles;
@@ -45,6 +45,13 @@ class UserList extends Component
     public function mount(): void
     {
         $this->availableRoles = collect();
+    }
+
+    public function updatedUserRoles(): void
+    {
+        if (is_string($this->userRoles)) {
+            $this->userRoles = [$this->userRoles];
+        }
     }
 
     public function render(): View

@@ -396,6 +396,17 @@ describe('User Role Management', function () {
         $this->assertTrue($this->regularUser->roles()->where('name', 'Administrator')->exists());
         $this->assertTrue($this->regularUser->roles()->where('name', 'Manager')->exists());
     });
+
+    it('coerces a scalar role name into an array when the client sends a string', function () {
+        livewire(UserList::class)
+            ->call('openChangeUserRoleModal', $this->regularUser)
+            ->set('userRoles', 'Administrator')
+            ->assertSet('userRoles', ['Administrator'])
+            ->call('saveUserRoles')
+            ->assertHasNoErrors();
+
+        expect($this->regularUser->roles()->where('name', 'Administrator')->exists())->toBeTrue();
+    });
 });
 
 describe('IT Staff Toggling', function () {

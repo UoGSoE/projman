@@ -150,7 +150,6 @@
                         @foreach ($availableRoles as $role)
                             <flux:checkbox value="{{ $role->name }}"
                                 label="{{ ucfirst($role->name) }}"
-                                :checked="in_array($role->name, (array)$userRoles)"
                                 description="{{ ucfirst($role->description) }}" />
                         @endforeach
                     </flux:checkbox.group>
