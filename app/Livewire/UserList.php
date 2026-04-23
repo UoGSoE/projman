@@ -26,8 +26,8 @@ class UserList extends Component
 
     public ?User $selectedUser = null;
 
-    /** @var array<int, string> */
-    public $userRoles = [];
+    /** @var array<int, int|string> */
+    public $userRoleIds = [];
 
     /** @var Collection<int, Role> */
     public Collection $availableRoles;
@@ -47,10 +47,10 @@ class UserList extends Component
         $this->availableRoles = collect();
     }
 
-    public function updatedUserRoles(): void
+    public function updatedUserRoleIds(): void
     {
-        if (is_string($this->userRoles)) {
-            $this->userRoles = [$this->userRoles];
+        if (is_string($this->userRoleIds)) {
+            $this->userRoleIds = [$this->userRoleIds];
         }
     }
 
@@ -115,20 +115,18 @@ class UserList extends Component
     public function openChangeUserRoleModal(User $user): void
     {
         $this->selectedUser = $user->fresh(['roles']);
-        $this->userRoles = $this->selectedUser->roles->pluck('name')->toArray();
+        $this->userRoleIds = $this->selectedUser->roles->pluck('id')->toArray();
         $this->availableRoles = Role::active()->get();
     }
 
     public function saveUserRoles(): void
     {
         $this->validate([
-            'userRoles' => ['array'],
-            'userRoles.*' => [Rule::exists('roles', 'name')->where('is_active', true)],
+            'userRoleIds' => ['array'],
+            'userRoleIds.*' => [Rule::exists('roles', 'id')->where('is_active', true)],
         ]);
 
-        $this->selectedUser->roles()->sync(
-            Role::whereIn('name', $this->userRoles)->pluck('id')
-        );
+        $this->selectedUser->roles()->sync($this->userRoleIds);
 
         Flux::modal('change-user-role')->close();
         Flux::toast('User roles updated successfully', variant: 'success');

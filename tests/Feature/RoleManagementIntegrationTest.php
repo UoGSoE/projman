@@ -76,12 +76,12 @@ describe('Role Management Integration', function () {
 
             // Set the properties manually to avoid view rendering issues
             $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoles = $userListComponent->selectedUser->roles->pluck('name')->toArray();
+            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
             $userListComponent->availableRoles = Role::active()->get();
 
             // Test the component properties directly
             expect($userListComponent->availableRoles->pluck('name')->toArray())->toContain('Updated User Role');
-            expect($userListComponent->userRoles)->toContain('Updated User Role');
+            expect($userListComponent->userRoleIds)->toContain($this->userRole->id);
         });
 
         it('maintains consistency when roles are deactivated', function () {
@@ -103,7 +103,7 @@ describe('Role Management Integration', function () {
 
             // Set the properties manually to avoid view rendering issues
             $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoles = $userListComponent->selectedUser->roles->pluck('name')->toArray();
+            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
             $userListComponent->availableRoles = Role::active()->get();
 
             expect($userListComponent->availableRoles->pluck('name')->toArray())->not->toContain('User');
@@ -132,11 +132,11 @@ describe('Role Management Integration', function () {
 
             // Set the properties manually to avoid view rendering issues
             $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoles = $userListComponent->selectedUser->roles->pluck('name')->toArray();
+            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
             $userListComponent->availableRoles = Role::active()->get();
 
             // User should now have no roles
-            expect($userListComponent->userRoles)->toHaveCount(0);
+            expect($userListComponent->userRoleIds)->toHaveCount(0);
             expect($userListComponent->availableRoles->pluck('name')->toArray())->not->toContain('User');
         });
     });
@@ -155,7 +155,7 @@ describe('Role Management Integration', function () {
 
             // Set the properties manually to avoid view rendering issues
             $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoles = $userListComponent->selectedUser->roles->pluck('name')->toArray();
+            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
             $userListComponent->availableRoles = Role::active()->get();
 
             expect($userListComponent->availableRoles->pluck('name')->toArray())->toContain('New Role');
@@ -203,7 +203,7 @@ describe('Role Management Integration', function () {
             // Assign user to role through UserList
             $userListComponent = livewire(UserList::class);
             $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
-            $userListComponent->set('userRoles', ['User']);
+            $userListComponent->set('userRoleIds', [$this->userRole->id]);
             $userListComponent->call('saveUserRoles');
 
             // Refresh both user and role
@@ -229,7 +229,7 @@ describe('Role Management Integration', function () {
             // Remove user from role through UserList
             $userListComponent = livewire(UserList::class);
             $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
-            $userListComponent->set('userRoles', []); // Remove all roles
+            $userListComponent->set('userRoleIds', []); // Remove all roles
             $userListComponent->call('saveUserRoles');
 
             // Refresh both user and role
@@ -283,7 +283,7 @@ describe('Role Management Integration', function () {
 
             // Initialize the component properly
             $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
-            $userListComponent->set('userRoles', ['User', 'Developer', 'Tester']);
+            $userListComponent->set('userRoleIds', [$this->userRole->id, $developerRole->id, $testerRole->id]);
             $userListComponent->call('saveUserRoles');
 
             // Verify multiple roles are assigned
@@ -305,9 +305,9 @@ describe('Role Management Integration', function () {
 
             // Check that UserList shows the updated role name
             $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoles = $userListComponent->selectedUser->roles->pluck('name')->toArray();
+            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
             $userListComponent->availableRoles = Role::active()->get();
-            expect($userListComponent->userRoles)->toContain('Senior Developer');
+            expect($userListComponent->userRoleIds)->toContain($developerRole->id);
         });
 
         it('handles role activation/deactivation cycles', function () {
@@ -329,7 +329,7 @@ describe('Role Management Integration', function () {
 
             // Set the properties manually to avoid view rendering issues
             $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoles = $userListComponent->selectedUser->roles->pluck('name')->toArray();
+            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
             $userListComponent->availableRoles = Role::active()->get();
             expect($userListComponent->availableRoles->pluck('name')->toArray())->not->toContain('User');
 
@@ -344,7 +344,7 @@ describe('Role Management Integration', function () {
 
             // Check that UserList now includes it in available roles
             $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoles = $userListComponent->selectedUser->roles->pluck('name')->toArray();
+            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
             $userListComponent->availableRoles = Role::active()->get();
             expect($userListComponent->availableRoles->pluck('name')->toArray())->toContain('User');
         });
@@ -405,7 +405,7 @@ describe('Role Management Integration', function () {
             // Assign user to role through UserList
             $userListComponent = livewire(UserList::class);
             $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
-            $userListComponent->set('userRoles', ['User']);
+            $userListComponent->set('userRoleIds', [$this->userRole->id]);
             $userListComponent->call('saveUserRoles');
 
             // Refresh both user and role
@@ -432,7 +432,7 @@ describe('Role Management Integration', function () {
             // Remove user from role through UserList
             $userListComponent = livewire(UserList::class);
             $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
-            $userListComponent->set('userRoles', []); // Remove all roles
+            $userListComponent->set('userRoleIds', []); // Remove all roles
             $userListComponent->call('saveUserRoles');
 
             // Refresh both user and role

@@ -377,31 +377,31 @@ describe('User Role Management', function () {
                 fn ($roles) => $roles instanceof Collection &&
                 collect([$this->adminRole->name, $this->userRole->name, $this->managerRole->name])->diff($roles->pluck('name'))->isEmpty()
             )
-            ->assertSet('userRoles', []);
+            ->assertSet('userRoleIds', []);
     });
 
     it('updates selected roles using checklist cards', function () {
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $this->regularUser)
-            ->set('userRoles', ['Administrator', 'Manager'])
-            ->assertSet('userRoles', ['Administrator', 'Manager']);
+            ->set('userRoleIds', [$this->adminRole->id, $this->managerRole->id])
+            ->assertSet('userRoleIds', [$this->adminRole->id, $this->managerRole->id]);
     });
 
     it('saves selected roles to user', function () {
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $this->regularUser)
-            ->set('userRoles', ['Administrator', 'Manager'])
+            ->set('userRoleIds', [$this->adminRole->id, $this->managerRole->id])
             ->call('saveUserRoles');
 
         $this->assertTrue($this->regularUser->roles()->where('name', 'Administrator')->exists());
         $this->assertTrue($this->regularUser->roles()->where('name', 'Manager')->exists());
     });
 
-    it('coerces a scalar role name into an array when the client sends a string', function () {
+    it('coerces a scalar role id into an array when the client sends a string', function () {
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $this->regularUser)
-            ->set('userRoles', 'Administrator')
-            ->assertSet('userRoles', ['Administrator'])
+            ->set('userRoleIds', (string) $this->adminRole->id)
+            ->assertSet('userRoleIds', [(string) $this->adminRole->id])
             ->call('saveUserRoles')
             ->assertHasNoErrors();
 

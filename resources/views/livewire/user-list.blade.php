@@ -143,12 +143,12 @@
                         :value="$selectedUser ? $selectedUser->forenames . ' ' . $selectedUser->surname : ''"
                         readonly disabled />
 
-                    <flux:checkbox.group wire:model.live="userRoles"
+                    <flux:checkbox.group wire:model="userRoleIds"
                      label="User Roles"
                      variant="cards"
                      class="flex-col">
                         @foreach ($availableRoles as $role)
-                            <flux:checkbox value="{{ $role->name }}"
+                            <flux:checkbox value="{{ $role->id }}"
                                 label="{{ ucfirst($role->name) }}"
                                 description="{{ ucfirst($role->description) }}" />
                         @endforeach

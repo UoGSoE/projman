@@ -58,7 +58,7 @@ describe('Role Assignment Modal', function () {
         $component = livewire(UserList::class)
             ->call('openChangeUserRoleModal', $user);
 
-        expect($component->userRoles)->toContain('Assigned Role');
+        expect($component->userRoleIds)->toContain($assignedRole->id);
         expect($component->selectedUser->id)->toBe($user->id);
     });
 
@@ -84,7 +84,7 @@ describe('Role Assignment', function () {
 
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $user)
-            ->set('userRoles', ['Role One', 'Role Two'])
+            ->set('userRoleIds', [$role1->id, $role2->id])
             ->call('saveUserRoles');
 
         $user->refresh();
@@ -100,7 +100,7 @@ describe('Role Assignment', function () {
 
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $user)
-            ->set('userRoles', ['Keep This'])
+            ->set('userRoleIds', [$role1->id])
             ->call('saveUserRoles');
 
         $user->refresh();
@@ -115,7 +115,7 @@ describe('Role Assignment', function () {
 
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $user)
-            ->set('userRoles', [])
+            ->set('userRoleIds', [])
             ->call('saveUserRoles');
 
         $user->refresh();
