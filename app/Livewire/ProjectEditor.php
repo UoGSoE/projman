@@ -311,7 +311,6 @@ class ProjectEditor extends Component
                 strlen($searchTerm) > 1,
                 fn ($query) => $query->where('surname', 'like', '%'.$searchTerm.'%')
             )
-            ->limit(20)
             ->get();
     }
 
