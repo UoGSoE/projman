@@ -6,6 +6,7 @@ use App\Events\ProjectStageChange;
 use App\Mail\ProjectStageChangeMail;
 use App\Services\RoleUserResolver;
 use Illuminate\Support\Facades\Mail;
+use App\Events\ProjectUpdated;
 
 class ProjectStageChangeListener
 {
@@ -23,5 +24,7 @@ class ProjectStageChangeListener
         Mail::to($users->pluck('email'))->queue(
             new ProjectStageChangeMail($event->project)
         );
+
+        event(new ProjectUpdated($event->project, "Stage changed to {$event->project->status->value}"));
     }
 }

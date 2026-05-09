@@ -447,12 +447,12 @@ describe('Submit Testing Workflow', function () {
         livewire(ProjectEditor::class, ['project' => $project])
             ->call('submitTesting');
 
-        // Assert - submitTesting creates 2 history entries: "Submitted testing" + "Advanced to deployed"
+        // Assert - submitTesting creates 2 history entries: "Submitted testing" + "Advanced to deployed" + "Project statys changed to ..."
         $project->refresh();
-        expect($project->history()->count())->toBe($historyCountBefore + 2);
+        expect($project->history()->count())->toBe($historyCountBefore + 3);
 
-        // Check both history entries exist (order may vary due to timing)
-        $historyEntries = $project->history()->latest()->take(2)->get();
+        // Check all history entries exist (order may vary due to timing)
+        $historyEntries = $project->history()->latest()->take(3)->get();
         $descriptions = $historyEntries->pluck('description')->implode(' ');
         expect($descriptions)->toContain('Advanced to');
         expect($descriptions)->toContain('Submitted testing');
