@@ -25,6 +25,7 @@ class ProjectStageChangeListener
             new ProjectStageChangeMail($event->project)
         );
 
-        event(new ProjectUpdated($event->project, "Stage changed to {$event->project->status->value}"));
+        $userName = $event->user ? $event->user->full_name : 'SYSTEM';
+        event(new ProjectUpdated($event->project, "Stage changed to {$event->project->status->value} by {$userName}"));
     }
 }
