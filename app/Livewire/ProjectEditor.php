@@ -353,16 +353,16 @@ class ProjectEditor extends Component
                 });
         }
 
-        // Get ALL staff users, not just those with matching skills
+        // Get ALL staff users, not just those with matching skills.
+        // Awareness-level ratings are excluded from scoring — staff often record
+        // "Awareness" for skills they've only read about, which inflates matches.
         return User::itStaff()
             ->with(['skills' => function ($query) use ($requiredSkillIds) {
-                // Eager load only the required skills for score calculation
-                $query->whereIn('skill_id', $requiredSkillIds);
+                $query->whereIn('skill_id', $requiredSkillIds)
+                    ->wherePivot('skill_level', '!=', SkillLevel::AWARENESS->value);
             }])
             ->get()
             ->map(function ($user) {
-                // Calculate skill score (will be 0 for users with no matching skills)
-                // Access pivot data directly to avoid N+1 queries
                 $totalScore = $user->skills->sum(function ($skill) {
                     $level = SkillLevel::from($skill->pivot->skill_level);
 

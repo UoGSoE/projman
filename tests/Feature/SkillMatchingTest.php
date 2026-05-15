@@ -83,8 +83,8 @@ describe('Skill Matching', function () {
         $user2->skills()->attach($skill3->id, ['skill_level' => SkillLevel::EXPERT->value]); // Score: 4
         // Total: 2 (only skill1 matches required skills)
 
-        $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::AWARENESS->value]); // Score: 1
-        // Total: 1
+        $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::AWARENESS->value]); // Awareness is excluded from scoring
+        // Total: 0
 
         // Test matching for skills 1 and 2
         $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([$skill1->id, $skill2->id]);
@@ -95,9 +95,8 @@ describe('Skill Matching', function () {
         expect($matchedUsers->first()->total_skill_score)->toBe(6);
         expect($matchedUsers[1]->id)->toBe($user2->id); // user2 second (score: 2)
         expect($matchedUsers[1]->total_skill_score)->toBe(2);
-        expect($matchedUsers[2]->id)->toBe($user3->id); // user3 third (score: 1)
-        expect($matchedUsers[2]->total_skill_score)->toBe(1);
-        // Fourth user (from fakeNotifications) has score: 0
+        // user3 (Awareness-only) and the fakeNotifications user both score 0
+        expect($matchedUsers[2]->total_skill_score)->toBe(0);
         expect($matchedUsers->last()->total_skill_score)->toBe(0);
     });
 
@@ -119,6 +118,24 @@ describe('Skill Matching', function () {
         expect($matchedUsers)->toHaveCount(2);
         expect($matchedUsers->first()->total_skill_score)->toBe(0);
         expect($matchedUsers->last()->total_skill_score)->toBe(0);
+    });
+
+    it('does not count Awareness-level ratings towards the skill match score', function () {
+        $skill = Skill::factory()->create(['name' => 'Laravel']);
+
+        $awarenessOnly = User::factory()->create(['forenames' => 'Ann', 'surname' => 'Awareness']);
+        $working = User::factory()->create(['forenames' => 'Will', 'surname' => 'Working']);
+
+        $awarenessOnly->skills()->attach($skill->id, ['skill_level' => SkillLevel::AWARENESS->value]);
+        $working->skills()->attach($skill->id, ['skill_level' => SkillLevel::WORKING->value]);
+
+        $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([$skill->id]);
+
+        $scoresById = $matchedUsers->pluck('total_skill_score', 'id');
+
+        expect($scoresById[$awarenessOnly->id])->toBe(0);
+        expect($scoresById[$working->id])->toBe(2);
+        expect($matchedUsers->first()->id)->toBe($working->id);
     });
 
     it('returns all staff with matched users sorted first by skill score', function () {

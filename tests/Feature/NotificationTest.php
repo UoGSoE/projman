@@ -50,6 +50,20 @@ describe('Config-based notifications', function () {
         $this->projectOwner = User::factory()->create();
     });
 
+    it('renders the project title and requester name in the ProjectCreated email body', function () {
+        Mail::fake();
+
+        $project = Project::factory()->create([
+            'title' => 'A very specific project title',
+            'user_id' => $this->projectOwner->id,
+        ]);
+
+        $rendered = (new ProjectCreatedMail($project))->render();
+
+        expect($rendered)->toContain('A very specific project title');
+        expect($rendered)->toContain($this->projectOwner->name);
+    });
+
     it('sends ProjectCreated notification to configured roles', function () {
         Mail::fake();
 
