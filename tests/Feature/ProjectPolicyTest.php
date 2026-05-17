@@ -55,6 +55,34 @@ describe('ProjectPolicy view ability', function () {
     });
 });
 
+describe('Project show page edit button', function () {
+    it('hides the edit button from the owner once the project has left ideation', function () {
+        $owner = User::factory()->requester()->create();
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'status' => ProjectStatus::FEASIBILITY,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('project.show', $project))
+            ->assertSuccessful()
+            ->assertDontSee(route('project.edit', $project));
+    });
+
+    it('still shows the edit button to the owner while the project is in ideation', function () {
+        $owner = User::factory()->requester()->create();
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'status' => ProjectStatus::IDEATION,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('project.show', $project))
+            ->assertSuccessful()
+            ->assertSee(route('project.edit', $project));
+    });
+});
+
 describe('ProjectPolicy create ability', function () {
     it('allows any authenticated user to reach the create page', function () {
         $user = User::factory()->requester()->create();

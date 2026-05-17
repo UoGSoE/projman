@@ -150,6 +150,31 @@ describe('Project Editing', function () {
                 ->call('save', 'ideation')
                 ->assertHasErrors(['ideationForm.deadline' => 'after']);
         });
+
+        it('shows a placeholder option for the strategic initiative dropdown so users must actively choose', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->assertSee('Please select a Strategic Initiative');
+        });
+
+        it('labels the advance button as "Submit Work Package" for the regular user who owns the project', function () {
+            $requester = User::factory()->requester()->create();
+            $theirProject = Project::factory()->create([
+                'user_id' => $requester->id,
+            ]);
+
+            $this->actingAs($requester);
+
+            livewire(ProjectEditor::class, ['project' => $theirProject])
+                ->assertSee('Submit Work Package')
+                ->assertDontSee('Advance to Next Stage');
+        });
+
+        it('keeps the "Advance to Next Stage" wording for admin users', function () {
+            // beforeEach already actingAs an admin user
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->assertSee('Advance to Next Stage')
+                ->assertDontSee('Submit Work Package');
+        });
     });
 
     describe('Feasibility Form', function () {

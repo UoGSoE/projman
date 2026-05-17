@@ -25,37 +25,41 @@
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="home" href="/" :current="request()->routeIs('home')" wire:navigate>Home
                 </flux:sidebar.item>
-                <flux:separator class="my-2" />
-                <flux:sidebar.item badge="3" icon="list-bullet" :href="route('projects')"
-                    :current="request()->routeIs('projects')" wire:navigate>
-                    All work packages
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')"
-                    wire:navigate>Staff heatmap</flux:sidebar.item>
-                <flux:separator class="my-2" />
-                <flux:sidebar.item icon="queue-list" href="/portfolio/backlog" :current="request()->routeIs('portfolio.backlog')"
-                    wire:navigate>Portfolio backlog</flux:sidebar.item>
-                <flux:sidebar.item icon="calendar" href="/portfolio/roadmap" :current="request()->routeIs('portfolio.roadmap')"
-                    wire:navigate>Portfolio roadmap</flux:sidebar.item>
-                @if (auth()->user()->is_admin)
-                    <flux:sidebar.item icon="users" href="/staff" :current="request()->routeIs('users.list')"
-                        wire:navigate>Staff</flux:sidebar.item>
-                    <flux:sidebar.item icon="user-group" href="/roles" :current="request()->routeIs('roles.list')"
-                        wire:navigate>Roles</flux:sidebar.item>
-                    <flux:sidebar.item icon="academic-cap" href="/skills" :current="request()->routeIs('skills.manage')"
-                        wire:navigate>Skills</flux:sidebar.item>
-                @endif
+                @adminOrITStaff
+                    <flux:separator class="my-2" />
+                    <flux:sidebar.item badge="3" icon="list-bullet" :href="route('projects')"
+                        :current="request()->routeIs('projects')" wire:navigate>
+                        All work packages
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="chart-bar" href="/staff/heatmap" :current="request()->routeIs('project.heatmap')"
+                        wire:navigate>Staff heatmap</flux:sidebar.item>
+                    <flux:separator class="my-2" />
+                    <flux:sidebar.item icon="queue-list" href="/portfolio/backlog" :current="request()->routeIs('portfolio.backlog')"
+                        wire:navigate>Portfolio backlog</flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar" href="/portfolio/roadmap" :current="request()->routeIs('portfolio.roadmap')"
+                        wire:navigate>Portfolio roadmap</flux:sidebar.item>
+                    @if (auth()->user()->is_admin)
+                        <flux:sidebar.item icon="users" href="/staff" :current="request()->routeIs('users.list')"
+                            wire:navigate>Staff</flux:sidebar.item>
+                        <flux:sidebar.item icon="user-group" href="/roles" :current="request()->routeIs('roles.list')"
+                            wire:navigate>Roles</flux:sidebar.item>
+                        <flux:sidebar.item icon="academic-cap" href="/skills" :current="request()->routeIs('skills.manage')"
+                            wire:navigate>Skills</flux:sidebar.item>
+                    @endif
+                @endadminOrITStaff
             </flux:sidebar.nav>
             <flux:sidebar.spacer />
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="user" href="{{ route('profile') }}" :current="request()->routeIs('profile')"
-                    wire:navigate>Profile</flux:sidebar.item>
-                @if (auth()->user()->is_admin)
-                    <flux:sidebar.item icon="cog-6-tooth" :href="route('settings')"
-                        :current="request()->routeIs('settings')" wire:navigate>Settings</flux:sidebar.item>
-                @endif
-                <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
-            </flux:sidebar.nav>
+            @adminOrITStaff
+                <flux:sidebar.nav>
+                    <flux:sidebar.item icon="user" href="{{ route('profile') }}" :current="request()->routeIs('profile')"
+                        wire:navigate>Profile</flux:sidebar.item>
+                    @if (auth()->user()->is_admin)
+                        <flux:sidebar.item icon="cog-6-tooth" :href="route('settings')"
+                            :current="request()->routeIs('settings')" wire:navigate>Settings</flux:sidebar.item>
+                    @endif
+                    <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
+                </flux:sidebar.nav>
+            @endadminOrITStaff
             <flux:sidebar.nav>
                 <flux:sidebar.item tooltip="Logout" icon="arrow-right-start-on-rectangle">
                     <form method="post" action="{{ route('auth.logout') }}">

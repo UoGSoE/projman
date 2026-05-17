@@ -5,7 +5,9 @@
             @admin
             <flux:button icon="arrow-down-tray" href="{{ route('project.export', $project) }}" target="_blank">Export</flux:button>
             @endadmin
-            <flux:button icon="pencil" variant="primary" href="{{ route('project.edit', $project) }}">Edit</flux:button>
+            @can('update', $project)
+                <flux:button icon="pencil" variant="primary" href="{{ route('project.edit', $project) }}">Edit</flux:button>
+            @endcan
         </div>
     </div>
 

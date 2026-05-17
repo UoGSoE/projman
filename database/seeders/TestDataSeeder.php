@@ -79,6 +79,12 @@ class TestDataSeeder extends Seeder
             'busyness_week_1' => Busyness::LOW,
             'busyness_week_2' => Busyness::MEDIUM,
         ]);
+
+        User::factory()->requester()->create([
+            'username' => 'requester2x',
+            'email' => 'requester2x@example.ac.uk',
+            'password' => bcrypt('secret'),
+        ]);
     }
 
     private function seedStaffTeam(): void

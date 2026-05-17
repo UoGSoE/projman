@@ -45,6 +45,10 @@ class AppServiceProvider extends ServiceProvider
             return auth()->check() && auth()->user()->isAdmin();
         });
 
+        Blade::if('adminOrITStaff', function () {
+            return auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isItStaff());
+        });
+
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });

@@ -19,7 +19,7 @@
             <flux:input label="Deadline / Key Milestone" type="date"
                 wire:model="ideationForm.deadline" />
 
-            <flux:select label="Strategic Initiative" wire:model="ideationForm.initiative">
+            <flux:select label="Strategic Initiative" wire:model="ideationForm.initiative" placeholder="Please select a Strategic Initiative...">
                 @foreach ($ideationForm->availableStrategicInitiatives as $key => $label)
                     <flux:select.option value="{{ $key }}">
                         {{ $key }} - {{ $label }}
@@ -33,7 +33,11 @@
 
     <div class="flex items-center gap-2">
         <flux:button wire:click="saveAndAdvance('ideation')" variant="primary" icon:trailing="arrow-right">
-            Advance to Next Stage
+            @adminOrITStaff
+                Advance to Next Stage
+            @else
+                Submit Work Package
+            @endadminOrITStaff
         </flux:button>
         <flux:button
             wire:click="advanceToNextStage()"
