@@ -12,6 +12,10 @@ class Settings extends Component
 
     public function createToken(): void
     {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
         $this->validate([
             'newTokenName' => 'required|string|max:255',
         ]);
@@ -24,6 +28,10 @@ class Settings extends Component
 
     public function revokeToken(int $tokenId): void
     {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
         auth()->user()->tokens()->whereKey($tokenId)->delete();
     }
 

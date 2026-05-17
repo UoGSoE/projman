@@ -9,6 +9,41 @@ use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->actingAs(User::factory()->admin()->create());
+});
+
+describe('Admin guard', function () {
+    it('forbids a non-admin from deleting a role', function () {
+        $nonAdmin = User::factory()->staff()->create();
+        $role = Role::factory()->create(['name' => 'Target Role']);
+
+        $this->actingAs($nonAdmin);
+
+        livewire(RolesList::class)
+            ->call('openDeleteRoleModal', $role)
+            ->call('deleteRole')
+            ->assertForbidden();
+
+        expect(Role::where('name', 'Target Role')->exists())->toBeTrue();
+    });
+
+    it('forbids a non-admin from creating or editing a role', function () {
+        $nonAdmin = User::factory()->staff()->create();
+
+        $this->actingAs($nonAdmin);
+
+        livewire(RolesList::class)
+            ->call('openCreateRoleModal')
+            ->set('roleName', 'Sneaky Role')
+            ->set('roleDescription', 'Should not be created')
+            ->call('saveEditRole')
+            ->assertForbidden();
+
+        expect(Role::where('name', 'Sneaky Role')->exists())->toBeFalse();
+    });
+});
+
 describe('Role List Display', function () {
     it('renders the component and displays roles', function () {
         Role::factory()->create(['name' => 'Administrator']);

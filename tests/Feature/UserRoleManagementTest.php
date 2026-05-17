@@ -9,6 +9,10 @@ use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->actingAs(User::factory()->admin()->create());
+});
+
 describe('User List Display', function () {
     it('shows users with their roles', function () {
         $userWithRoles = User::factory()->create(['forenames' => 'Jane', 'surname' => 'Doe']);

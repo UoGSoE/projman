@@ -92,6 +92,10 @@ class SkillsImporter extends Component
 
     public function confirmImport(): void
     {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
         foreach ($this->parsedSkills as $skill) {
             Skill::updateOrCreate(
                 ['name' => $skill['name']],

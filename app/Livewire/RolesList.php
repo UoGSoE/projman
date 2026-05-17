@@ -96,6 +96,10 @@ class RolesList extends Component
 
     public function deleteRole()
     {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
         if (! $this->selectedRole) {
             return;
         }
@@ -121,6 +125,10 @@ class RolesList extends Component
 
     public function saveEditRole()
     {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
         // Determine validation rules based on create vs edit
         $validationRules = [
             'roleDescription' => 'required|string|min:3|max:1000',

@@ -50,6 +50,8 @@ describe('Role Management Integration', function () {
 
         // Assign roles to users
         $this->regularUser->roles()->attach([$this->userRole->id]);
+
+        $this->actingAs($this->adminUser);
     });
 
     describe('Role-User Relationship Consistency', function () {

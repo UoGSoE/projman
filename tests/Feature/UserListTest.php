@@ -48,6 +48,39 @@ describe('UserList Component', function () {
             $this->actingAs($this->adminUser);
             $this->get(route('users.list'))->assertOk();
         });
+
+        it('forbids a non-admin from saving a user via Livewire', function () {
+            $this->actingAs($this->regularUser);
+
+            livewire(UserList::class)
+                ->set('userAttributes', [
+                    'id' => null,
+                    'username' => 'sneaky.user',
+                    'email' => 'sneaky@example.ac.uk',
+                    'surname' => 'Sneaky',
+                    'forenames' => 'User',
+                    'is_admin' => true,
+                    'is_itstaff' => true,
+                ])
+                ->call('saveUser')
+                ->assertForbidden();
+
+            expect(User::where('username', 'sneaky.user')->exists())->toBeFalse();
+        });
+
+        it('forbids a non-admin from saving user roles via Livewire', function () {
+            $role = Role::factory()->create(['name' => 'Sensitive Role', 'is_active' => true]);
+
+            $this->actingAs($this->regularUser);
+
+            livewire(UserList::class)
+                ->call('openChangeUserRoleModal', $this->anotherUser)
+                ->set('userRoleIds', [$role->id])
+                ->call('saveUserRoles')
+                ->assertForbidden();
+
+            expect($this->anotherUser->fresh()->roles()->count())->toBe(0);
+        });
     });
 
     describe('Basic Rendering', function () {
@@ -278,6 +311,7 @@ describe('UserList Component', function () {
 describe('Create User', function () {
     beforeEach(function () {
         $this->adminUser = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($this->adminUser);
     });
 
     it('validates required fields and does not create a user', function () {
@@ -366,6 +400,7 @@ describe('User Role Management', function () {
         // Create users
         $this->adminUser = User::factory()->create(['is_admin' => true]);
         $this->regularUser = User::factory()->create(['is_admin' => false]);
+        $this->actingAs($this->adminUser);
     });
 
     it('opens change user role modal and loads roles correctly', function () {

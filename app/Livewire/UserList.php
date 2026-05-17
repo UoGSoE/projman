@@ -121,6 +121,10 @@ class UserList extends Component
 
     public function saveUserRoles(): void
     {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
         $this->validate([
             'userRoleIds' => ['array'],
             'userRoleIds.*' => [Rule::exists('roles', 'id')->where('is_active', true)],
@@ -146,6 +150,10 @@ class UserList extends Component
 
     public function saveUser(): void
     {
+        if (! auth()->user()?->isAdmin()) {
+            abort(403);
+        }
+
         $userId = $this->userAttributes['id'];
 
         $this->validate([

@@ -16,6 +16,21 @@ it('requires admin access', function () {
         ->assertForbidden();
 });
 
+it('forbids a non-admin from calling confirmImport via Livewire', function () {
+    $user = User::factory()->create(['is_admin' => false, 'is_staff' => true]);
+    $target = User::factory()->create(['is_staff' => true, 'surname' => 'Target', 'forenames' => 'User']);
+
+    $this->actingAs($user);
+
+    Livewire\Livewire::test(SkillsImporter::class)
+        ->set('step', 'preview')
+        ->set('parsedSkills', [['name' => 'Sneaky Skill', 'description' => 'd', 'category' => 'c']])
+        ->call('confirmImport')
+        ->assertForbidden();
+
+    expect(Skill::where('name', 'Sneaky Skill')->exists())->toBeFalse();
+});
+
 it('renders the upload step by default', function () {
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
 
