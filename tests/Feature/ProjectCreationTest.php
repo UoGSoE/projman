@@ -65,6 +65,7 @@ describe('Project Editing', function () {
 
         // Create a test admin user
         $this->user = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($this->user);
         $this->project = Project::factory()->create([
             'user_id' => $this->user->id,
             'title' => 'Test Project', // Set the project title directly

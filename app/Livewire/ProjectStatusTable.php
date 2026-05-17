@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Flux\Flux;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,6 +17,7 @@ class ProjectStatusTable extends Component
 
     public $sortDirection = 'desc';
 
+    #[Locked]
     public ?int $userId = null;
 
     public $projectStatuses = [];
@@ -69,9 +71,10 @@ class ProjectStatusTable extends Component
         }
     }
 
-    public function cancelProject(int $projectId)
+    public function cancelProject(int $projectId): void
     {
         $project = Project::findOrFail($projectId);
+        $this->authorize('cancel', $project);
         $project->cancel();
         Flux::toast('Work package cancelled', variant: 'success');
     }

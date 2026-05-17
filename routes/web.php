@@ -17,15 +17,16 @@ use App\Livewire\SkillsImporter;
 use App\Livewire\SkillsManager;
 use App\Livewire\UserList;
 use App\Livewire\UserViewer;
+use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/sso-auth.php';
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', HomePage::class)->name('home');
-    Route::get('/work-package/create', ProjectCreator::class)->name('project.create');
-    Route::get('/work-package/{project}', ProjectViewer::class)->name('project.show');
-    Route::get('/work-package/{project}/edit', ProjectEditor::class)->name('project.edit');
+    Route::get('/work-package/create', ProjectCreator::class)->middleware('can:create,'.Project::class)->name('project.create');
+    Route::get('/work-package/{project}', ProjectViewer::class)->middleware('can:view,project')->name('project.show');
+    Route::get('/work-package/{project}/edit', ProjectEditor::class)->middleware('can:update,project')->name('project.edit');
 
     Route::get('/profile', Profile::class)->name('profile');
 
