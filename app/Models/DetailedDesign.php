@@ -32,4 +32,9 @@ class DetailedDesign extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function designer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'designed_by');
+    }
 }

@@ -11,7 +11,20 @@ class ProjectViewer extends Component
 
     public function mount(Project $project)
     {
-        $project->load(['history.user', 'user', 'ideation', 'feasibility', 'scoping', 'scheduling', 'detailedDesign', 'development', 'testing', 'deployed']);
+        $project->load([
+            'history.user',
+            'user',
+            'ideation',
+            'feasibility.assessor',
+            'scoping.assessor',
+            'scheduling.technicalLead',
+            'detailedDesign.designer',
+            'development.leadDeveloper',
+            'build',
+            'testing.testLead',
+            'testing.uatTester',
+            'deployed.deploymentLead',
+        ]);
         $this->project = $project;
     }
 

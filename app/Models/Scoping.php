@@ -35,6 +35,11 @@ class Scoping extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function assessor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assessed_by');
+    }
+
     protected function casts(): array
     {
         return [
