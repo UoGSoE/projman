@@ -2,15 +2,18 @@
 
 namespace App\Livewire;
 
-use App\Enums\Busyness;
+use App\Enums\AvailabilityForChange;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class Profile extends Component
 {
-    public ?Busyness $busynessWeek1 = null;
+    public ?AvailabilityForChange $availabilityForChange = null;
 
-    public ?Busyness $busynessWeek2 = null;
+    public function mount(): void
+    {
+        $this->availabilityForChange = auth()->user()->availability_for_change ?? AvailabilityForChange::Moderate;
+    }
 
     public function render(): View
     {
@@ -18,37 +21,14 @@ class Profile extends Component
 
         return view('livewire.profile', [
             'skills' => $user->skills,
-            'busynessOptions' => Busyness::cases(),
+            'availabilityOptions' => AvailabilityForChange::cases(),
         ]);
     }
 
-    public function mount(): void
-    {
-        $this->loadBusynessData();
-    }
-
-    public function loadBusynessData(): void
-    {
-        $user = auth()->user();
-        $this->busynessWeek1 = $user->busyness_week_1 ?? Busyness::LOW;
-        $this->busynessWeek2 = $user->busyness_week_2 ?? Busyness::LOW;
-    }
-
-    public function updateBusyness(): void
+    public function updatedAvailabilityForChange(): void
     {
         auth()->user()->update([
-            'busyness_week_1' => $this->busynessWeek1,
-            'busyness_week_2' => $this->busynessWeek2,
+            'availability_for_change' => $this->availabilityForChange,
         ]);
-    }
-
-    public function updatedBusynessWeek1(): void
-    {
-        $this->updateBusyness();
-    }
-
-    public function updatedBusynessWeek2(): void
-    {
-        $this->updateBusyness();
     }
 }

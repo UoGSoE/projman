@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\AvailabilityForChange;
 use App\Enums\Busyness;
 use App\Enums\ProjectStatus;
 use App\Enums\ServiceFunction;
@@ -38,6 +39,7 @@ class User extends Authenticatable
         'password',
         'busyness_week_1',
         'busyness_week_2',
+        'availability_for_change',
     ];
 
     /**
@@ -66,6 +68,7 @@ class User extends Authenticatable
             'service_function' => ServiceFunction::class,
             'busyness_week_1' => Busyness::class,
             'busyness_week_2' => Busyness::class,
+            'availability_for_change' => AvailabilityForChange::class,
         ];
     }
 
