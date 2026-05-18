@@ -166,24 +166,10 @@ trait HasHeatmapData
      */
     protected function getProjectAssignmentsByUser(): Collection
     {
-        $projects = Project::query()
-            ->currentlyActive()
-            ->with([
-                'scheduling',
-                'detailedDesign',
-                'development',
-                'testing',
-                'feasibility',
-                'scoping',
-            ])
-            ->get();
-
         $assignments = collect();
 
-        foreach ($projects as $project) {
-            $userIds = $this->collectTeamMemberIds($project);
-
-            foreach ($userIds as $userId) {
+        foreach ($this->loadActiveProjects() as $project) {
+            foreach ($project->teamMemberIds() as $userId) {
                 if (! $assignments->has($userId)) {
                     $assignments->put($userId, collect());
                 }
@@ -193,6 +179,36 @@ trait HasHeatmapData
 
         return $assignments;
     }
+
+    /**
+     * Active projects with every relation the heatmap needs, loaded once
+     * per request and reused by both the per-user assignment lookup and
+     * the active-projects list.
+     */
+    protected function loadActiveProjects(): Collection
+    {
+        if (isset($this->cachedActiveProjects)) {
+            return $this->cachedActiveProjects;
+        }
+
+        return $this->cachedActiveProjects = Project::query()
+            ->currentlyActive()
+            ->with([
+                'user',
+                'scheduling',
+                'detailedDesign',
+                'development',
+                'testing',
+                'feasibility',
+                'scoping',
+            ])
+            ->orderByRaw('deadline IS NULL')
+            ->orderBy('deadline')
+            ->orderBy('title')
+            ->get();
+    }
+
+    private ?Collection $cachedActiveProjects = null;
 
     /**
      * Upcoming working days (skipping weekends) starting from today.
@@ -255,26 +271,12 @@ trait HasHeatmapData
     }
 
     /**
-     * Currently active projects ordered by their deadline.
+     * Currently active projects ordered by their deadline, with team_members
+     * pre-attached for the project list rendering.
      */
     protected function activeProjects(): Collection
     {
-        $projects = Project::query()
-            ->currentlyActive()
-            ->with([
-                'user',
-                'scheduling',
-                'development',
-                'testing',
-                'detailedDesign',
-                'feasibility',
-                'scoping',
-            ])
-            ->orderByRaw('deadline IS NULL')
-            ->orderBy('deadline')
-            ->orderBy('title')
-            ->get();
-
+        $projects = $this->loadActiveProjects();
         $teamMembers = $this->teamMembersForProjects($projects);
 
         return $projects->map(function (Project $project) use ($teamMembers) {
@@ -287,34 +289,16 @@ trait HasHeatmapData
 
     protected function collectTeamMembers(Project $project, Collection $users): Collection
     {
-        return $this->collectTeamMemberIds($project)
+        return $project->teamMemberIds()
             ->map(fn ($id) => $users->get($id))
             ->filter()
-            ->values();
-    }
-
-    protected function collectTeamMemberIds(Project $project): Collection
-    {
-        // As there are so many people assigned to a project on the forms - this is a bit of a mess.
-        return collect([
-            optional($project->scheduling)->assigned_to,
-            optional($project->detailedDesign)->designed_by,
-            optional($project->development)->lead_developer,
-            optional($project->testing)->test_lead,
-            optional($project->feasibility)->assessed_by,
-            optional($project->scoping)->assessed_by,
-        ])
-            ->filter()
-            ->merge(collect(optional($project->scheduling)->cose_it_staff ?? []))
-            ->merge(collect(optional($project->development)->development_team ?? []))
-            ->unique()
             ->values();
     }
 
     protected function teamMembersForProjects(Collection $projects): Collection
     {
         $userIds = $projects
-            ->flatMap(fn (Project $project) => $this->collectTeamMemberIds($project))
+            ->flatMap(fn (Project $project) => $project->teamMemberIds())
             ->unique()
             ->values();
 
