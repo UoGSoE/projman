@@ -158,7 +158,15 @@ describe('User::activeAssignedProjectCount()', function () {
     });
 });
 
-describe('ProjectEditor busyness adjustments', function () {
+describe('ProjectEditor live preview (NEW model — TODO)', function () {
+    // The previous tests asserted busyness ±1 adjustments on the old enum model.
+    // The new model needs different live-preview behaviour: when the user
+    // toggles staff in the scheduling form, the heatmap cells for those users
+    // should add/remove the in-edit project's per-day cost. To implement that,
+    // ProjectEditor needs to pass the form's current effort/dates/staff into
+    // the cell calculation as a "preview override" (since they aren't saved
+    // yet). Tests will be reinstated once that path is built.
+
     it('stores original assigned staff IDs on mount', function () {
         $staffMember = User::factory()->create(['is_staff' => true]);
 
@@ -178,70 +186,9 @@ describe('ProjectEditor busyness adjustments', function () {
         expect($component->get('originalAssignedStaffIds'))->toBe([]);
     });
 
-    it('calculates +1 adjustment for newly selected staff', function () {
-        $staffMember = User::factory()->create(['is_staff' => true]);
-        $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
-
-        $component = Livewire::test(ProjectEditor::class, ['project' => $project])
-            ->set('schedulingForm.assignedTo', $staffMember->id);
-
-        // Get the heatmap data which uses adjustments
-        $heatmapData = $component->get('heatmapData');
-
-        // The staff member should have busyness calculated with +1 adjustment
-        // Since they have 0 projects + 1 = 1 project, should be LOW
-        $staffEntry = collect($heatmapData['staff'])->firstWhere('user.id', $staffMember->id);
-
-        expect($staffEntry)->not->toBeNull();
-        expect($staffEntry['busyness'][0])->toBe(Busyness::LOW);
-    });
-
-    it('calculates -1 adjustment for deselected staff', function () {
-        $staffMember = User::factory()->create([
-            'is_staff' => true,
-            'busyness_week_1' => Busyness::HIGH,
-            'busyness_week_2' => Busyness::HIGH,
-        ]);
-
-        // Create project with this staff member assigned
-        $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
-        $project->scheduling->update(['assigned_to' => $staffMember->id]);
-
-        // Mount the component (staff is in original)
-        $component = Livewire::test(ProjectEditor::class, ['project' => $project]);
-
-        // Verify original IDs include the staff member
-        expect($component->get('originalAssignedStaffIds'))->toContain($staffMember->id);
-
-        // Now deselect the staff member
-        $component->set('schedulingForm.assignedTo', null);
-
-        // Get heatmap data - staff should show reduced busyness
-        $heatmapData = $component->get('heatmapData');
-        $staffEntry = collect($heatmapData['staff'])->firstWhere('user.id', $staffMember->id);
-
-        // HIGH - 1 adjustment = MEDIUM
-        expect($staffEntry['busyness'][0])->toBe(Busyness::MEDIUM);
-    });
-
-    it('shows stored busyness for unchanged staff', function () {
-        $staffMember = User::factory()->create([
-            'is_staff' => true,
-            'busyness_week_1' => Busyness::HIGH,
-            'busyness_week_2' => Busyness::HIGH,
-        ]);
-
-        $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
-        $project->scheduling->update(['assigned_to' => $staffMember->id]);
-
-        $component = Livewire::test(ProjectEditor::class, ['project' => $project]);
-
-        $heatmapData = $component->get('heatmapData');
-        $staffEntry = collect($heatmapData['staff'])->firstWhere('user.id', $staffMember->id);
-
-        // No adjustment, should use stored busyness value
-        expect($staffEntry['busyness'][0])->toBe(Busyness::HIGH);
-    });
+    it('reflects newly selected staff in the heatmap (live preview)')->todo();
+    it('removes deselected staff contribution from the heatmap (live preview)')->todo();
+    it('shows saved cost for staff whose selection has not changed (live preview)')->todo();
 });
 
 describe('Heatmap reactivity', function () {

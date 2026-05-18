@@ -2,9 +2,9 @@
 
 namespace App\Traits;
 
-use App\Enums\Busyness;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\HeatmapCell;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -92,12 +92,12 @@ trait HasHeatmapData
     }
 
     /**
-     * Staff members with busyness calculated for each bucket.
+     * Build a heatmap cell per bucket for each staff member, derived from
+     * project allocations via Project::perDayCostForUser and normalised
+     * against the user's Availability for Change.
      */
-    protected function staffWithBusynessForBuckets(array $buckets, ?array $assignedUserIds = null, array $busynessAdjustments = []): Collection
+    protected function staffWithCellsForBuckets(array $buckets, ?array $assignedUserIds = null): Collection
     {
-        $viewMode = property_exists($this, 'viewMode') ? $this->viewMode : 'days';
-
         $staff = User::itStaff()
             ->orderBy('surname')
             ->orderBy('forenames')
@@ -107,37 +107,52 @@ trait HasHeatmapData
             $staff = $this->sortStaffByAssignment($staff, $assignedUserIds);
         }
 
-        // For days view, use the existing week_1/week_2 busyness
-        if ($viewMode === 'days') {
-            return $staff->map(function (User $user) use ($buckets, $busynessAdjustments) {
-                $adjustment = $busynessAdjustments[$user->id] ?? 0;
-
-                return [
-                    'user' => $user,
-                    'busyness' => $this->busynessSeries($user, count($buckets), $adjustment),
-                ];
-            });
-        }
-
-        // For weeks/months, calculate busyness from project assignments
         $projectsByUser = $this->getProjectAssignmentsByUser();
 
-        return $staff->map(function (User $user) use ($buckets, $projectsByUser, $busynessAdjustments) {
+        return $staff->map(function (User $user) use ($buckets, $projectsByUser) {
             $userProjects = $projectsByUser->get($user->id, collect());
-            $adjustment = $busynessAdjustments[$user->id] ?? 0;
 
-            $busyness = array_map(function ($bucket) use ($userProjects, $adjustment) {
-                $count = $this->countProjectsInPeriod($userProjects, $bucket['start'], $bucket['end']);
-                $baseBusyness = Busyness::fromProjectCount($count);
-
-                return $adjustment === 0 ? $baseBusyness : $baseBusyness->adjustedBy($adjustment);
-            }, $buckets);
+            $cells = array_map(
+                fn ($bucket) => $this->cellFor($user, $userProjects, $bucket),
+                $buckets
+            );
 
             return [
                 'user' => $user,
-                'busyness' => $busyness,
+                'cells' => $cells,
             ];
         });
+    }
+
+    /**
+     * Sum the per-day cost of every project active in the given bucket and
+     * wrap the result in a HeatmapCell.
+     */
+    protected function cellFor(User $user, Collection $userProjects, array $bucket): HeatmapCell
+    {
+        $totalCost = $userProjects
+            ->filter(fn (Project $project) => $this->projectOverlaps($project, $bucket['start'], $bucket['end']))
+            ->sum(fn (Project $project) => $project->perDayCostForUser($user));
+
+        return new HeatmapCell((float) $totalCost);
+    }
+
+    /**
+     * Whether the given project's scheduled dates overlap the given period.
+     */
+    protected function projectOverlaps(Project $project, Carbon $start, Carbon $end): bool
+    {
+        $projectStart = $project->scheduling?->estimated_start_date;
+        $projectEnd = $project->scheduling?->estimated_completion_date;
+
+        if (! $projectStart && ! $projectEnd) {
+            return true;
+        }
+
+        $startsBeforePeriodEnds = ! $projectStart || $projectStart->lte($end);
+        $endsAfterPeriodStarts = ! $projectEnd || $projectEnd->gte($start);
+
+        return $startsBeforePeriodEnds && $endsAfterPeriodStarts;
     }
 
     /**
@@ -174,48 +189,6 @@ trait HasHeatmapData
     }
 
     /**
-     * Count how many projects overlap with the given period.
-     */
-    protected function countProjectsInPeriod(Collection $projects, Carbon $start, Carbon $end): int
-    {
-        return $projects->filter(function (Project $project) use ($start, $end) {
-            $projectStart = $project->scheduling?->estimated_start_date;
-            $projectEnd = $project->scheduling?->estimated_completion_date;
-
-            // If no dates set, assume the project is ongoing
-            if (! $projectStart && ! $projectEnd) {
-                return true;
-            }
-
-            // Project overlaps if it starts before period ends AND ends after period starts
-            $startsBeforePeriodEnds = ! $projectStart || $projectStart->lte($end);
-            $endsAfterPeriodStarts = ! $projectEnd || $projectEnd->gte($start);
-
-            return $startsBeforePeriodEnds && $endsAfterPeriodStarts;
-        })->count();
-    }
-
-    /**
-     * Determine the busyness enum for the given user/day index.
-     *
-     * If adjustment is non-zero, shifts the stored busyness level
-     * (for live preview of staff assignment changes).
-     */
-    public function busynessForDay(User $user, int $dayIndex, int $adjustment = 0): Busyness
-    {
-        $baseBusyness = match (intdiv($dayIndex, 5)) {
-            0 => $user->busyness_week_1 ?? Busyness::UNKNOWN,
-            default => $user->busyness_week_2 ?? Busyness::UNKNOWN,
-        };
-
-        if ($adjustment === 0) {
-            return $baseBusyness;
-        }
-
-        return $baseBusyness->adjustedBy($adjustment);
-    }
-
-    /**
      * Upcoming working days (skipping weekends) starting from today.
      *
      * @return array<int, Carbon>
@@ -239,35 +212,6 @@ trait HasHeatmapData
         }
 
         return $days;
-    }
-
-    /**
-     * Staff members represented in the heatmap with per-day busyness.
-     *
-     * @param  array  $busynessAdjustments  Array of user_id => adjustment for live preview
-     */
-    protected function staffWithBusyness(array $days, ?array $assignedUserIds = null, array $busynessAdjustments = []): Collection
-    {
-        $staff = User::itStaff()
-            ->orderBy('surname')
-            ->orderBy('forenames')
-            ->get();
-
-        // Apply smart sorting if assigned users are provided
-        if ($assignedUserIds !== null) {
-            $staff = $this->sortStaffByAssignment($staff, $assignedUserIds);
-        }
-
-        $dayCount = count($days);
-
-        return $staff->map(function (User $user) use ($dayCount, $busynessAdjustments) {
-            $adjustment = $busynessAdjustments[$user->id] ?? 0;
-
-            return [
-                'user' => $user,
-                'busyness' => $this->busynessSeries($user, $dayCount, $adjustment),
-            ];
-        });
     }
 
     /**
@@ -302,19 +246,6 @@ trait HasHeatmapData
 
         // Merge: assigned first, then unassigned
         return $assigned->concat($unassigned);
-    }
-
-    /**
-     * Busyness enum sequence for the requested number of days.
-     *
-     * @return array<int, Busyness>
-     */
-    protected function busynessSeries(User $user, int $dayCount, int $adjustment = 0): array
-    {
-        return array_map(
-            fn ($index) => $this->busynessForDay($user, $index, $adjustment),
-            range(0, $dayCount - 1)
-        );
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
-use App\Enums\Busyness;
+use App\Enums\AvailabilityForChange;
+use App\Enums\EffortScale;
 use App\Livewire\HeatMapViewer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -95,12 +96,11 @@ it('provides 10 buckets in days view by default', function () {
     }
 });
 
-it('includes busyness data for each staff member', function () {
+it('includes a heatmap cell per bucket for each staff member', function () {
     // Arrange
     User::factory()->create([
         'is_staff' => true,
-        'busyness_week_1' => 30, // LOW
-        'busyness_week_2' => 60, // MEDIUM
+        'availability_for_change' => AvailabilityForChange::Moderate,
     ]);
 
     // Act
@@ -108,8 +108,8 @@ it('includes busyness data for each staff member', function () {
 
     // Assert
     $staff = $component->viewData('staff');
-    expect($staff[0])->toHaveKey('busyness');
-    expect($staff[0]['busyness'])->toHaveCount(10);
+    expect($staff[0])->toHaveKey('cells');
+    expect($staff[0]['cells'])->toHaveCount(10);
 });
 
 it('defaults to days view mode', function () {
@@ -154,33 +154,34 @@ it('can switch to months view mode', function () {
     }
 });
 
-it('calculates busyness from project assignments in weeks view', function () {
-    // Arrange
+it('builds a heatmap cell from project assignments in weeks view', function () {
+    // Staff with Moderate (60%) AFC, sole assignee on a Small (5 person-day)
+    // project running one working week (5 weekdays).
+    // Per-day cost = 5 / 1 / 5 / 0.6 = 1.667 → 167% → Black.
     $staff = User::factory()->create([
         'is_staff' => true,
+        'availability_for_change' => AvailabilityForChange::Moderate,
     ]);
 
     $project = $this->createProject([
         'title' => 'Assigned Project',
         'status' => 'scheduling',
     ]);
+    $project->scoping->update(['estimated_effort' => EffortScale::SMALL]);
 
-    // Assign the staff member to the project with dates that overlap the first week
     $project->scheduling->update([
         'assigned_to' => $staff->id,
         'estimated_start_date' => now()->startOfWeek(),
         'estimated_completion_date' => now()->endOfWeek(),
     ]);
 
-    // Act
     $component = Livewire::test(HeatMapViewer::class)
         ->set('viewMode', 'weeks');
 
-    // Assert - staff should have LOW busyness for first week (1 project)
     $staffData = $component->viewData('staff');
     $assignedStaff = $staffData->firstWhere('user.id', $staff->id);
 
-    expect($assignedStaff['busyness'][0])->toBe(Busyness::LOW);
+    expect($assignedStaff['cells'][0]->colour())->toBe('bg-black');
 });
 
 it('persists view mode in URL', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AvailabilityForChange;
 use App\Enums\ProjectStatus;
 use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 class Project extends Model
@@ -178,5 +180,53 @@ class Project extends Model
         ProjectStageChange::dispatch($this, auth()->user());
 
         return $this->status;
+    }
+
+    /**
+     * IDs of every user allocated to this project across all stage forms.
+     */
+    public function teamMemberIds(): Collection
+    {
+        return collect([
+            optional($this->scheduling)->assigned_to,
+            optional($this->detailedDesign)->designed_by,
+            optional($this->development)->lead_developer,
+            optional($this->testing)->test_lead,
+            optional($this->feasibility)->assessed_by,
+            optional($this->scoping)->assessed_by,
+        ])
+            ->filter()
+            ->merge(collect(optional($this->scheduling)->cose_it_staff ?? []))
+            ->merge(collect(optional($this->development)->development_team ?? []))
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Per-day cost (as a fraction of full-time) this project imposes on the
+     * given user, distributed equally across allocated people and spread
+     * uniformly across the project's working-day duration, normalised against
+     * the user's Availability for Change.
+     */
+    public function perDayCostForUser(User $user): float
+    {
+        $effortDays = $this->scoping?->estimated_effort?->estimatedDays();
+        $start = $this->scheduling?->estimated_start_date;
+        $end = $this->scheduling?->estimated_completion_date;
+
+        if (! $effortDays || ! $start || ! $end) {
+            return 0.0;
+        }
+
+        $duration = max(1, (int) $start->diffInWeekdays($end) + 1);
+        $peopleCount = max(1, $this->teamMemberIds()->count());
+
+        $afc = ($user->availability_for_change ?? AvailabilityForChange::Moderate)->value / 100;
+
+        if ($afc <= 0) {
+            return PHP_FLOAT_MAX;
+        }
+
+        return $effortDays / $peopleCount / $duration / $afc;
     }
 }

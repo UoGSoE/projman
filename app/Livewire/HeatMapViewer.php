@@ -20,7 +20,7 @@ class HeatMapViewer extends Component
     public function render()
     {
         $buckets = $this->getDateBuckets();
-        $staff = $this->staffWithBusynessForBuckets($buckets);
+        $staff = $this->staffWithCellsForBuckets($buckets);
         $activeProjects = $this->activeProjects();
 
         $allStaff = User::itStaff()

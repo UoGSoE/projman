@@ -234,14 +234,9 @@ class ProjectEditor extends Component
     public function heatmapData(): array
     {
         $buckets = $this->getDateBuckets();
-
-        // Collect assigned user IDs from scheduling form
         $assignedUserIds = $this->getAssignedStaffIds();
 
-        // Calculate busyness adjustments for live preview
-        $adjustments = $this->calculateBusynessAdjustments();
-
-        $staff = $this->staffWithBusynessForBuckets($buckets, $assignedUserIds, $adjustments);
+        $staff = $this->staffWithCellsForBuckets($buckets, $assignedUserIds);
         $projects = $this->activeProjects();
 
         return [
