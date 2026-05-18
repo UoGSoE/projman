@@ -218,15 +218,27 @@ class Project extends Model
             return 0.0;
         }
 
-        $duration = max(1, (int) $start->diffInWeekdays($end) + 1);
-        $peopleCount = max(1, $this->teamMemberIds()->count());
+        return self::calculatePerDayCost(
+            $user,
+            $effortDays,
+            $this->teamMemberIds()->count(),
+            (int) $start->diffInWeekdays($end) + 1,
+        );
+    }
 
+    /**
+     * Pure formula behind perDayCostForUser. Exposed so the heatmap's live
+     * preview can compute the cost of an in-edit project using form values
+     * that aren't saved to the database yet.
+     */
+    public static function calculatePerDayCost(User $user, int $effortDays, int $peopleCount, int $duration): float
+    {
         $afc = ($user->availability_for_change ?? AvailabilityForChange::Moderate)->value / 100;
 
         if ($afc <= 0) {
             return PHP_FLOAT_MAX;
         }
 
-        return $effortDays / $peopleCount / $duration / $afc;
+        return $effortDays / max(1, $peopleCount) / max(1, $duration) / $afc;
     }
 }

@@ -23,13 +23,6 @@
                     <flux:radio value="weeks" label="Weeks" />
                     <flux:radio value="months" label="Months" />
                 </flux:radio.group>
-                <flux:text variant="subtle" class="text-xs">
-                    @if ($viewMode === 'days')
-                        Showing manually reported busyness from staff profiles.
-                    @else
-                        Showing busyness calculated from project assignments.
-                    @endif
-                </flux:text>
             </div>
 
             <flux:pillbox wire:model.live="nameFilter" multiple searchable placeholder="Filter by staff..." class="min-w-64">

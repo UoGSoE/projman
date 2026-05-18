@@ -96,7 +96,7 @@ trait HasHeatmapData
      * project allocations via Project::perDayCostForUser and normalised
      * against the user's Availability for Change.
      */
-    protected function staffWithCellsForBuckets(array $buckets, ?array $assignedUserIds = null): Collection
+    protected function staffWithCellsForBuckets(array $buckets, ?array $assignedUserIds = null, ?int $excludeProjectId = null): Collection
     {
         $staff = User::itStaff()
             ->orderBy('surname')
@@ -108,6 +108,12 @@ trait HasHeatmapData
         }
 
         $projectsByUser = $this->getProjectAssignmentsByUser();
+
+        if ($excludeProjectId !== null) {
+            $projectsByUser = $projectsByUser->map(
+                fn (Collection $projects) => $projects->reject(fn (Project $p) => $p->id === $excludeProjectId)
+            );
+        }
 
         return $staff->map(function (User $user) use ($buckets, $projectsByUser) {
             $userProjects = $projectsByUser->get($user->id, collect());
