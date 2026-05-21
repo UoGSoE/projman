@@ -182,6 +182,17 @@ class Project extends Model
         return $this->status;
     }
 
+    public function returnToPreviousStage(): ProjectStatus
+    {
+        $previous = $this->status->getPreviousStatus();
+
+        abort_if($previous === null, 422, 'Cannot return to a previous stage from '.$this->status->label().'.');
+
+        $this->update(['status' => $previous]);
+
+        return $this->status;
+    }
+
     /**
      * IDs of every user allocated to this project across all stage forms.
      */

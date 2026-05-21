@@ -142,6 +142,24 @@ class ProjectEditor extends Component
         $this->advanceToNextStage();
     }
 
+    public function returnToPreviousStage(): void
+    {
+        $this->authorize('update', $this->project);
+
+        if (! $this->project->status->canReturnToPreviousStage()) {
+            Flux::toast('Work package cannot be returned to a previous stage from '.$this->project->status->label().'.', variant: 'warning');
+
+            return;
+        }
+
+        $this->project->returnToPreviousStage();
+        $this->project->addHistory(Auth::user(), 'Returned to '.$this->project->status->value);
+
+        $this->modal('return-to-previous-stage-modal')->close();
+
+        Flux::toast('Work package returned to '.$this->project->status->label(), variant: 'success');
+    }
+
     public function approveFeasibility(): void
     {
         $this->authorize('update', $this->project);
