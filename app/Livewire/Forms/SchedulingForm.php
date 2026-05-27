@@ -30,8 +30,14 @@ class SchedulingForm extends Form
         '3' => 'Support Team',
     ];
 
-    #[Validate('required|string|max:1024')]
-    public ?string $keySkills;
+    // Kept nullable on purpose: original spec included a "Key skills matched" textarea,
+    // a later spec revision removed the UI for it, and the stakeholder has form for
+    // re-adding fields without warning. Property + column stay so we don't have to
+    // recreate the plumbing if it comes back. See ant adr projman-XKtxA.
+    // TODO: drop this (and the column/factory/seeder/test refs) once we're confident
+    // the field is gone for good.
+    #[Validate('nullable|string|max:1024')]
+    public ?string $keySkills = null;
 
     #[Validate('array')]
     public ?array $coseItStaff = [];

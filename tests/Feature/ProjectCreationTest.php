@@ -2,6 +2,7 @@
 
 use App\Enums\EffortScale;
 use App\Enums\Priority;
+use App\Enums\ProjectStatus;
 use App\Livewire\ProjectCreator;
 use App\Livewire\ProjectEditor;
 use App\Models\Deployed;
@@ -285,13 +286,13 @@ describe('Project Editing', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'scheduling')
                 ->assertHasErrors([
-                    'schedulingForm.keySkills' => 'required',
                     'schedulingForm.estimatedStartDate' => 'required',
                     'schedulingForm.estimatedCompletionDate' => 'required',
                     'schedulingForm.changeBoardDate' => 'required',
                     'schedulingForm.assignedTo' => 'required',
                     'schedulingForm.priority' => 'required',
-                ]);
+                ])
+                ->assertHasNoErrors(['schedulingForm.keySkills']);
         });
 
         it('validates completion date must be after start date', function () {
@@ -303,6 +304,24 @@ describe('Project Editing', function () {
                 ->set('schedulingForm.estimatedCompletionDate', $today)
                 ->call('save', 'scheduling')
                 ->assertHasErrors(['schedulingForm.estimatedCompletionDate' => 'after']);
+        });
+
+        it('lets a fresh work package advance from Scheduling without setting keySkills', function () {
+            $tomorrow = now()->addDay()->format('Y-m-d');
+            $dayAfterTomorrow = now()->addDays(2)->format('Y-m-d');
+
+            $this->project->update(['status' => ProjectStatus::SCHEDULING]);
+
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('schedulingForm.estimatedStartDate', $tomorrow)
+                ->set('schedulingForm.estimatedCompletionDate', $dayAfterTomorrow)
+                ->set('schedulingForm.changeBoardDate', $tomorrow)
+                ->set('schedulingForm.assignedTo', $this->testLead->id)
+                ->set('schedulingForm.priority', Priority::PRIORITY_2->value)
+                ->call('saveAndAdvance', 'scheduling')
+                ->assertHasNoErrors();
+
+            expect($this->project->fresh()->status)->toBe(ProjectStatus::DETAILED_DESIGN);
         });
     });
 
