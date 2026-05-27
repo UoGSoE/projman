@@ -3,10 +3,10 @@
 namespace App\Listeners;
 
 use App\Events\ProjectStageChange;
+use App\Events\ProjectUpdated;
 use App\Mail\ProjectStageChangeMail;
 use App\Services\RoleUserResolver;
 use Illuminate\Support\Facades\Mail;
-use App\Events\ProjectUpdated;
 
 class ProjectStageChangeListener
 {
