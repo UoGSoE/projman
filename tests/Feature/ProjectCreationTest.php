@@ -336,7 +336,7 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.approvalDelivery', $this->testAssessor->id)
                 ->set('detailedDesignForm.approvalOperations', $this->testLead->id)
                 ->set('detailedDesignForm.approvalResilience', $this->testDesigner->id)
-                ->set('detailedDesignForm.approvalChangeBoard', $this->testDeployer->id)
+                ->set('detailedDesignForm.approvalAgb', $this->testDeployer->id)
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -348,7 +348,7 @@ describe('Project Editing', function () {
             expect($this->project->detailedDesign->approval_delivery)->toEqual($this->testAssessor->id);
             expect($this->project->detailedDesign->approval_operations)->toEqual($this->testLead->id);
             expect($this->project->detailedDesign->approval_resilience)->toEqual($this->testDesigner->id);
-            expect($this->project->detailedDesign->approval_change_board)->toEqual($this->testDeployer->id);
+            expect($this->project->detailedDesign->approval_agb)->toEqual($this->testDeployer->id);
         });
 
         it('validates required fields for detailed design form', function () {
@@ -359,10 +359,14 @@ describe('Project Editing', function () {
                     'detailedDesignForm.serviceFunction' => 'required',
                     'detailedDesignForm.functionalRequirements' => 'required',
                     'detailedDesignForm.nonFunctionalRequirements' => 'required',
-                    'detailedDesignForm.approvalDelivery' => 'required',
-                    'detailedDesignForm.approvalOperations' => 'required',
-                    'detailedDesignForm.approvalResilience' => 'required',
-                    'detailedDesignForm.approvalChangeBoard' => 'required',
+                ])
+                // Approvals default to 'Pending', so they are never empty and
+                // do not trip the required rule.
+                ->assertHasNoErrors([
+                    'detailedDesignForm.approvalDelivery',
+                    'detailedDesignForm.approvalOperations',
+                    'detailedDesignForm.approvalResilience',
+                    'detailedDesignForm.approvalAgb',
                 ]);
         });
 
@@ -373,7 +377,7 @@ describe('Project Editing', function () {
                 ->assertHasErrors(['detailedDesignForm.hldDesignLink' => 'url']);
         });
 
-        it('allows Not Required as a Change Board approval value', function () {
+        it('allows Not Required as an Architecture Governance Board approval value', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
                 ->set('detailedDesignForm.serviceFunction', 'Test Service')
@@ -383,13 +387,26 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.approvalDelivery', 'Approved')
                 ->set('detailedDesignForm.approvalOperations', 'Approved')
                 ->set('detailedDesignForm.approvalResilience', 'Approved')
-                ->set('detailedDesignForm.approvalChangeBoard', 'Not Required')
+                ->set('detailedDesignForm.approvalAgb', 'Not Required')
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors()
                 ->assertSee('Not Required');
 
-            expect($this->project->fresh()->detailedDesign->approval_change_board)
+            // Dual-write during the expand-then-contract transition: the new
+            // approval_agb column and the legacy approval_change_board column
+            // both receive the value until the legacy column is dropped.
+            expect($this->project->fresh()->detailedDesign->approval_agb)
+                ->toBe('Not Required')
+                ->and($this->project->fresh()->detailedDesign->approval_change_board)
                 ->toBe('Not Required');
+        });
+
+        it('defaults the detailed design approvals to Pending when none are recorded', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->assertSet('detailedDesignForm.approvalDelivery', 'Pending')
+                ->assertSet('detailedDesignForm.approvalOperations', 'Pending')
+                ->assertSet('detailedDesignForm.approvalResilience', 'Pending')
+                ->assertSet('detailedDesignForm.approvalAgb', 'Pending');
         });
     });
 

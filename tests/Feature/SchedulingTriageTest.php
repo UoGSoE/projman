@@ -91,6 +91,26 @@ describe('Scheduling Triage Fields', function () {
                 ->toBe(ChangeBoardOutcome::APPROVED);
         });
 
+        it('saves and loads a Not Required change board outcome', function () {
+            // Arrange
+            $user = User::factory()->create(['is_admin' => true]);
+            $assignedUser = User::factory()->create();
+            $project = Project::factory()->create();
+            ($this->setupValidScheduling)($project, $assignedUser);
+            $this->actingAs($user);
+
+            // Act
+            livewire(ProjectEditor::class, ['project' => $project])
+                ->set('schedulingForm.changeBoardOutcome', ChangeBoardOutcome::NOT_REQUIRED)
+                ->call('save', 'scheduling')
+                ->assertHasNoErrors();
+
+            // Assert
+            $project->refresh();
+            expect($project->scheduling->change_board_outcome)
+                ->toBe(ChangeBoardOutcome::NOT_REQUIRED);
+        });
+
         it('saves all three fields together', function () {
             // Arrange
             $user = User::factory()->create(['is_admin' => true]);

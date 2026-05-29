@@ -2,6 +2,7 @@
     {{-- Designed by / Service Function --}}
     <div class="grid grid-cols-2 gap-4">
         <flux:select label="Designed by" wire:model="detailedDesignForm.designedBy">
+            <flux:select.option value="">– Select –</flux:select.option>
             @foreach ($this->availableUsers as $user)
                 <flux:select.option value="{{ $user->id }}">
                     {{ $user->full_name }}
@@ -47,8 +48,8 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
-        <flux:select label="Change Board" wire:model="detailedDesignForm.approvalChangeBoard">
-            @foreach ($detailedDesignForm->availableChangeBoardStates as $label)
+        <flux:select label="Architecture Governance Board" wire:model="detailedDesignForm.approvalAgb">
+            @foreach ($detailedDesignForm->availableAgbStates as $label)
                 <flux:select.option value="{{ $label }}">
                     {{ $label }}
                 </flux:select.option>

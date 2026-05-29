@@ -19,6 +19,8 @@ class DetailedDesignFactory extends Factory
      */
     public function definition(): array
     {
+        $changeBoardApproval = fake()->randomElement(['pending', 'approved', 'rejected']);
+
         return [
             'project_id' => Project::factory(),
             'designed_by' => User::factory(),
@@ -29,7 +31,8 @@ class DetailedDesignFactory extends Factory
             'approval_delivery' => fake()->randomElement(['pending', 'approved', 'rejected']),
             'approval_operations' => fake()->randomElement(['pending', 'approved', 'rejected']),
             'approval_resilience' => fake()->randomElement(['pending', 'approved', 'rejected']),
-            'approval_change_board' => fake()->randomElement(['pending', 'approved', 'rejected']),
+            'approval_change_board' => $changeBoardApproval,
+            'approval_agb' => $changeBoardApproval,
         ];
     }
 }

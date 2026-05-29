@@ -461,6 +461,8 @@ class TestDataSeeder extends Seeder
                 ];
             },
             ProjectStatus::DETAILED_DESIGN => function () use ($faker, $staffId) {
+                $agbApproval = $faker->randomElement(['pending', 'approved', 'rejected']);
+
                 return [
                     'designed_by' => $staffId,
                     'service_function' => $faker->sentence(),
@@ -470,7 +472,8 @@ class TestDataSeeder extends Seeder
                     'approval_delivery' => $faker->randomElement(['pending', 'approved', 'rejected']),
                     'approval_operations' => $faker->randomElement(['pending', 'approved', 'rejected']),
                     'approval_resilience' => $faker->randomElement(['pending', 'approved', 'rejected']),
-                    'approval_change_board' => $faker->randomElement(['pending', 'approved', 'rejected']),
+                    'approval_agb' => $agbApproval,
+                    'approval_change_board' => $agbApproval,
                 ];
             },
             ProjectStatus::DEVELOPMENT => function () use ($faker, $staffMembers, $project, $hasReached, $staffId) {

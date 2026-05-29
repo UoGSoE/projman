@@ -16,7 +16,7 @@ class DetailedDesignForm extends Form
         'rejected' => 'Rejected',
     ];
 
-    public $availableChangeBoardStates = [
+    public $availableAgbStates = [
         'pending' => 'Pending',
         'approved' => 'Approved',
         'rejected' => 'Rejected',
@@ -39,16 +39,16 @@ class DetailedDesignForm extends Form
     public ?string $hldDesignLink;
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalDelivery = '';
+    public ?string $approvalDelivery = 'Pending';
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalOperations = '';
+    public ?string $approvalOperations = 'Pending';
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalResilience = '';
+    public ?string $approvalResilience = 'Pending';
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalChangeBoard = '';
+    public ?string $approvalAgb = 'Pending';
 
     public function setProject(Project $project)
     {
@@ -58,10 +58,10 @@ class DetailedDesignForm extends Form
         $this->functionalRequirements = $project->detailedDesign->functional_requirements;
         $this->nonFunctionalRequirements = $project->detailedDesign->non_functional_requirements;
         $this->hldDesignLink = $project->detailedDesign->hld_design_link;
-        $this->approvalDelivery = $project->detailedDesign->approval_delivery;
-        $this->approvalOperations = $project->detailedDesign->approval_operations;
-        $this->approvalResilience = $project->detailedDesign->approval_resilience;
-        $this->approvalChangeBoard = $project->detailedDesign->approval_change_board;
+        $this->approvalDelivery = $project->detailedDesign->approval_delivery ?? 'Pending';
+        $this->approvalOperations = $project->detailedDesign->approval_operations ?? 'Pending';
+        $this->approvalResilience = $project->detailedDesign->approval_resilience ?? 'Pending';
+        $this->approvalAgb = $project->detailedDesign->approval_agb ?? 'Pending';
     }
 
     public function save()
@@ -75,7 +75,8 @@ class DetailedDesignForm extends Form
             'approval_delivery' => $this->approvalDelivery,
             'approval_operations' => $this->approvalOperations,
             'approval_resilience' => $this->approvalResilience,
-            'approval_change_board' => $this->approvalChangeBoard,
+            'approval_agb' => $this->approvalAgb,
+            'approval_change_board' => $this->approvalAgb,
         ]);
     }
 }

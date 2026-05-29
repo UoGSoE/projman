@@ -38,7 +38,7 @@
             <p class="field-value">{{ $project->detailedDesign->hld_design_link }}</p>
         </div>
         @endif
-        @if($project->detailedDesign->approval_delivery || $project->detailedDesign->approval_operations || $project->detailedDesign->approval_resilience || $project->detailedDesign->approval_change_board)
+        @if($project->detailedDesign->approval_delivery || $project->detailedDesign->approval_operations || $project->detailedDesign->approval_resilience || $project->detailedDesign->approval_agb)
         <div class="field">
             <p class="field-label">Approvals</p>
             <div class="field-value">
@@ -57,9 +57,9 @@
                         Resilience: {{ ucfirst($project->detailedDesign->approval_resilience) }}
                     </span>
                 @endif
-                @if($project->detailedDesign->approval_change_board)
-                    <span class="badge badge-{{ $project->detailedDesign->approval_change_board === 'approved' ? 'green' : 'amber' }}">
-                        Change Board: {{ ucfirst($project->detailedDesign->approval_change_board) }}
+                @if($project->detailedDesign->approval_agb)
+                    <span class="badge badge-{{ $project->detailedDesign->approval_agb === 'approved' ? 'green' : 'amber' }}">
+                        Architecture Governance Board: {{ ucfirst($project->detailedDesign->approval_agb) }}
                     </span>
                 @endif
             </div>

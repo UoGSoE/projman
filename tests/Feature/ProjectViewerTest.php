@@ -134,6 +134,22 @@ describe('Project show page scheduling summary', function () {
             ->assertSee('20/05/2026')
             ->assertSee('Approved');
     });
+
+    it('shows a Not Required change board outcome with a readable label', function () {
+        $owner = User::factory()->requester()->create();
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+
+        $project->scheduling->update([
+            'estimated_start_date' => '2026-06-01',
+            'change_board_outcome' => ChangeBoardOutcome::NOT_REQUIRED,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('project.show', $project))
+            ->assertSuccessful()
+            ->assertSee('Not Required')
+            ->assertDontSee('Not_required');
+    });
 });
 
 describe('Project show page detailed design summary', function () {
@@ -150,7 +166,7 @@ describe('Project show page detailed design summary', function () {
             'approval_delivery' => 'approved',
             'approval_operations' => 'pending',
             'approval_resilience' => 'rejected',
-            'approval_change_board' => 'pending',
+            'approval_agb' => 'pending',
         ]);
 
         $this->actingAs($owner)
@@ -163,7 +179,7 @@ describe('Project show page detailed design summary', function () {
                 'Delivery', 'Approved',
                 'Operations', 'Pending',
                 'Resilience', 'Rejected',
-                'Change Board', 'Pending',
+                'Architecture Governance Board', 'Pending',
             ]);
     });
 });

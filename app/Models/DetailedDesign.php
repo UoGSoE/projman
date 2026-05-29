@@ -26,6 +26,7 @@ class DetailedDesign extends Model
         'approval_operations',
         'approval_resilience',
         'approval_change_board',
+        'approval_agb',
     ];
 
     public function project(): BelongsTo

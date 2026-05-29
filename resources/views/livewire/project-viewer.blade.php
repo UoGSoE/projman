@@ -163,7 +163,7 @@
             @if ($project->scheduling->change_board_outcome)
                 <flux:heading size="sm" class="mt-4">Outcome</flux:heading>
                 <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <x-approval-badge label="Change Board" :status="$project->scheduling->change_board_outcome->value" />
+                    <x-approval-badge label="Change Board" :status="$project->scheduling->change_board_outcome->value" :display="$project->scheduling->change_board_outcome->label()" />
                 </div>
             @endif
         </div>
@@ -181,7 +181,7 @@
                 <x-approval-badge label="Delivery" :status="$project->detailedDesign->approval_delivery ?? 'pending'" />
                 <x-approval-badge label="Operations" :status="$project->detailedDesign->approval_operations ?? 'pending'" />
                 <x-approval-badge label="Resilience" :status="$project->detailedDesign->approval_resilience ?? 'pending'" />
-                <x-approval-badge label="Change Board" :status="$project->detailedDesign->approval_change_board ?? 'pending'" />
+                <x-approval-badge label="Architecture Governance Board" :status="$project->detailedDesign->approval_agb ?? 'pending'" />
             </div>
         </div>
     @endif

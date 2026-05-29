@@ -164,6 +164,15 @@ test('export conditionally shows development section when software dev required'
         ->assertSee('Agile methodology');
 });
 
+test('export displays the architecture governance board approval', function () {
+    $project = $this->createProject();
+    $project->detailedDesign->update(['approval_agb' => 'approved']);
+
+    $this->actingAs($this->admin)
+        ->get(route('project.export', $project))
+        ->assertSee('Architecture Governance Board');
+});
+
 test('export hides development section when software dev not required', function () {
     $project = $this->createProject();
     $project->scoping->update(['requires_software_dev' => false]);

@@ -10,6 +10,7 @@
         {{-- Lead Developer / Development Team --}}
         <div class="grid grid-cols-2 gap-4">
         <flux:select label="Lead Developer" wire:model="developmentForm.leadDeveloper">
+            <flux:select.option value="">– Select –</flux:select.option>
             @foreach ($this->availableUsers as $user)
                 <flux:select.option value="{{ $user->id }}">
                     {{ $user->full_name }}

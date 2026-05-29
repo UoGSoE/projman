@@ -8,9 +8,13 @@ enum ChangeBoardOutcome: string
     case APPROVED = 'approved';
     case DEFERRED = 'deferred';
     case REJECTED = 'rejected';
+    case NOT_REQUIRED = 'not_required';
 
     public function label(): string
     {
-        return ucfirst($this->value);
+        return match ($this) {
+            self::NOT_REQUIRED => 'Not Required',
+            default => ucfirst($this->value),
+        };
     }
 }
