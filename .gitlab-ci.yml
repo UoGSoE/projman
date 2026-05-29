@@ -84,7 +84,7 @@ php-security-scan:
   script:
     - cd /var/www/html
     - composer config http-basic.composer.fluxui.dev "${FLUX_USERNAME}" "${FLUX_LICENSE_KEY}"
-    - composer audit --abandoned report
+    - composer audit
 
 dotenv-example-missing-keys-check:
   stage: test
