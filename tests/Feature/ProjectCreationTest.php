@@ -372,6 +372,25 @@ describe('Project Editing', function () {
                 ->call('save', 'detailed-design')
                 ->assertHasErrors(['detailedDesignForm.hldDesignLink' => 'url']);
         });
+
+        it('allows Not Required as a Change Board approval value', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
+                ->set('detailedDesignForm.serviceFunction', 'Test Service')
+                ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
+                ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
+                ->set('detailedDesignForm.hldDesignLink', 'https://example.com/design')
+                ->set('detailedDesignForm.approvalDelivery', 'Approved')
+                ->set('detailedDesignForm.approvalOperations', 'Approved')
+                ->set('detailedDesignForm.approvalResilience', 'Approved')
+                ->set('detailedDesignForm.approvalChangeBoard', 'Not Required')
+                ->call('save', 'detailed-design')
+                ->assertHasNoErrors()
+                ->assertSee('Not Required');
+
+            expect($this->project->fresh()->detailedDesign->approval_change_board)
+                ->toBe('Not Required');
+        });
     });
 
     describe('Development Form', function () {

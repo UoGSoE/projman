@@ -48,7 +48,7 @@
             @endforeach
         </flux:select>
         <flux:select label="Change Board" wire:model="detailedDesignForm.approvalChangeBoard">
-            @foreach ($detailedDesignForm->availableApprovalStates as $label)
+            @foreach ($detailedDesignForm->availableChangeBoardStates as $label)
                 <flux:select.option value="{{ $label }}">
                     {{ $label }}
                 </flux:select.option>

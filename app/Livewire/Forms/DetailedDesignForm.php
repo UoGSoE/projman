@@ -16,6 +16,13 @@ class DetailedDesignForm extends Form
         'rejected' => 'Rejected',
     ];
 
+    public $availableChangeBoardStates = [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+        'not_required' => 'Not Required',
+    ];
+
     #[Validate('required|integer|exists:users,id')]
     public ?int $designedBy = null;
 
