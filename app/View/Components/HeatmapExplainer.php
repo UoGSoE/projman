@@ -19,7 +19,7 @@ class HeatmapExplainer extends Component
     /** @var array<int, string> */
     public array $singleRoles;
 
-    /** @var array<int, string> */
+    /** @var array<string, int> Role label => default headcount for the sandbox */
     public array $multiRoles;
 
     /** @var array{amber: int, red: int, black: int} */
@@ -43,7 +43,8 @@ class HeatmapExplainer extends Component
         // There is no declarative role list to read there (it returns user IDs
         // imperatively), so if a contributing role is added there, add it here
         // too. Single-person roles render as checkboxes; the two multi-person
-        // array fields (cose_it_staff, development_team) render as number inputs.
+        // array fields (cose_it_staff, development_team) render as number inputs,
+        // keyed by label with their default sandbox headcount as the value.
         $this->singleRoles = [
             'Assigned to',
             'Technical lead',
@@ -55,9 +56,12 @@ class HeatmapExplainer extends Component
             'Test lead',
         ];
 
+        // Default CoSE IT staff to 1 so the explainer opens on a realistic,
+        // comfortable example (Assigned to + 1 IT person = ~83%, "filling up")
+        // rather than a single overloaded person.
         $this->multiRoles = [
-            'CoSE IT staff',
-            'Development team',
+            'CoSE IT staff' => 1,
+            'Development team' => 0,
         ];
 
         // Mirrors App\Support\HeatmapCell::colour() (the source of truth):

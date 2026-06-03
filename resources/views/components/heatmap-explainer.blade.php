@@ -31,7 +31,7 @@
                 availPct: 60,
                 workingDays: 10,
                 checkedSingleRoles: ['Assigned to'],
-                multiCounts: { @foreach ($multiRoles as $role) @js($role): 0, @endforeach },
+                multiCounts: { @foreach ($multiRoles as $role => $default) @js($role): {{ $default }}, @endforeach },
 
                 showCalc: false,
                 showAssumptions: false,
@@ -149,7 +149,7 @@
                 </flux:checkbox.group>
 
                 <div class="space-y-3">
-                    @foreach ($multiRoles as $role)
+                    @foreach ($multiRoles as $role => $default)
                         <flux:input type="number" min="0" x-model.number="multiCounts['{{ $role }}']" label="{{ $role }} (how many?)" />
                     @endforeach
                 </div>
