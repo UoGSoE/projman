@@ -3,6 +3,7 @@
 use App\Enums\AvailabilityForChange;
 use App\Enums\EffortScale;
 use App\Livewire\HeatMapViewer;
+use App\Models\Project;
 use App\Models\User;
 use App\Support\HeatmapCell;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -130,4 +131,58 @@ it('builds heatmap cells as HeatmapCell objects derived from active project allo
     expect($aliceData['cells'])->toBeArray()
         ->and($aliceData['cells'][0])->toBeInstanceOf(HeatmapCell::class)
         ->and($aliceData['cells'][0]->colour())->toBe('bg-black');
+});
+
+it('scales the same allocation against each availability band', function (AvailabilityForChange $availability, float $expectedUtilisation) {
+    // A fixed allocation — Medium effort (10 person-days), one person, over 10 working
+    // days — so the bare cost is exactly 1.0. Only the person's declared availability
+    // changes between scenarios, which shows the result is purely that cost divided by
+    // their availability, and that nothing caps it: at Minimal it reaches 500%.
+    $user = User::factory()->make(['availability_for_change' => $availability]);
+
+    expect(Project::calculatePerDayCost($user, effortDays: 10, peopleCount: 1, duration: 10))
+        ->toEqualWithDelta($expectedUtilisation, 0.01);
+})->with([
+    'Full (100%) gives 100%' => [AvailabilityForChange::Full, 1.0],
+    'Good (80%) gives 125%' => [AvailabilityForChange::Good, 1.25],
+    'Moderate (60%) gives 167%' => [AvailabilityForChange::Moderate, 1.667],
+    'Low (40%) gives 250%' => [AvailabilityForChange::Low, 2.5],
+    'Minimal (20%) gives 500%' => [AvailabilityForChange::Minimal, 5.0],
+]);
+
+it('treats none availability as overloaded regardless of how small the allocation is', function () {
+    // A deliberately tiny allocation — Small effort split ten ways over 200 working
+    // days — would be a negligible cost for anyone else. With None availability it
+    // still returns the maximum, so the cell always renders as overloaded.
+    $user = User::factory()->make(['availability_for_change' => AvailabilityForChange::None]);
+
+    expect(Project::calculatePerDayCost($user, effortDays: 5, peopleCount: 10, duration: 200))
+        ->toBe(PHP_FLOAT_MAX);
+});
+
+it('counts the scheduling technical lead and change champion as team members', function () {
+    // Medium effort (10 person-days) over 10 working days, all three people at Full
+    // availability. With assigned_to, technical_lead_id and change_champion_id set,
+    // three people share the effort: 10 / 3 / 10 / 1.0 = 0.333 each.
+    $assigned = User::factory()->create(['is_staff' => true, 'availability_for_change' => AvailabilityForChange::Full]);
+    $technicalLead = User::factory()->create(['is_staff' => true, 'availability_for_change' => AvailabilityForChange::Full]);
+    $changeChampion = User::factory()->create(['is_staff' => true, 'availability_for_change' => AvailabilityForChange::Full]);
+
+    $project = $this->createProject(['status' => 'scheduling']);
+    $project->scoping->update(['estimated_effort' => EffortScale::MEDIUM]);
+
+    $start = Carbon::parse('next monday');
+    $project->scheduling->update([
+        'assigned_to' => $assigned->id,
+        'technical_lead_id' => $technicalLead->id,
+        'change_champion_id' => $changeChampion->id,
+        'estimated_start_date' => $start,
+        'estimated_completion_date' => $start->copy()->addWeekdays(9),
+    ]);
+
+    $project = $project->fresh();
+
+    expect($project->teamMemberIds())->toHaveCount(3)
+        ->and($project->perDayCostForUser($technicalLead))->toEqualWithDelta(0.333, 0.01)
+        ->and($project->perDayCostForUser($changeChampion))->toEqualWithDelta(0.333, 0.01);
 });

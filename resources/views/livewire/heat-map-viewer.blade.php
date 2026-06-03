@@ -14,6 +14,8 @@
                         Upcoming ten working days of staff capacity at a glance.
                 @endswitch
             </flux:text>
+
+            <x-heatmap-explainer class="mt-3" />
         </div>
 
         <div class="flex flex-col items-end gap-4">

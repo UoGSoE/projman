@@ -200,6 +200,8 @@ class Project extends Model
     {
         return collect([
             optional($this->scheduling)->assigned_to,
+            optional($this->scheduling)->technical_lead_id,
+            optional($this->scheduling)->change_champion_id,
             optional($this->detailedDesign)->designed_by,
             optional($this->development)->lead_developer,
             optional($this->testing)->test_lead,

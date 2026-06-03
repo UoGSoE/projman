@@ -164,6 +164,8 @@
                         All staff members are shown alphabetically.
                     @endif
                 </flux:text>
+
+                <x-heatmap-explainer class="mt-3" />
             </div>
 
             <div class="flex flex-col items-end gap-2">

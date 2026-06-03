@@ -47,6 +47,16 @@ describe('Scheduling Heatmap Integration', function () {
             ->assertDontSeeHtml('data-test="heatmap-grid"');
     });
 
+    it('shows the "how is this calculated?" explainer trigger when the heatmap is shown', function () {
+        $user = User::factory()->create(['is_admin' => true]);
+        $project = $this->createProject();
+        $this->actingAs($user);
+
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->call('toggleHeatmap')
+            ->assertSee('How is this calculated?');
+    });
+
     it('shows assigned staff at top of heatmap when staff are assigned', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);

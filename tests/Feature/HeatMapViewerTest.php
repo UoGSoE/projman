@@ -277,3 +277,16 @@ it('provides all staff for the pillbox options regardless of filter', function (
     $allStaff = $component->viewData('allStaff');
     expect($allStaff)->toHaveCount(3); // admin + 2 created
 });
+
+it('shows a "how is this calculated?" explainer trigger on the heatmap page', function () {
+    Livewire::test(HeatMapViewer::class)
+        ->assertSee('How is this calculated?');
+});
+
+it('embeds the counted-role labels and enum values in the explainer markup', function () {
+    Livewire::test(HeatMapViewer::class)
+        ->assertSee('Change champion')      // single-person role -> checkbox
+        ->assertSee('CoSE IT staff')        // multi-person role -> number input
+        ->assertSee('Large (30-50 days)')   // EffortScale label, shown as specced
+        ->assertSee('Moderate');            // AvailabilityForChange level
+});
