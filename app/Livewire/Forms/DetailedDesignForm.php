@@ -16,13 +16,6 @@ class DetailedDesignForm extends Form
         'rejected' => 'Rejected',
     ];
 
-    public $availableAgbStates = [
-        'pending' => 'Pending',
-        'approved' => 'Approved',
-        'rejected' => 'Rejected',
-        'not_required' => 'Not Required',
-    ];
-
     #[Validate('required|integer|exists:users,id')]
     public ?int $designedBy = null;
 
@@ -39,16 +32,16 @@ class DetailedDesignForm extends Form
     public ?string $hldDesignLink;
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalDelivery = 'Pending';
+    public ?string $approvalDelivery = 'pending';
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalOperations = 'Pending';
+    public ?string $approvalOperations = 'pending';
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalResilience = 'Pending';
+    public ?string $approvalResilience = 'pending';
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalAgb = 'Pending';
+    public ?string $approvalAgb = 'pending';
 
     public function setProject(Project $project)
     {
@@ -58,10 +51,10 @@ class DetailedDesignForm extends Form
         $this->functionalRequirements = $project->detailedDesign->functional_requirements;
         $this->nonFunctionalRequirements = $project->detailedDesign->non_functional_requirements;
         $this->hldDesignLink = $project->detailedDesign->hld_design_link;
-        $this->approvalDelivery = $project->detailedDesign->approval_delivery ?? 'Pending';
-        $this->approvalOperations = $project->detailedDesign->approval_operations ?? 'Pending';
-        $this->approvalResilience = $project->detailedDesign->approval_resilience ?? 'Pending';
-        $this->approvalAgb = $project->detailedDesign->approval_agb ?? 'Pending';
+        $this->approvalDelivery = $project->detailedDesign->approval_delivery ?? 'pending';
+        $this->approvalOperations = $project->detailedDesign->approval_operations ?? 'pending';
+        $this->approvalResilience = $project->detailedDesign->approval_resilience ?? 'pending';
+        $this->approvalAgb = $project->detailedDesign->approval_agb ?? 'pending';
     }
 
     public function save()

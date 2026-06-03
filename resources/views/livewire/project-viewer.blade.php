@@ -181,7 +181,7 @@
                 <x-approval-badge label="Delivery" :status="$project->detailedDesign->approval_delivery ?? 'pending'" />
                 <x-approval-badge label="Operations" :status="$project->detailedDesign->approval_operations ?? 'pending'" />
                 <x-approval-badge label="Resilience" :status="$project->detailedDesign->approval_resilience ?? 'pending'" />
-                <x-approval-badge label="Architecture Governance Board" :status="$project->detailedDesign->approval_agb ?? 'pending'" />
+                <x-approval-badge label="Architecture Governance Board" :status="$project->detailedDesign->approval_agb ?? 'pending'" :display="\App\Enums\AgbApproval::tryFrom($project->detailedDesign->approval_agb ?? 'pending')?->label()" />
             </div>
         </div>
     @endif

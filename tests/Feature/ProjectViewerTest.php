@@ -182,6 +182,23 @@ describe('Project show page detailed design summary', function () {
                 'Architecture Governance Board', 'Pending',
             ]);
     });
+
+    it('renders the architecture governance board "Not Required" state without an underscore', function () {
+        $owner = User::factory()->requester()->create();
+        $designer = User::factory()->staff()->create();
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+
+        $project->detailedDesign->update([
+            'designed_by' => $designer->id,
+            'approval_agb' => 'not_required',
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('project.show', $project))
+            ->assertSuccessful()
+            ->assertSee('Not Required')
+            ->assertDontSee('Not_required');
+    });
 });
 
 describe('Project show page development summary', function () {

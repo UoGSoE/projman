@@ -59,7 +59,7 @@
                 @endif
                 @if($project->detailedDesign->approval_agb)
                     <span class="badge badge-{{ $project->detailedDesign->approval_agb === 'approved' ? 'green' : 'amber' }}">
-                        Architecture Governance Board: {{ ucfirst($project->detailedDesign->approval_agb) }}
+                        Architecture Governance Board: {{ \App\Enums\AgbApproval::tryFrom($project->detailedDesign->approval_agb)?->label() ?? ucfirst($project->detailedDesign->approval_agb) }}
                     </span>
                 @endif
             </div>

@@ -333,10 +333,10 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
                 ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
                 ->set('detailedDesignForm.hldDesignLink', 'https://example.com/design')
-                ->set('detailedDesignForm.approvalDelivery', $this->testAssessor->id)
-                ->set('detailedDesignForm.approvalOperations', $this->testLead->id)
-                ->set('detailedDesignForm.approvalResilience', $this->testDesigner->id)
-                ->set('detailedDesignForm.approvalAgb', $this->testDeployer->id)
+                ->set('detailedDesignForm.approvalDelivery', 'approved')
+                ->set('detailedDesignForm.approvalOperations', 'rejected')
+                ->set('detailedDesignForm.approvalResilience', 'approved')
+                ->set('detailedDesignForm.approvalAgb', 'approved')
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -345,10 +345,10 @@ describe('Project Editing', function () {
             expect($this->project->detailedDesign->functional_requirements)->toBe('Test Functional Requirements');
             expect($this->project->detailedDesign->non_functional_requirements)->toBe('Test Non-Functional Requirements');
             expect($this->project->detailedDesign->hld_design_link)->toBe('https://example.com/design');
-            expect($this->project->detailedDesign->approval_delivery)->toEqual($this->testAssessor->id);
-            expect($this->project->detailedDesign->approval_operations)->toEqual($this->testLead->id);
-            expect($this->project->detailedDesign->approval_resilience)->toEqual($this->testDesigner->id);
-            expect($this->project->detailedDesign->approval_agb)->toEqual($this->testDeployer->id);
+            expect($this->project->detailedDesign->approval_delivery)->toBe('approved');
+            expect($this->project->detailedDesign->approval_operations)->toBe('rejected');
+            expect($this->project->detailedDesign->approval_resilience)->toBe('approved');
+            expect($this->project->detailedDesign->approval_agb)->toBe('approved');
         });
 
         it('validates required fields for detailed design form', function () {
@@ -360,7 +360,7 @@ describe('Project Editing', function () {
                     'detailedDesignForm.functionalRequirements' => 'required',
                     'detailedDesignForm.nonFunctionalRequirements' => 'required',
                 ])
-                // Approvals default to 'Pending', so they are never empty and
+                // Approvals default to 'pending', so they are never empty and
                 // do not trip the required rule.
                 ->assertHasNoErrors([
                     'detailedDesignForm.approvalDelivery',
@@ -384,10 +384,10 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
                 ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
                 ->set('detailedDesignForm.hldDesignLink', 'https://example.com/design')
-                ->set('detailedDesignForm.approvalDelivery', 'Approved')
-                ->set('detailedDesignForm.approvalOperations', 'Approved')
-                ->set('detailedDesignForm.approvalResilience', 'Approved')
-                ->set('detailedDesignForm.approvalAgb', 'Not Required')
+                ->set('detailedDesignForm.approvalDelivery', 'approved')
+                ->set('detailedDesignForm.approvalOperations', 'approved')
+                ->set('detailedDesignForm.approvalResilience', 'approved')
+                ->set('detailedDesignForm.approvalAgb', 'not_required')
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors()
                 ->assertSee('Not Required');
@@ -396,17 +396,21 @@ describe('Project Editing', function () {
             // approval_agb column and the legacy approval_change_board column
             // both receive the value until the legacy column is dropped.
             expect($this->project->fresh()->detailedDesign->approval_agb)
-                ->toBe('Not Required')
+                ->toBe('not_required')
                 ->and($this->project->fresh()->detailedDesign->approval_change_board)
-                ->toBe('Not Required');
+                ->toBe('not_required');
         });
 
         it('defaults the detailed design approvals to Pending when none are recorded', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
-                ->assertSet('detailedDesignForm.approvalDelivery', 'Pending')
-                ->assertSet('detailedDesignForm.approvalOperations', 'Pending')
-                ->assertSet('detailedDesignForm.approvalResilience', 'Pending')
-                ->assertSet('detailedDesignForm.approvalAgb', 'Pending');
+                ->assertSet('detailedDesignForm.approvalDelivery', 'pending')
+                ->assertSet('detailedDesignForm.approvalOperations', 'pending')
+                ->assertSet('detailedDesignForm.approvalResilience', 'pending')
+                ->assertSet('detailedDesignForm.approvalAgb', 'pending')
+                // Dropdowns must offer the lowercase keys as option values,
+                // not the capitalised labels (the original quirk this fixed).
+                ->assertSeeHtml('value="pending"')
+                ->assertSeeHtml('value="not_required"');
         });
     });
 
