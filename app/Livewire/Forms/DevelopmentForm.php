@@ -15,12 +15,6 @@ class DevelopmentForm extends Form
 
     public $developmentTeamSearch = '';
 
-    public array $availableDevelopers = [
-        '1' => 'Alice',
-        '2' => 'Bob',
-        '3' => 'Charlie',
-    ];
-
     public array $availableStatuses = [
         'not_started' => 'Not Started',
         'in_progress' => 'In Progress',

@@ -95,15 +95,6 @@
             @endif
         </flux:select>
 
-        {{-- <flux:select label="Team Assignment" wire:model="schedulingForm.teamAssignment">
-            <flux:select.option value="">– Select –</flux:select.option>
-            @foreach ($schedulingForm->availableTeams as $id => $name)
-                <flux:select.option value="{{ $id }}">
-                    {{ $name }}
-                </flux:select.option>
-            @endforeach
-        </flux:select> --}}
-
         <flux:pillbox multiple placeholder="Pick staff..." label="CoSE IT staff (Skill Score)"
             wire:model.live="schedulingForm.coseItStaff">
             @foreach ($this->skillMatchedUsers as $user)

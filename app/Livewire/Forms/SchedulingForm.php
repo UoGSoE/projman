@@ -18,18 +18,6 @@ class SchedulingForm extends Form
 {
     public ?Project $project = null;
 
-    public array $availableUsers = [
-        '1' => 'Jenny',
-        '2' => 'John',
-        '3' => 'Sarah',
-    ];
-
-    public array $availableTeams = [
-        '1' => 'Development Team',
-        '2' => 'Infrastructure Team',
-        '3' => 'Support Team',
-    ];
-
     // Kept nullable on purpose: original spec included a "Key skills matched" textarea,
     // a later spec revision removed the UI for it, and the stakeholder has form for
     // re-adding fields without warning. Property + column stay so we don't have to
