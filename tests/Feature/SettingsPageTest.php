@@ -45,7 +45,17 @@ it('lists the shipped API endpoints with curl examples', function () {
 
     $response = $this->actingAs($admin)->get(route('settings'))->assertOk();
 
-    foreach (['/api/ping', '/api/skills', '/api/users', '/api/projects', '/api/stats/skills-gap'] as $path) {
+    $shippedEndpoints = [
+        '/api/ping',
+        '/api/skills',
+        '/api/skills/{id}/users',
+        '/api/users',
+        '/api/users/{id}/skills',
+        '/api/projects',
+        '/api/stats/skills-gap',
+    ];
+
+    foreach ($shippedEndpoints as $path) {
         $response->assertSeeText($path);
     }
     $response->assertSeeText('curl');
