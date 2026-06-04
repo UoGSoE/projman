@@ -112,7 +112,7 @@ describe('Project Editing', function () {
                 ->set('ideationForm.businessCase', 'Test Business Case')
                 ->set('ideationForm.benefits', 'Test Benefits')
                 ->set('ideationForm.deadline', $tomorrow)
-                ->set('ideationForm.initiative', 'thing')
+                ->set('ideationForm.initiative', 'Inspire')
                 ->call('save', 'ideation')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -121,7 +121,7 @@ describe('Project Editing', function () {
             expect($this->project->ideation->business_case)->toBe('Test Business Case');
             expect($this->project->ideation->benefits)->toBe('Test Benefits');
             expect($this->project->ideation->deadline->format('Y-m-d'))->toBe($tomorrow);
-            expect($this->project->ideation->strategic_initiative)->toBe('thing');
+            expect($this->project->ideation->strategic_initiative)->toBe('Inspire');
         });
 
         it('validates required fields for ideation form', function () {
@@ -150,6 +150,20 @@ describe('Project Editing', function () {
                 ->set('ideationForm.deadline', $yesterday)
                 ->call('save', 'ideation')
                 ->assertHasErrors(['ideationForm.deadline' => 'after']);
+        });
+
+        it('rejects a strategic initiative that is not a valid StrategicInitiative', function () {
+            $tomorrow = now()->addDay()->format('Y-m-d');
+
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('ideationForm.schoolGroup', 'Test School')
+                ->set('ideationForm.objective', 'Test Objective')
+                ->set('ideationForm.businessCase', 'Test Business Case')
+                ->set('ideationForm.benefits', 'Test Benefits')
+                ->set('ideationForm.deadline', $tomorrow)
+                ->set('ideationForm.initiative', 'not-a-real-initiative')
+                ->call('save', 'ideation')
+                ->assertHasErrors(['ideationForm.initiative']);
         });
 
         it('shows a placeholder option for the strategic initiative dropdown so users must actively choose', function () {
@@ -243,7 +257,7 @@ describe('Project Editing', function () {
         it('can create a scoping form with valid data', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('scopingForm.assessedBy', $this->testAssessor->id)
-                ->set('scopingForm.estimatedEffort', EffortScale::MEDIUM)
+                ->set('scopingForm.estimatedEffort', EffortScale::MEDIUM->value)
                 ->set('scopingForm.inScope', 'Test In Scope')
                 ->set('scopingForm.outOfScope', 'Test Out of Scope')
                 ->set('scopingForm.assumptions', 'Test Assumptions')
@@ -490,6 +504,13 @@ describe('Project Editing', function () {
                 ->call('save', 'development')
                 ->assertHasErrors(['developmentForm.repositoryLink' => 'url']);
         });
+
+        it('rejects a status that is not a valid DevelopmentStatus', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('developmentForm.status', 'banana')
+                ->call('save', 'development')
+                ->assertHasErrors(['developmentForm.status']);
+        });
     });
 
     describe('Testing Form', function () {
@@ -521,6 +542,7 @@ describe('Project Editing', function () {
             expect($this->project->testing->user_acceptance)->toBe('approved');
             expect($this->project->testing->testing_lead_sign_off)->toBe('pending');
             expect($this->project->testing->service_delivery_sign_off)->toBe('rejected');
+            expect($this->project->testing->service_resilience_sign_off)->toBe('approved');
         });
 
         it('validates required fields for testing form', function () {

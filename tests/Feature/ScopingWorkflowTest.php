@@ -4,12 +4,10 @@ use App\Enums\EffortScale;
 use App\Events\ScopingSubmitted;
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
-use App\Models\Role;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Mail;
 
 use function Pest\Livewire\livewire;
 
@@ -115,35 +113,6 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
         Event::assertDispatched(ScopingSubmitted::class, function ($event) use ($project) {
             return $event->project->id === $project->id;
         });
-    });
-
-    it('sends email to Work Package Assessors on submission', function () {
-        // Arrange
-        Mail::fake();
-        $role = Role::factory()->create(['name' => 'Work Package Assessor']);
-        $assessor = User::factory()->create();
-        $assessor->roles()->attach($role);
-
-        $user = User::factory()->create(['is_admin' => true]);
-        $projectAssessor = User::factory()->create();
-        $project = Project::factory()->create();
-        $project->scoping->update([
-            'assessed_by' => $projectAssessor->id,
-            'estimated_effort' => EffortScale::MEDIUM,
-            'in_scope' => 'Feature',
-            'out_of_scope' => 'None',
-            'assumptions' => 'None',
-            'skills_required' => [$this->skill1->id],
-        ]);
-        $this->actingAs($user);
-
-        // Act
-        livewire(ProjectEditor::class, ['project' => $project])
-            ->call('submitScoping');
-
-        // Assert - event was dispatched which will trigger email
-        // Email sending is handled by listener + config
-        expect(true)->toBeTrue();
     });
 
     it('records history when scoping is submitted', function () {

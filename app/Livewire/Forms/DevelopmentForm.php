@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\DevelopmentStatus;
 use App\Models\Project;
 use App\Traits\HasNotes;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -14,14 +16,6 @@ class DevelopmentForm extends Form
     public ?Project $project = null;
 
     public $developmentTeamSearch = '';
-
-    public array $availableStatuses = [
-        'not_started' => 'Not Started',
-        'in_progress' => 'In Progress',
-        'code_review' => 'Code Review',
-        'testing' => 'Testing',
-        'completed' => 'Completed',
-    ];
 
     #[Validate('required|integer|exists:users,id')]
     public ?int $leadDeveloper = null;
@@ -38,7 +32,6 @@ class DevelopmentForm extends Form
     #[Validate('url|max:255')]
     public ?string $repositoryLink;
 
-    #[Validate('required|string|max:255')]
     public ?string $status;
 
     #[Validate('required|date')]
@@ -49,6 +42,13 @@ class DevelopmentForm extends Form
 
     #[Validate('nullable|string|max:2048')]
     public ?string $codeReviewNotes;
+
+    public function rules(): array
+    {
+        return [
+            'status' => ['required', Rule::enum(DevelopmentStatus::class)],
+        ];
+    }
 
     public function setProject(Project $project)
     {

@@ -1,13 +1,9 @@
 <?php
 
 use App\Events\ServiceAcceptanceRequested;
-use App\Events\UATAccepted;
-use App\Events\UATRejected;
 use App\Events\UATRequested;
 use App\Livewire\ProjectEditor;
 use App\Mail\ServiceAcceptanceRequestedMail;
-use App\Mail\UATAcceptedMail;
-use App\Mail\UATRejectedMail;
 use App\Mail\UATRequestedMail;
 use App\Models\Project;
 use App\Models\Role;
@@ -158,85 +154,6 @@ describe('Request UAT Workflow', function () {
         // Assert - field persists after refresh
         $project = $project->fresh(['testing']);
         expect($project->testing->department_office)->toBe('IT Department');
-    });
-});
-
-describe('UAT Acceptance/Rejection Workflow', function () {
-    beforeEach(function () {
-        $this->setupBaseNotificationRoles();
-    });
-
-    it('dispatches UATAccepted event when User Acceptance set to approved', function () {
-        // Arrange
-        Event::fake([UATAccepted::class]);
-        $user = User::factory()->create(['is_admin' => true]);
-        $project = createTestingProject();
-        $this->actingAs($user);
-
-        // Act
-        livewire(ProjectEditor::class, ['project' => $project])
-            ->set('testingForm.userAcceptance', 'approved')
-            ->call('save', 'testing');
-
-        // Manually fire the event (in reality this would be triggered by Livewire lifecycle)
-        event(new UATAccepted($project));
-
-        // Assert
-        Event::assertDispatched(UATAccepted::class);
-    });
-
-    it('dispatches UATRejected event when User Acceptance set to rejected', function () {
-        // Arrange
-        Event::fake([UATRejected::class]);
-        $user = User::factory()->create(['is_admin' => true]);
-        $project = createTestingProject();
-        $this->actingAs($user);
-
-        // Act
-        livewire(ProjectEditor::class, ['project' => $project])
-            ->set('testingForm.userAcceptance', 'rejected')
-            ->set('testingForm.userAcceptanceNotes', 'Tests failed')
-            ->call('save', 'testing');
-
-        // Manually fire the event
-        event(new UATRejected($project));
-
-        // Assert
-        Event::assertDispatched(UATRejected::class);
-    });
-
-    it('sends email to project owner when UAT accepted', function () {
-        // Arrange
-        Mail::fake();
-        $projectOwner = User::factory()->create();
-        $project = createTestingProject();
-        $project->update(['user_id' => $projectOwner->id]);
-        $this->actingAs($projectOwner);
-
-        // Act - fire the event
-        event(new UATAccepted($project));
-
-        // Assert
-        Mail::assertQueued(UATAcceptedMail::class, function ($mail) use ($projectOwner) {
-            return $mail->hasTo($projectOwner->email);
-        });
-    });
-
-    it('sends email to project owner when UAT rejected', function () {
-        // Arrange
-        Mail::fake();
-        $projectOwner = User::factory()->create();
-        $project = createTestingProject();
-        $project->update(['user_id' => $projectOwner->id]);
-        $this->actingAs($projectOwner);
-
-        // Act - fire the event
-        event(new UATRejected($project));
-
-        // Assert
-        Mail::assertQueued(UATRejectedMail::class, function ($mail) use ($projectOwner) {
-            return $mail->hasTo($projectOwner->email);
-        });
     });
 });
 

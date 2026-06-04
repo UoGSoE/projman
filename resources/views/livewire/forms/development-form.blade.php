@@ -47,9 +47,9 @@
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <flux:select label="Status" wire:model="developmentForm.status">
             <flux:select.option value="">– Select –</flux:select.option>
-            @foreach ($developmentForm->availableStatuses as $id => $label)
-                <flux:select.option value="{{ $id }}">
-                    {{ $label }}
+            @foreach (\App\Enums\DevelopmentStatus::cases() as $status)
+                <flux:select.option value="{{ $status->value }}">
+                    {{ $status->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>
