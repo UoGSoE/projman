@@ -114,7 +114,6 @@ test('displays project details in table columns', function () {
     ]);
 
     livewire(BacklogList::class)
-        ->assertSee($project->id)
         ->assertSee('Test Project')
         ->assertSee('John Doe')
         ->assertSee('Medium')
@@ -149,7 +148,10 @@ test('ref number links to change on a page', function () {
     $project = $this->createProject(['title' => 'Test Project']);
 
     livewire(BacklogList::class)
-        ->assertSeeHtml(route('portfolio.change-on-a-page', $project));
+        ->assertSeeHtmlInOrder([
+            route('portfolio.change-on-a-page', $project),
+            (string) $project->id,
+        ]);
 });
 
 test('search and status filters work together', function () {

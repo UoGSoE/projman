@@ -162,14 +162,14 @@ class ProjectEditor extends Component
 
     public function approveFeasibility(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->feasibilityForm->approve();
         Flux::toast('Feasibility approved successfully', variant: 'success');
     }
 
     public function rejectFeasibility(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->feasibilityForm->reject();
         $this->modal('reject-feasibility-modal')->close();
         Flux::toast('Feasibility rejected', variant: 'warning');
@@ -177,42 +177,42 @@ class ProjectEditor extends Component
 
     public function submitScoping(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->scopingForm->submit();
         Flux::toast('Scoping submitted to Work Package Assessors', variant: 'success');
     }
 
     public function submitSchedulingToDCGG(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->schedulingForm->submitToDCGG();
         Flux::toast('Scheduling submitted to Digital Change Governance Group', variant: 'success');
     }
 
     public function scheduleScheduling(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->schedulingForm->schedule();
         Flux::toast('Scheduling approved and scheduled', variant: 'success');
     }
 
     public function requestUAT(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->testingForm->requestUAT();
         Flux::toast('UAT testing requested - UAT Tester has been notified', variant: 'success');
     }
 
     public function requestServiceAcceptance(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->testingForm->requestServiceAcceptance();
         Flux::toast('Service Acceptance requested - Service Leads have been notified', variant: 'success');
     }
 
     public function submitTesting(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->testingForm->submit();
         $this->advanceToNextStage();
         Flux::toast('Testing complete - work package advanced to Deployed stage', variant: 'success');
@@ -220,28 +220,28 @@ class ProjectEditor extends Component
 
     public function acceptDeploymentService(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->deployedForm->acceptService();
         Flux::toast('Service Acceptance submitted - Service Leads have been notified', variant: 'success');
     }
 
     public function approveDeployment(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->deployedForm->approve();
         Flux::toast('Deployment approved - work package status set to Completed', variant: 'success');
     }
 
     public function addDevelopmentNote(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->developmentForm->addNote($this->project->development);
         Flux::modal('add-note-developmentForm')->close();
     }
 
     public function addBuildNote(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->buildForm->addNote($this->project->build);
         Flux::modal('add-note-buildForm')->close();
     }

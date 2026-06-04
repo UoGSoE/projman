@@ -2,6 +2,7 @@
 
 use App\Enums\EffortScale;
 use App\Enums\Priority;
+use App\Enums\ProjectStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -67,11 +68,15 @@ test('export displays owner information', function () {
 });
 
 test('export displays project status', function () {
+    // Use a status whose label is not also a stage heading (e.g. "Completed" has no
+    // section), so the assertion can only be satisfied by the status badge — not by a
+    // heading like "1. Ideation".
     $project = $this->createProject();
+    $project->update(['status' => ProjectStatus::COMPLETED]);
 
     $this->actingAs($this->admin)
         ->get(route('project.export', $project))
-        ->assertSee($project->status->label());
+        ->assertSee('Completed');
 });
 
 test('export includes ideation stage data', function () {
@@ -170,7 +175,7 @@ test('export displays the architecture governance board approval', function () {
 
     $this->actingAs($this->admin)
         ->get(route('project.export', $project))
-        ->assertSee('Architecture Governance Board');
+        ->assertSee('Architecture Governance Board: Approved');
 });
 
 test('export hides development section when software dev not required', function () {
@@ -238,8 +243,7 @@ test('export displays footer with export date and app name', function () {
 
     $this->actingAs($this->admin)
         ->get(route('project.export', $project))
-        ->assertSee('Exported on')
-        ->assertSee(config('app.name'));
+        ->assertSeeInOrder(['Exported on', config('app.name')]);
 });
 
 test('export button only visible to admins on project viewer', function () {

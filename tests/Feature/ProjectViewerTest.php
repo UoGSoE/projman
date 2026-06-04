@@ -148,7 +148,7 @@ describe('Project show page scheduling summary', function () {
             ->get(route('project.show', $project))
             ->assertSuccessful()
             ->assertSee('Not Required')
-            ->assertDontSee('Not_required');
+            ->assertDontSee('not_required');
     });
 });
 
@@ -197,7 +197,7 @@ describe('Project show page detailed design summary', function () {
             ->get(route('project.show', $project))
             ->assertSuccessful()
             ->assertSee('Not Required')
-            ->assertDontSee('Not_required');
+            ->assertDontSee('not_required');
     });
 });
 
