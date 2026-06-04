@@ -74,15 +74,15 @@ describe('Config-based notifications', function () {
             ->call('save')
             ->assertHasNoErrors();
 
-        Mail::assertQueued(ProjectCreatedMail::class);
+        $project = Project::where('title', 'Test Project')->firstOrFail();
 
-        // Should send to Admin and Project Manager roles
-        Mail::assertQueued(ProjectCreatedMail::class, function ($mail) {
-            return $mail->hasTo($this->admin->email);
-        });
-
-        Mail::assertQueued(ProjectCreatedMail::class, function ($mail) {
-            return $mail->hasTo($this->projectManager->email);
+        // Exactly one mail, carrying this project, to exactly the Admin and Project Manager
+        Mail::assertQueued(ProjectCreatedMail::class, 1);
+        Mail::assertQueued(ProjectCreatedMail::class, function ($mail) use ($project) {
+            return $mail->project->is($project)
+                && $mail->hasTo($this->admin->email)
+                && $mail->hasTo($this->projectManager->email)
+                && count($mail->to) === 2;
         });
 
         // Should NOT include project owner (config has include_project_owner = false)
@@ -98,10 +98,10 @@ describe('Config-based notifications', function () {
 
         event(new FeasibilityApproved($project));
 
-        Mail::assertQueued(FeasibilityApprovedMail::class);
+        Mail::assertQueued(FeasibilityApprovedMail::class, 1);
 
-        Mail::assertQueued(FeasibilityApprovedMail::class, function ($mail) {
-            return $mail->hasTo($this->assessor->email);
+        Mail::assertQueued(FeasibilityApprovedMail::class, function ($mail) use ($project) {
+            return $mail->hasTo($this->assessor->email) && $mail->project->is($project);
         });
 
         // Should NOT include project owner
@@ -117,10 +117,10 @@ describe('Config-based notifications', function () {
 
         event(new FeasibilityRejected($project));
 
-        Mail::assertQueued(FeasibilityRejectedMail::class);
+        Mail::assertQueued(FeasibilityRejectedMail::class, 1);
 
-        Mail::assertQueued(FeasibilityRejectedMail::class, function ($mail) {
-            return $mail->hasTo($this->assessor->email);
+        Mail::assertQueued(FeasibilityRejectedMail::class, function ($mail) use ($project) {
+            return $mail->hasTo($this->assessor->email) && $mail->project->is($project);
         });
 
         // SHOULD include project owner (config has include_project_owner = true)
@@ -136,10 +136,10 @@ describe('Config-based notifications', function () {
 
         event(new ScopingSubmitted($project));
 
-        Mail::assertQueued(ScopingSubmittedMail::class);
+        Mail::assertQueued(ScopingSubmittedMail::class, 1);
 
-        Mail::assertQueued(ScopingSubmittedMail::class, function ($mail) {
-            return $mail->hasTo($this->assessor->email);
+        Mail::assertQueued(ScopingSubmittedMail::class, function ($mail) use ($project) {
+            return $mail->hasTo($this->assessor->email) && $mail->project->is($project);
         });
 
         // Should NOT include project owner (config has include_project_owner = false)
@@ -159,8 +159,8 @@ describe('Config-based notifications', function () {
 
         Mail::assertQueued(SchedulingSubmittedMail::class, 1);
 
-        Mail::assertQueued(SchedulingSubmittedMail::class, function ($mail) {
-            return $mail->hasTo('dcgg@example.ac.uk');
+        Mail::assertQueued(SchedulingSubmittedMail::class, function ($mail) use ($project) {
+            return $mail->hasTo('dcgg@example.ac.uk') && $mail->project->is($project);
         });
     });
 
@@ -171,10 +171,10 @@ describe('Config-based notifications', function () {
 
         event(new SchedulingScheduled($project));
 
-        Mail::assertQueued(SchedulingScheduledMail::class);
+        Mail::assertQueued(SchedulingScheduledMail::class, 1);
 
-        Mail::assertQueued(SchedulingScheduledMail::class, function ($mail) {
-            return $mail->hasTo($this->assessor->email);
+        Mail::assertQueued(SchedulingScheduledMail::class, function ($mail) use ($project) {
+            return $mail->hasTo($this->assessor->email) && $mail->project->is($project);
         });
 
         // Should NOT include project owner
@@ -199,11 +199,11 @@ describe('Config-based notifications', function () {
 
         event(new ProjectStageChange($project));
 
-        Mail::assertQueued(ProjectStageChangeMail::class);
+        Mail::assertQueued(ProjectStageChangeMail::class, 1);
 
         // Testing stage should notify Testing Manager and Service Lead
-        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($testingManager) {
-            return $mail->hasTo($testingManager->email);
+        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($testingManager, $project) {
+            return $mail->hasTo($testingManager->email) && $mail->project->is($project);
         });
 
         Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($serviceLead) {
@@ -254,8 +254,8 @@ describe('Config-based notifications', function () {
         Mail::assertQueued(ProjectStageChangeMail::class, 1);
 
         // Should send to the Feasibility Manager
-        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($feasibilityManager) {
-            return $mail->hasTo($feasibilityManager->email);
+        Mail::assertQueued(ProjectStageChangeMail::class, function ($mail) use ($feasibilityManager, $project) {
+            return $mail->hasTo($feasibilityManager->email) && $mail->project->is($project);
         });
 
         // Should NOT send to the random user without the role
