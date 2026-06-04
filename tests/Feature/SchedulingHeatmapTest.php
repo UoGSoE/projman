@@ -57,19 +57,21 @@ describe('Scheduling Heatmap Integration', function () {
             ->assertSee('How is this calculated?');
     });
 
-    it('shows assigned staff at top of heatmap when staff are assigned', function () {
+    it('shows assigned staff above unassigned staff even when they sort later alphabetically', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
         $project = $this->createProject();
 
-        // Create staff members with known surnames for ordering
+        // The assigned member is given a surname that sorts LAST alphabetically and the
+        // unassigned member one that sorts FIRST. The assigned member can only appear above
+        // the unassigned one if assignment ordering beats plain alphabetical ordering.
         $assignedStaff = User::factory()->create([
-            'surname' => 'Zebra',
+            'surname' => 'Zzz_Assigned',
             'forenames' => 'Alice',
             'is_staff' => true,
         ]);
         $unassignedStaff = User::factory()->create([
-            'surname' => 'Zzzzzzzzzz',
+            'surname' => 'Aaa_Unassigned',
             'forenames' => 'Bob',
             'is_staff' => true,
         ]);
@@ -81,17 +83,16 @@ describe('Scheduling Heatmap Integration', function () {
             ->set('schedulingForm.assignedTo', $assignedStaff->id)
             ->call('toggleHeatmap');
 
-        // Assert - assigned staff (Zebra) should appear before unassigned (Apple) despite alphabetical order
+        // Assert
         $heatmapData = $component->get('heatmapData');
 
         expect($heatmapData['hasAssignedStaff'])->toBeTrue();
 
-        $staffCollection = $heatmapData['staff'];
-        $firstStaff = $staffCollection->first()['user'];
-        $secondStaff = $staffCollection->last()['user'];
+        $orderedIds = $heatmapData['staff']->pluck('user.id')->all();
+        $assignedPosition = array_search($assignedStaff->id, $orderedIds);
+        $unassignedPosition = array_search($unassignedStaff->id, $orderedIds);
 
-        expect($firstStaff->id)->toBe($assignedStaff->id)
-            ->and($secondStaff->id)->toBe($unassignedStaff->id);
+        expect($assignedPosition)->toBeLessThan($unassignedPosition);
     });
 
     it('shows all staff alphabetically when no staff are assigned', function () {
@@ -182,6 +183,11 @@ describe('Scheduling Heatmap Integration', function () {
 
         expect($assignedStaffIds)->toContain($coseStaff1->id)
             ->and($assignedStaffIds)->toContain($coseStaff2->id);
+
+        // The unassigned member sorts first alphabetically, so it must only appear
+        // below the CoSE staff because they are assigned, not because of surname order.
+        $remainingStaffIds = $staffCollection->skip(2)->pluck('user.id')->all();
+        expect($remainingStaffIds)->toContain($unassigned->id);
     });
 
     it('shows both assigned_to and coseItStaff together at top of heatmap', function () {

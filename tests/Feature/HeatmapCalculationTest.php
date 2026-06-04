@@ -88,16 +88,39 @@ it('treats a user with zero availability as effectively overloaded by any alloca
     expect($project->fresh()->perDayCostForUser($unavailable))->toBeGreaterThan(1.0);
 });
 
-it('returns zero when the project has no effort or no scheduling dates', function () {
+it('returns zero per-day cost when the project has effort but no scheduling dates', function () {
     $alice = User::factory()->create([
         'is_staff' => true,
         'availability_for_change' => AvailabilityForChange::Moderate,
     ]);
 
-    $unscoped = $this->createProject(['status' => 'feasibility']);
-    $unscoped->scheduling->update(['assigned_to' => $alice->id]);
+    $project = $this->createProject(['status' => 'scheduling']);
+    $project->scoping->update(['estimated_effort' => EffortScale::SMALL]);
+    $project->scheduling->update([
+        'assigned_to' => $alice->id,
+        'estimated_start_date' => null,
+        'estimated_completion_date' => null,
+    ]);
 
-    expect($unscoped->fresh()->perDayCostForUser($alice))->toBe(0.0);
+    expect($project->fresh()->perDayCostForUser($alice))->toBe(0.0);
+});
+
+it('returns zero per-day cost when the project has scheduling dates but no effort', function () {
+    $alice = User::factory()->create([
+        'is_staff' => true,
+        'availability_for_change' => AvailabilityForChange::Moderate,
+    ]);
+
+    $start = Carbon::parse('next monday');
+    $project = $this->createProject(['status' => 'scheduling']);
+    $project->scoping->update(['estimated_effort' => null]);
+    $project->scheduling->update([
+        'assigned_to' => $alice->id,
+        'estimated_start_date' => $start,
+        'estimated_completion_date' => $start->copy()->addWeekdays(4),
+    ]);
+
+    expect($project->fresh()->perDayCostForUser($alice))->toBe(0.0);
 });
 
 it('builds heatmap cells as HeatmapCell objects derived from active project allocations', function () {

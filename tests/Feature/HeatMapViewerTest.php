@@ -184,16 +184,23 @@ it('builds a heatmap cell from project assignments in weeks view', function () {
     expect($assignedStaff['cells'][0]->colour())->toBe('bg-black');
 });
 
-it('persists view mode in URL', function () {
-    // Arrange & Act
-    $this->get(route('project.heatmap', ['viewMode' => 'months']))
-        ->assertOk();
+it('hydrates the view mode from the URL query string', function () {
+    Livewire::withQueryParams(['viewMode' => 'months'])
+        ->test(HeatMapViewer::class)
+        ->assertSet('viewMode', 'months');
+});
 
-    $component = Livewire::test(HeatMapViewer::class)
-        ->set('viewMode', 'months');
+it('hydrates the name filter from the URL query string and applies it', function () {
+    $wanted = User::factory()->create(['is_staff' => true, 'surname' => 'Wanted']);
+    User::factory()->create(['is_staff' => true, 'surname' => 'Ignored']);
 
-    // Assert
-    expect($component->get('viewMode'))->toBe('months');
+    $component = Livewire::withQueryParams(['nameFilter' => [$wanted->id]])
+        ->test(HeatMapViewer::class);
+
+    $component->assertSet('nameFilter', [$wanted->id]);
+
+    $staff = $component->viewData('staff');
+    expect($staff->pluck('user.id')->all())->toBe([$wanted->id]);
 });
 
 it('can filter staff by name using the name filter', function () {
