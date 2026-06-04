@@ -51,9 +51,15 @@ it('sorts skills by column', function () {
 it('exports skills to xlsx', function () {
     Skill::factory()->create(['name' => 'Test Skill']);
 
-    livewire(SkillsManager::class)
-        ->set('activeTab', 'available-skills')
-        ->call('downloadExcel')
+    $component = livewire(SkillsManager::class)
+        ->set('activeTab', 'available-skills');
+
+    // The export payload actually contains the skill...
+    $exportData = $component->instance()->getSkillsExportData();
+    expect(collect($exportData)->pluck(0))->toContain('Test Skill');
+
+    // ...and downloading produces the dated xlsx file.
+    $component->call('downloadExcel')
         ->assertFileDownloaded('skills-export-'.now()->format('Y-m-d').'.xlsx');
 });
 

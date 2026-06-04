@@ -9,26 +9,17 @@ uses(RefreshDatabase::class);
 it('seeds every role referenced in projman config as active', function () {
     $this->seed(RoleSeeder::class);
 
-    $expected = collect([
-        'Admin',
-        'Project Manager',
-        'Work Package Assessor',
-        'Service Lead',
-        'Ideation Manager',
-        'Feasibility Manager',
-        'Scoping Manager',
-        'Scheduling Manager',
-        'Detailed Design Manager',
-        'Development Manager',
-        'Testing Manager',
-        'Build Manager',
-        'Deployment Manager',
-        'Completed Manager',
-        'Cancelled Manager',
-        'Change Manager',
-    ]);
+    // Derived from config so the test cannot drift from the roles the notification system
+    // actually references: each event's `roles`, plus ProjectStageChange's `stage_roles`.
+    $configuredRoles = collect(config('projman.notifications'))
+        ->flatMap(fn ($definition) => collect($definition['roles'] ?? [])
+            ->merge(collect($definition['stage_roles'] ?? [])->flatten()))
+        ->unique()
+        ->values();
 
-    foreach ($expected as $name) {
+    expect($configuredRoles)->not->toBeEmpty();
+
+    foreach ($configuredRoles as $name) {
         $role = Role::where('name', $name)->first();
 
         expect($role)->not->toBeNull("missing role: {$name}");
