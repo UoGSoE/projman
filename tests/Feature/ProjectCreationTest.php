@@ -221,6 +221,22 @@ describe('Project Editing', function () {
                     'feasibilityForm.dateAssessed' => 'required',
                 ]);
         });
+
+        it('rejects an approval status that is not a valid ApprovalStatus', function () {
+            $tomorrow = now()->addDay()->format('Y-m-d');
+
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('feasibilityForm.technicalCredence', 'Test Technical Credence')
+                ->set('feasibilityForm.costBenefitCase', 'Test Cost Benefit Case')
+                ->set('feasibilityForm.dependenciesPrerequisites', 'Test Dependencies')
+                ->set('feasibilityForm.deadlinesAchievable', 'yes')
+                ->set('feasibilityForm.alternativeProposal', 'Test Alternative')
+                ->set('feasibilityForm.assessedBy', $this->testAssessor->id)
+                ->set('feasibilityForm.dateAssessed', $tomorrow)
+                ->set('feasibilityForm.approvalStatus', 'banana')
+                ->call('save', 'feasibility')
+                ->assertHasErrors(['feasibilityForm.approvalStatus']);
+        });
     });
 
     describe('Scoping Form', function () {
@@ -377,6 +393,17 @@ describe('Project Editing', function () {
                 ->assertHasErrors(['detailedDesignForm.hldDesignLink' => 'url']);
         });
 
+        it('rejects an approval value that is not a valid ApprovalStatus', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
+                ->set('detailedDesignForm.serviceFunction', 'Test Service')
+                ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
+                ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
+                ->set('detailedDesignForm.approvalDelivery', 'banana')
+                ->call('save', 'detailed-design')
+                ->assertHasErrors(['detailedDesignForm.approvalDelivery']);
+        });
+
         it('allows Not Required as an Architecture Governance Board approval value', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
@@ -475,11 +502,11 @@ describe('Project Editing', function () {
                 ->set('testingForm.nonFunctionalTestingTitle', 'Non-Functional Testing')
                 ->set('testingForm.nonFunctionalTests', 'Test non-functional tests')
                 ->set('testingForm.testRepository', 'https://github.com/test/tests')
-                ->set('testingForm.testingSignOff', $this->testAssessor->id)
-                ->set('testingForm.userAcceptance', $this->testLead->id)
-                ->set('testingForm.testingLeadSignOff', $this->testDesigner->id)
-                ->set('testingForm.serviceDeliverySignOff', $this->testDeployer->id)
-                ->set('testingForm.serviceResilienceSignOff', $this->testAssessor->id)
+                ->set('testingForm.testingSignOff', 'approved')
+                ->set('testingForm.userAcceptance', 'approved')
+                ->set('testingForm.testingLeadSignOff', 'pending')
+                ->set('testingForm.serviceDeliverySignOff', 'rejected')
+                ->set('testingForm.serviceResilienceSignOff', 'approved')
                 ->call('save', 'testing')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -490,10 +517,10 @@ describe('Project Editing', function () {
             expect($this->project->testing->non_functional_testing_title)->toBe('Non-Functional Testing');
             expect($this->project->testing->non_functional_tests)->toBe('Test non-functional tests');
             expect($this->project->testing->test_repository)->toBe('https://github.com/test/tests');
-            expect($this->project->testing->testing_sign_off)->toEqual($this->testAssessor->id);
-            expect($this->project->testing->user_acceptance)->toEqual($this->testLead->id);
-            expect($this->project->testing->testing_lead_sign_off)->toEqual($this->testDesigner->id);
-            expect($this->project->testing->service_delivery_sign_off)->toEqual($this->testDeployer->id);
+            expect($this->project->testing->testing_sign_off)->toBe('approved');
+            expect($this->project->testing->user_acceptance)->toBe('approved');
+            expect($this->project->testing->testing_lead_sign_off)->toBe('pending');
+            expect($this->project->testing->service_delivery_sign_off)->toBe('rejected');
         });
 
         it('validates required fields for testing form', function () {
@@ -519,6 +546,13 @@ describe('Project Editing', function () {
                 ->set('testingForm.testRepository', 'not-a-url')
                 ->call('save', 'testing')
                 ->assertHasErrors(['testingForm.testRepository' => 'url']);
+        });
+
+        it('rejects a sign-off value that is not a valid ApprovalStatus', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('testingForm.testingSignOff', 'banana')
+                ->call('save', 'testing')
+                ->assertHasErrors(['testingForm.testingSignOff']);
         });
     });
 

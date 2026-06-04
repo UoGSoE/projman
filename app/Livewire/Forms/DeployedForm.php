@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\ProjectStatus;
 use App\Events\DeploymentApproved;
 use App\Events\DeploymentServiceAccepted;
 use App\Events\ProjectUpdated;
 use App\Models\Project;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -34,31 +36,31 @@ class DeployedForm extends Form
     public ?string $bauOperationalWiki = null;
 
     // Service Handover - Service Resilience
-    #[Validate('required|in:pending,approved,rejected')]
     public string $serviceResilienceApproval = 'pending';
 
     #[Validate('nullable|string')]
     public ?string $serviceResilienceNotes = null;
 
     // Service Handover - Service Operations
-    #[Validate('required|in:pending,approved,rejected')]
     public string $serviceOperationsApproval = 'pending';
 
     #[Validate('nullable|string')]
     public ?string $serviceOperationsNotes = null;
 
     // Service Handover - Service Delivery
-    #[Validate('required|in:pending,approved,rejected')]
     public string $serviceDeliveryApproval = 'pending';
 
     #[Validate('nullable|string')]
     public ?string $serviceDeliveryNotes = null;
 
-    public array $availableApprovalStates = [
-        'pending' => 'Pending',
-        'approved' => 'Approved',
-        'rejected' => 'Rejected',
-    ];
+    public function rules(): array
+    {
+        return [
+            'serviceResilienceApproval' => ['required', Rule::enum(ApprovalStatus::class)],
+            'serviceOperationsApproval' => ['required', Rule::enum(ApprovalStatus::class)],
+            'serviceDeliveryApproval' => ['required', Rule::enum(ApprovalStatus::class)],
+        ];
+    }
 
     public function setProject(Project $project): void
     {

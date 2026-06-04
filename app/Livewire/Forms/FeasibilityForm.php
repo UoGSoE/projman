@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\ApprovalStatus;
 use App\Events\FeasibilityApproved;
 use App\Events\FeasibilityRejected;
 use App\Events\ProjectUpdated;
 use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -46,12 +48,12 @@ class FeasibilityForm extends Form
     #[Validate('nullable|string|max:5000')]
     public ?string $rejectReason = null;
 
-    #[Validate('in:pending,approved,rejected')]
     public string $approvalStatus = 'pending';
 
     public function rules(): array
     {
         $rules = [
+            'approvalStatus' => [Rule::enum(ApprovalStatus::class)],
             'existingSolutionStatus' => 'nullable|in:yes,no,yes_not_practical',
             'existingSolutionNotes' => 'nullable|string|max:10000',
             'offTheShelfSolutionStatus' => 'nullable|in:yes,no,yes_not_practical',

@@ -28,23 +28,23 @@
     <div class="grid grid-cols-5 gap-4">
         <flux:input label="Approvals" value="Approvals" disabled />
         <flux:select label="Delivery" wire:model="detailedDesignForm.approvalDelivery">
-            @foreach ($detailedDesignForm->availableApprovalStates as $value => $label)
-                <flux:select.option value="{{ $value }}">
-                    {{ $label }}
+            @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                <flux:select.option value="{{ $state->value }}">
+                    {{ $state->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>
         <flux:select label="Operations" wire:model="detailedDesignForm.approvalOperations">
-            @foreach ($detailedDesignForm->availableApprovalStates as $value => $label)
-                <flux:select.option value="{{ $value }}">
-                    {{ $label }}
+            @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                <flux:select.option value="{{ $state->value }}">
+                    {{ $state->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>
         <flux:select label="Resilience" wire:model="detailedDesignForm.approvalResilience">
-            @foreach ($detailedDesignForm->availableApprovalStates as $value => $label)
-                <flux:select.option value="{{ $value }}">
-                    {{ $label }}
+            @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                <flux:select.option value="{{ $state->value }}">
+                    {{ $state->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>

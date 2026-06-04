@@ -2,19 +2,15 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\ApprovalStatus;
 use App\Models\Project;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class DetailedDesignForm extends Form
 {
     public ?Project $project = null;
-
-    public $availableApprovalStates = [
-        'pending' => 'Pending',
-        'approved' => 'Approved',
-        'rejected' => 'Rejected',
-    ];
 
     #[Validate('required|integer|exists:users,id')]
     public ?int $designedBy = null;
@@ -31,17 +27,23 @@ class DetailedDesignForm extends Form
     #[Validate('url|max:255')]
     public ?string $hldDesignLink;
 
-    #[Validate('required|string|max:255')]
     public ?string $approvalDelivery = 'pending';
 
-    #[Validate('required|string|max:255')]
     public ?string $approvalOperations = 'pending';
 
-    #[Validate('required|string|max:255')]
     public ?string $approvalResilience = 'pending';
 
     #[Validate('required|string|max:255')]
     public ?string $approvalAgb = 'pending';
+
+    public function rules(): array
+    {
+        return [
+            'approvalDelivery' => ['required', Rule::enum(ApprovalStatus::class)],
+            'approvalOperations' => ['required', Rule::enum(ApprovalStatus::class)],
+            'approvalResilience' => ['required', Rule::enum(ApprovalStatus::class)],
+        ];
+    }
 
     public function setProject(Project $project)
     {

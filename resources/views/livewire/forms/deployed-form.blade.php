@@ -39,9 +39,9 @@
         {{-- Service Resilience --}}
         <div class="space-y-2">
             <flux:select label="Service Resilience" wire:model="deployedForm.serviceResilienceApproval">
-                @foreach ($deployedForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>
@@ -51,9 +51,9 @@
         {{-- Service Operations --}}
         <div class="space-y-2">
             <flux:select label="Service Operations" wire:model="deployedForm.serviceOperationsApproval">
-                @foreach ($deployedForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>
@@ -63,9 +63,9 @@
         {{-- Service Delivery --}}
         <div class="space-y-2">
             <flux:select label="Service Delivery" wire:model="deployedForm.serviceDeliveryApproval">
-                @foreach ($deployedForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>

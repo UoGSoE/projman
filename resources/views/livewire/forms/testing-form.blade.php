@@ -46,9 +46,9 @@
         {{-- Testing Sign Off --}}
         <div class="space-y-2">
             <flux:select label="Testing Sign Off" wire:model="testingForm.testingSignOff">
-                @foreach ($testingForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>
@@ -58,9 +58,9 @@
         {{-- User Acceptance --}}
         <div class="space-y-2">
             <flux:select label="User Acceptance" wire:model="testingForm.userAcceptance">
-                @foreach ($testingForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>
@@ -70,9 +70,9 @@
         {{-- Test Lead Sign Off --}}
         <div class="space-y-2">
             <flux:select label="Test Lead" wire:model="testingForm.testingLeadSignOff">
-                @foreach ($testingForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>
@@ -82,9 +82,9 @@
         {{-- Service Delivery --}}
         <div class="space-y-2">
             <flux:select label="Service Delivery" wire:model="testingForm.serviceDeliverySignOff">
-                @foreach ($testingForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>
@@ -94,9 +94,9 @@
         {{-- Service Resilience --}}
         <div class="space-y-2">
             <flux:select label="Service Resilience" wire:model="testingForm.serviceResilienceSignOff">
-                @foreach ($testingForm->availableApprovalStates as $id => $label)
-                    <flux:select.option value="{{ $id }}">
-                        {{ $label }}
+                @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                    <flux:select.option value="{{ $state->value }}">
+                        {{ $state->label() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>
