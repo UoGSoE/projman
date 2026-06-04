@@ -253,14 +253,14 @@ describe('Delete Role', function () {
         expect(Role::where('name', 'Has Users')->exists())->toBeTrue();
     });
 
-    it('shows warning when role has users', function () {
+    it('shows a warning when the role being deleted has users assigned', function () {
         $role = Role::factory()->create(['name' => 'Popular Role']);
         $users = User::factory()->count(5)->create();
         $role->users()->attach($users);
 
-        $component = livewire(RolesList::class)
-            ->call('openDeleteRoleModal', $role);
-
-        expect($component->selectedRole->users)->toHaveCount(5);
+        livewire(RolesList::class)
+            ->call('openDeleteRoleModal', $role)
+            ->assertSee('is assigned to 5')
+            ->assertSee('will lose access to the associated work packages and alerts');
     });
 });

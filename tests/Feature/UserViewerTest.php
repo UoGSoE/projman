@@ -89,8 +89,14 @@ it('shows user details, roles, skills, requests, and IT assignments for admins',
     $response->assertDontSeeText($cancelledAssignment->title);
 });
 
-it('hides IT assignment information when the user has no skills', function () {
+it('hides IT assignment information when the user has no skills, even if assigned to a work package', function () {
     $targetUser = User::factory()->create();
+
+    // Give the user a genuine active IT assignment, so the section can only stay hidden
+    // because the user has no skills - not because there is nothing to show.
+    $projectOwner = User::factory()->create();
+    $assignment = Project::factory()->for($projectOwner)->create(['title' => 'Phantom Rollout']);
+    $assignment->scheduling()->create(['cose_it_staff' => [$targetUser->id]]);
 
     $this->actingAs($this->adminUser);
 
@@ -98,6 +104,7 @@ it('hides IT assignment information when the user has no skills', function () {
 
     $response->assertOk();
     $response->assertDontSeeText('IT work package assignments');
+    $response->assertDontSeeText('Phantom Rollout');
 });
 
 it('can toggle to include completed and cancelled assignments', function () {

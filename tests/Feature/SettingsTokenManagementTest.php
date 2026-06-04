@@ -12,14 +12,16 @@ it('lets an admin create a named api token and renders it in the list', function
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
     $this->actingAs($admin);
 
+    // A distinctive name that does not appear as the placeholder/example text in the
+    // view, so assertSee can only be satisfied by the rendered token list.
     livewire(Settings::class)
-        ->set('newTokenName', 'PowerBI Production')
+        ->set('newTokenName', 'Nightly Reporting Token')
         ->call('createToken')
         ->assertHasNoErrors()
-        ->assertSee('PowerBI Production');
+        ->assertSee('Nightly Reporting Token');
 
     expect($admin->tokens()->count())->toBe(1);
-    expect($admin->tokens()->first()->name)->toBe('PowerBI Production');
+    expect($admin->tokens()->first()->name)->toBe('Nightly Reporting Token');
 });
 
 it('exposes the plaintext token only after creation', function () {

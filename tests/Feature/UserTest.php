@@ -78,7 +78,12 @@ it('returns all IT assignments including completed and cancelled when asked', fu
     $completed = Project::factory()->for($owner)->create(['status' => ProjectStatus::COMPLETED]);
     $completed->scheduling()->create(['cose_it_staff' => [$user->id]]);
 
+    $cancelled = Project::factory()->for($owner)->create(['status' => ProjectStatus::CANCELLED]);
+    $cancelled->scheduling()->create(['cose_it_staff' => [$user->id]]);
+
     $assignments = $user->itAssignments(includeCompleted: true);
 
-    expect($assignments->pluck('id'))->toContain($active->id, $completed->id);
+    expect($assignments->pluck('id'))
+        ->toContain($active->id, $completed->id, $cancelled->id)
+        ->toHaveCount(3);
 });
