@@ -8,6 +8,7 @@ use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Models\Traits\CanCheckIfEdited;
 use Database\Factories\ProjectFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
+#[Fillable('user_id', 'school_group', 'title', 'deadline', 'status')]
 class Project extends Model
 {
     use CanCheckIfEdited;
@@ -27,14 +29,6 @@ class Project extends Model
 
     protected $dispatchesEvents = [
         'created' => ProjectCreated::class,
-    ];
-
-    protected $fillable = [
-        'user_id',
-        'school_group',
-        'title',
-        'deadline',
-        'status',
     ];
 
     protected $casts = [

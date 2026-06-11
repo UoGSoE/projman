@@ -4,10 +4,14 @@ namespace App\Models;
 
 use App\Models\Traits\CanCheckIfEdited;
 use Database\Factories\IdeationFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Touches;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[Fillable('project_id', 'school_group', 'objective', 'business_case', 'benefits', 'deadline', 'strategic_initiative')]
+#[Touches('project')]
 class Ideation extends Model
 {
     use CanCheckIfEdited;
@@ -15,21 +19,9 @@ class Ideation extends Model
     /** @use HasFactory<IdeationFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'project_id',
-        'school_group',
-        'objective',
-        'business_case',
-        'benefits',
-        'deadline',
-        'strategic_initiative',
-    ];
-
     protected $casts = [
         'deadline' => 'date',
     ];
-
-    protected $touches = ['project'];
 
     public function project(): BelongsTo
     {
