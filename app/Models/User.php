@@ -9,6 +9,8 @@ use App\Enums\ProjectStatus;
 use App\Enums\ServiceFunction;
 use App\Enums\SkillLevel;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -17,40 +19,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+#[Fillable('username', 'surname', 'forenames', 'is_staff', 'is_itstaff', 'is_admin', 'email', 'service_function', 'password', 'busyness_week_1', 'busyness_week_2', 'availability_for_change')]
+#[Hidden('password', 'remember_token')]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'username',
-        'surname',
-        'forenames',
-        'is_staff',
-        'is_itstaff',
-        'is_admin',
-        'email',
-        'service_function',
-        'password',
-        'busyness_week_1',
-        'busyness_week_2',
-        'availability_for_change',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
 
     /**
      * Get the attributes that should be cast.

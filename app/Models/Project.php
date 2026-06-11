@@ -8,6 +8,7 @@ use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Models\Traits\CanCheckIfEdited;
 use Database\Factories\ProjectFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
+#[Fillable('user_id', 'school_group', 'title', 'deadline', 'status')]
 class Project extends Model
 {
     use CanCheckIfEdited;
@@ -29,18 +31,13 @@ class Project extends Model
         'created' => ProjectCreated::class,
     ];
 
-    protected $fillable = [
-        'user_id',
-        'school_group',
-        'title',
-        'deadline',
-        'status',
-    ];
-
-    protected $casts = [
-        'status' => ProjectStatus::class,
-        'deadline' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'status' => ProjectStatus::class,
+            'deadline' => 'date',
+        ];
+    }
 
     /**
      * Get the validation rules that apply to the model.
@@ -199,18 +196,18 @@ class Project extends Model
     public function teamMemberIds(): Collection
     {
         return collect([
-            optional($this->scheduling)->assigned_to,
-            optional($this->scheduling)->technical_lead_id,
-            optional($this->scheduling)->change_champion_id,
-            optional($this->detailedDesign)->designed_by,
-            optional($this->development)->lead_developer,
-            optional($this->testing)->test_lead,
-            optional($this->feasibility)->assessed_by,
-            optional($this->scoping)->assessed_by,
+            $this->scheduling?->assigned_to,
+            $this->scheduling?->technical_lead_id,
+            $this->scheduling?->change_champion_id,
+            $this->detailedDesign?->designed_by,
+            $this->development?->lead_developer,
+            $this->testing?->test_lead,
+            $this->feasibility?->assessed_by,
+            $this->scoping?->assessed_by,
         ])
             ->filter()
-            ->merge(collect(optional($this->scheduling)->cose_it_staff ?? []))
-            ->merge(collect(optional($this->development)->development_team ?? []))
+            ->merge(collect($this->scheduling?->cose_it_staff ?? []))
+            ->merge(collect($this->development?->development_team ?? []))
             ->unique()
             ->values();
     }
