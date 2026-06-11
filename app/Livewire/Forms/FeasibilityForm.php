@@ -113,6 +113,13 @@ class FeasibilityForm extends Form
     public function approve(): void
     {
         $this->validate([
+            'approvalStatus' => [
+                function ($attribute, $value, $fail) {
+                    if (! $this->project->feasibility->isReadyForApproval() || ! $this->project->feasibility->hasProperSolutionAssessment()) {
+                        $fail('Cannot approve before the feasibility assessment and a solution assessment have been saved.');
+                    }
+                },
+            ],
             'existingSolutionStatus' => [
                 function ($attribute, $value, $fail) {
                     if ($value === 'yes') {
