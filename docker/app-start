@@ -22,6 +22,9 @@ do
 done
 
 php /var/www/html/artisan config:cache
+# route:cache must run here (not at image build) - Livewire v4 route hashes derive from APP_KEY,
+# which only exists once the .env secret is mounted
+php /var/www/html/artisan route:cache
 
 if [ "$role" = "app" ]; then
 
