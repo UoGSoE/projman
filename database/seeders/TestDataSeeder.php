@@ -253,7 +253,7 @@ class TestDataSeeder extends Seeder
                     break;
                 case ProjectStatus::SCHEDULING:
                     $attributes['assigned_to'] = $assignee->id;
-                    $requiredSkillIds = collect(optional($project->scoping)->skills_required ?? []);
+                    $requiredSkillIds = collect($project->scoping?->skills_required ?? []);
                     if ($requiredSkillIds->isEmpty()) {
                         $requiredSkillIds = $this->sampleSkillIds();
                         $project->scoping?->update(['skills_required' => $requiredSkillIds->all()]);
@@ -331,20 +331,20 @@ class TestDataSeeder extends Seeder
             return;
         }
 
-        $requiredSkillIds = collect(optional($project->scoping)->skills_required ?? []);
+        $requiredSkillIds = collect($project->scoping?->skills_required ?? []);
 
         if ($requiredSkillIds->isEmpty()) {
             $requiredSkillIds = $this->sampleSkillIds();
             $project->scoping?->update(['skills_required' => $requiredSkillIds->all()]);
         }
 
-        $assigned = optional($project->scheduling)->assigned_to;
+        $assigned = $project->scheduling?->assigned_to;
 
         if (! $assigned || $assigned === $project->user_id) {
             $assigned = $availableStaff->random()->id;
         }
 
-        $existingExtras = collect(optional($project->scheduling)->cose_it_staff ?? [])
+        $existingExtras = collect($project->scheduling?->cose_it_staff ?? [])
             ->filter(fn ($id) => $id !== $project->user_id && $id !== $assigned)
             ->values();
 
@@ -439,7 +439,7 @@ class TestDataSeeder extends Seeder
                 $duration = random_int(30, 120); // Duration: 1-4 months
                 $start = Carbon::now()->addDays($startOffset);
                 $completion = $start->copy()->addDays($duration);
-                $existingSkills = collect(optional($project->scoping)->skills_required ?? []);
+                $existingSkills = collect($project->scoping?->skills_required ?? []);
 
                 if ($existingSkills->isEmpty()) {
                     $existingSkills = $this->sampleSkillIds();
@@ -709,7 +709,7 @@ class TestDataSeeder extends Seeder
             $filtered = $staffMembers->values();
         }
 
-        return optional($filtered->shuffle()->first())->id;
+        return $filtered->shuffle()->first()?->id;
     }
 
     private function staffProfiles(): array

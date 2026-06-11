@@ -281,7 +281,7 @@ trait HasHeatmapData
 
         return $projects->map(function (Project $project) use ($teamMembers) {
             $project->setRelation('team_members', $this->collectTeamMembers($project, $teamMembers));
-            $project->setAttribute('assigned_user_id', optional($project->scheduling)->assigned_to);
+            $project->setAttribute('assigned_user_id', $project->scheduling?->assigned_to);
 
             return $project;
         });

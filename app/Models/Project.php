@@ -199,18 +199,18 @@ class Project extends Model
     public function teamMemberIds(): Collection
     {
         return collect([
-            optional($this->scheduling)->assigned_to,
-            optional($this->scheduling)->technical_lead_id,
-            optional($this->scheduling)->change_champion_id,
-            optional($this->detailedDesign)->designed_by,
-            optional($this->development)->lead_developer,
-            optional($this->testing)->test_lead,
-            optional($this->feasibility)->assessed_by,
-            optional($this->scoping)->assessed_by,
+            $this->scheduling?->assigned_to,
+            $this->scheduling?->technical_lead_id,
+            $this->scheduling?->change_champion_id,
+            $this->detailedDesign?->designed_by,
+            $this->development?->lead_developer,
+            $this->testing?->test_lead,
+            $this->feasibility?->assessed_by,
+            $this->scoping?->assessed_by,
         ])
             ->filter()
-            ->merge(collect(optional($this->scheduling)->cose_it_staff ?? []))
-            ->merge(collect(optional($this->development)->development_team ?? []))
+            ->merge(collect($this->scheduling?->cose_it_staff ?? []))
+            ->merge(collect($this->development?->development_team ?? []))
             ->unique()
             ->values();
     }
