@@ -31,10 +31,13 @@ class Project extends Model
         'created' => ProjectCreated::class,
     ];
 
-    protected $casts = [
-        'status' => ProjectStatus::class,
-        'deadline' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'status' => ProjectStatus::class,
+            'deadline' => 'date',
+        ];
+    }
 
     /**
      * Get the validation rules that apply to the model.

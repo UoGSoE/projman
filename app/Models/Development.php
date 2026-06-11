@@ -17,11 +17,15 @@ class Development extends Model
     use CanCheckIfEdited;
     use HasFactory;
 
-    protected $casts = [
-        'start_date' => 'date',
-        'completion_date' => 'date',
-        'development_team' => 'array',
-    ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'completion_date' => 'date',
+            'development_team' => 'array',
+        ];
+    }
 
     public function project(): BelongsTo
     {

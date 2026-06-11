@@ -18,17 +18,21 @@ class Scheduling extends Model
     use CanCheckIfEdited;
     use HasFactory;
 
-    protected $casts = [
-        'estimated_start_date' => 'date',
-        'estimated_completion_date' => 'date',
-        'change_board_date' => 'date',
-        'cose_it_staff' => 'array',
-        'change_board_outcome' => ChangeBoardOutcome::class,
-        'priority' => Priority::class,
-        'fields_locked' => 'boolean',
-        'submitted_to_dcgg_at' => 'datetime',
-        'scheduled_at' => 'datetime',
-    ];
+
+    protected function casts(): array
+    {
+        return [
+            'estimated_start_date' => 'date',
+            'estimated_completion_date' => 'date',
+            'change_board_date' => 'date',
+            'cose_it_staff' => 'array',
+            'change_board_outcome' => ChangeBoardOutcome::class,
+            'priority' => Priority::class,
+            'fields_locked' => 'boolean',
+            'submitted_to_dcgg_at' => 'datetime',
+            'scheduled_at' => 'datetime',
+        ];
+    }
 
     public function project(): BelongsTo
     {

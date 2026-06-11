@@ -19,11 +19,15 @@ class Feasibility extends Model
     /** @use HasFactory<FeasibilityFactory> */
     use HasFactory;
 
-    protected $casts = [
-        'date_assessed' => 'date',
-        'deadlines_achievable' => 'boolean',
-        'approved_at' => 'datetime',
-    ];
+
+    protected function casts(): array
+    {
+        return [
+            'date_assessed' => 'date',
+            'deadlines_achievable' => 'boolean',
+            'approved_at' => 'datetime',
+        ];
+    }
 
     public function project(): BelongsTo
     {

@@ -19,9 +19,13 @@ class Ideation extends Model
     /** @use HasFactory<IdeationFactory> */
     use HasFactory;
 
-    protected $casts = [
-        'deadline' => 'date',
-    ];
+
+    protected function casts(): array
+    {
+        return [
+            'deadline' => 'date',
+        ];
+    }
 
     public function project(): BelongsTo
     {
