@@ -19,7 +19,6 @@ class Ideation extends Model
     /** @use HasFactory<IdeationFactory> */
     use HasFactory;
 
-
     protected function casts(): array
     {
         return [

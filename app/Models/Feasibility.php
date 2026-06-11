@@ -19,7 +19,6 @@ class Feasibility extends Model
     /** @use HasFactory<FeasibilityFactory> */
     use HasFactory;
 
-
     protected function casts(): array
     {
         return [

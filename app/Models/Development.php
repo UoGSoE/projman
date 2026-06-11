@@ -17,7 +17,6 @@ class Development extends Model
     use CanCheckIfEdited;
     use HasFactory;
 
-
     protected function casts(): array
     {
         return [
