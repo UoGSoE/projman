@@ -58,7 +58,6 @@ unit-tests:
   - php artisan config:clear
   - php artisan migrate:fresh
   - cat .env
-  - echo "Add code coverage and upload artifact to gitlab"
   - php ./vendor/bin/pest -c phpunit.gitlab.xml
 
 php-codestyle-check:
