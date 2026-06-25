@@ -2,6 +2,7 @@
 
 use App\Enums\EffortScale;
 use App\Enums\Priority;
+use App\Enums\ProjectStatus;
 use App\Livewire\ProjectCreator;
 use App\Livewire\ProjectEditor;
 use App\Models\Deployed;
@@ -111,7 +112,7 @@ describe('Project Editing', function () {
                 ->set('ideationForm.businessCase', 'Test Business Case')
                 ->set('ideationForm.benefits', 'Test Benefits')
                 ->set('ideationForm.deadline', $tomorrow)
-                ->set('ideationForm.initiative', 'thing')
+                ->set('ideationForm.initiative', 'Inspire')
                 ->call('save', 'ideation')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -120,7 +121,7 @@ describe('Project Editing', function () {
             expect($this->project->ideation->business_case)->toBe('Test Business Case');
             expect($this->project->ideation->benefits)->toBe('Test Benefits');
             expect($this->project->ideation->deadline->format('Y-m-d'))->toBe($tomorrow);
-            expect($this->project->ideation->strategic_initiative)->toBe('thing');
+            expect($this->project->ideation->strategic_initiative)->toBe('Inspire');
         });
 
         it('validates required fields for ideation form', function () {
@@ -149,6 +150,20 @@ describe('Project Editing', function () {
                 ->set('ideationForm.deadline', $yesterday)
                 ->call('save', 'ideation')
                 ->assertHasErrors(['ideationForm.deadline' => 'after']);
+        });
+
+        it('rejects a strategic initiative that is not a valid StrategicInitiative', function () {
+            $tomorrow = now()->addDay()->format('Y-m-d');
+
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('ideationForm.schoolGroup', 'Test School')
+                ->set('ideationForm.objective', 'Test Objective')
+                ->set('ideationForm.businessCase', 'Test Business Case')
+                ->set('ideationForm.benefits', 'Test Benefits')
+                ->set('ideationForm.deadline', $tomorrow)
+                ->set('ideationForm.initiative', 'not-a-real-initiative')
+                ->call('save', 'ideation')
+                ->assertHasErrors(['ideationForm.initiative']);
         });
 
         it('shows a placeholder option for the strategic initiative dropdown so users must actively choose', function () {
@@ -220,13 +235,29 @@ describe('Project Editing', function () {
                     'feasibilityForm.dateAssessed' => 'required',
                 ]);
         });
+
+        it('rejects an approval status that is not a valid ApprovalStatus', function () {
+            $tomorrow = now()->addDay()->format('Y-m-d');
+
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('feasibilityForm.technicalCredence', 'Test Technical Credence')
+                ->set('feasibilityForm.costBenefitCase', 'Test Cost Benefit Case')
+                ->set('feasibilityForm.dependenciesPrerequisites', 'Test Dependencies')
+                ->set('feasibilityForm.deadlinesAchievable', 'yes')
+                ->set('feasibilityForm.alternativeProposal', 'Test Alternative')
+                ->set('feasibilityForm.assessedBy', $this->testAssessor->id)
+                ->set('feasibilityForm.dateAssessed', $tomorrow)
+                ->set('feasibilityForm.approvalStatus', 'banana')
+                ->call('save', 'feasibility')
+                ->assertHasErrors(['feasibilityForm.approvalStatus']);
+        });
     });
 
     describe('Scoping Form', function () {
         it('can create a scoping form with valid data', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->set('scopingForm.assessedBy', $this->testAssessor->id)
-                ->set('scopingForm.estimatedEffort', EffortScale::MEDIUM)
+                ->set('scopingForm.estimatedEffort', EffortScale::MEDIUM->value)
                 ->set('scopingForm.inScope', 'Test In Scope')
                 ->set('scopingForm.outOfScope', 'Test Out of Scope')
                 ->set('scopingForm.assumptions', 'Test Assumptions')
@@ -285,13 +316,13 @@ describe('Project Editing', function () {
             livewire(ProjectEditor::class, ['project' => $this->project])
                 ->call('save', 'scheduling')
                 ->assertHasErrors([
-                    'schedulingForm.keySkills' => 'required',
                     'schedulingForm.estimatedStartDate' => 'required',
                     'schedulingForm.estimatedCompletionDate' => 'required',
                     'schedulingForm.changeBoardDate' => 'required',
                     'schedulingForm.assignedTo' => 'required',
                     'schedulingForm.priority' => 'required',
-                ]);
+                ])
+                ->assertHasNoErrors(['schedulingForm.keySkills']);
         });
 
         it('validates completion date must be after start date', function () {
@@ -304,6 +335,24 @@ describe('Project Editing', function () {
                 ->call('save', 'scheduling')
                 ->assertHasErrors(['schedulingForm.estimatedCompletionDate' => 'after']);
         });
+
+        it('lets a fresh work package advance from Scheduling without setting keySkills', function () {
+            $tomorrow = now()->addDay()->format('Y-m-d');
+            $dayAfterTomorrow = now()->addDays(2)->format('Y-m-d');
+
+            $this->project->update(['status' => ProjectStatus::SCHEDULING]);
+
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('schedulingForm.estimatedStartDate', $tomorrow)
+                ->set('schedulingForm.estimatedCompletionDate', $dayAfterTomorrow)
+                ->set('schedulingForm.changeBoardDate', $tomorrow)
+                ->set('schedulingForm.assignedTo', $this->testLead->id)
+                ->set('schedulingForm.priority', Priority::PRIORITY_2->value)
+                ->call('saveAndAdvance', 'scheduling')
+                ->assertHasNoErrors();
+
+            expect($this->project->fresh()->status)->toBe(ProjectStatus::DETAILED_DESIGN);
+        });
     });
 
     describe('Detailed Design Form', function () {
@@ -314,10 +363,10 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
                 ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
                 ->set('detailedDesignForm.hldDesignLink', 'https://example.com/design')
-                ->set('detailedDesignForm.approvalDelivery', $this->testAssessor->id)
-                ->set('detailedDesignForm.approvalOperations', $this->testLead->id)
-                ->set('detailedDesignForm.approvalResilience', $this->testDesigner->id)
-                ->set('detailedDesignForm.approvalChangeBoard', $this->testDeployer->id)
+                ->set('detailedDesignForm.approvalDelivery', 'approved')
+                ->set('detailedDesignForm.approvalOperations', 'rejected')
+                ->set('detailedDesignForm.approvalResilience', 'approved')
+                ->set('detailedDesignForm.approvalAgb', 'approved')
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -326,10 +375,10 @@ describe('Project Editing', function () {
             expect($this->project->detailedDesign->functional_requirements)->toBe('Test Functional Requirements');
             expect($this->project->detailedDesign->non_functional_requirements)->toBe('Test Non-Functional Requirements');
             expect($this->project->detailedDesign->hld_design_link)->toBe('https://example.com/design');
-            expect($this->project->detailedDesign->approval_delivery)->toEqual($this->testAssessor->id);
-            expect($this->project->detailedDesign->approval_operations)->toEqual($this->testLead->id);
-            expect($this->project->detailedDesign->approval_resilience)->toEqual($this->testDesigner->id);
-            expect($this->project->detailedDesign->approval_change_board)->toEqual($this->testDeployer->id);
+            expect($this->project->detailedDesign->approval_delivery)->toBe('approved');
+            expect($this->project->detailedDesign->approval_operations)->toBe('rejected');
+            expect($this->project->detailedDesign->approval_resilience)->toBe('approved');
+            expect($this->project->detailedDesign->approval_agb)->toBe('approved');
         });
 
         it('validates required fields for detailed design form', function () {
@@ -340,10 +389,14 @@ describe('Project Editing', function () {
                     'detailedDesignForm.serviceFunction' => 'required',
                     'detailedDesignForm.functionalRequirements' => 'required',
                     'detailedDesignForm.nonFunctionalRequirements' => 'required',
-                    'detailedDesignForm.approvalDelivery' => 'required',
-                    'detailedDesignForm.approvalOperations' => 'required',
-                    'detailedDesignForm.approvalResilience' => 'required',
-                    'detailedDesignForm.approvalChangeBoard' => 'required',
+                ])
+                // Approvals default to 'pending', so they are never empty and
+                // do not trip the required rule.
+                ->assertHasNoErrors([
+                    'detailedDesignForm.approvalDelivery',
+                    'detailedDesignForm.approvalOperations',
+                    'detailedDesignForm.approvalResilience',
+                    'detailedDesignForm.approvalAgb',
                 ]);
         });
 
@@ -352,6 +405,53 @@ describe('Project Editing', function () {
                 ->set('detailedDesignForm.hldDesignLink', 'not-a-url')
                 ->call('save', 'detailed-design')
                 ->assertHasErrors(['detailedDesignForm.hldDesignLink' => 'url']);
+        });
+
+        it('rejects an approval value that is not a valid ApprovalStatus', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
+                ->set('detailedDesignForm.serviceFunction', 'Test Service')
+                ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
+                ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
+                ->set('detailedDesignForm.approvalDelivery', 'banana')
+                ->call('save', 'detailed-design')
+                ->assertHasErrors(['detailedDesignForm.approvalDelivery']);
+        });
+
+        it('allows Not Required as an Architecture Governance Board approval value', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
+                ->set('detailedDesignForm.serviceFunction', 'Test Service')
+                ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
+                ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
+                ->set('detailedDesignForm.hldDesignLink', 'https://example.com/design')
+                ->set('detailedDesignForm.approvalDelivery', 'approved')
+                ->set('detailedDesignForm.approvalOperations', 'approved')
+                ->set('detailedDesignForm.approvalResilience', 'approved')
+                ->set('detailedDesignForm.approvalAgb', 'not_required')
+                ->call('save', 'detailed-design')
+                ->assertHasNoErrors()
+                ->assertSee('Not Required');
+
+            // Dual-write during the expand-then-contract transition: the new
+            // approval_agb column and the legacy approval_change_board column
+            // both receive the value until the legacy column is dropped.
+            expect($this->project->fresh()->detailedDesign->approval_agb)
+                ->toBe('not_required')
+                ->and($this->project->fresh()->detailedDesign->approval_change_board)
+                ->toBe('not_required');
+        });
+
+        it('defaults the detailed design approvals to Pending when none are recorded', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->assertSet('detailedDesignForm.approvalDelivery', 'pending')
+                ->assertSet('detailedDesignForm.approvalOperations', 'pending')
+                ->assertSet('detailedDesignForm.approvalResilience', 'pending')
+                ->assertSet('detailedDesignForm.approvalAgb', 'pending')
+                // Dropdowns must offer the lowercase keys as option values,
+                // not the capitalised labels (the original quirk this fixed).
+                ->assertSeeHtml('value="pending"')
+                ->assertSeeHtml('value="not_required"');
         });
     });
 
@@ -404,6 +504,13 @@ describe('Project Editing', function () {
                 ->call('save', 'development')
                 ->assertHasErrors(['developmentForm.repositoryLink' => 'url']);
         });
+
+        it('rejects a status that is not a valid DevelopmentStatus', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('developmentForm.status', 'banana')
+                ->call('save', 'development')
+                ->assertHasErrors(['developmentForm.status']);
+        });
     });
 
     describe('Testing Form', function () {
@@ -416,11 +523,11 @@ describe('Project Editing', function () {
                 ->set('testingForm.nonFunctionalTestingTitle', 'Non-Functional Testing')
                 ->set('testingForm.nonFunctionalTests', 'Test non-functional tests')
                 ->set('testingForm.testRepository', 'https://github.com/test/tests')
-                ->set('testingForm.testingSignOff', $this->testAssessor->id)
-                ->set('testingForm.userAcceptance', $this->testLead->id)
-                ->set('testingForm.testingLeadSignOff', $this->testDesigner->id)
-                ->set('testingForm.serviceDeliverySignOff', $this->testDeployer->id)
-                ->set('testingForm.serviceResilienceSignOff', $this->testAssessor->id)
+                ->set('testingForm.testingSignOff', 'approved')
+                ->set('testingForm.userAcceptance', 'approved')
+                ->set('testingForm.testingLeadSignOff', 'pending')
+                ->set('testingForm.serviceDeliverySignOff', 'rejected')
+                ->set('testingForm.serviceResilienceSignOff', 'approved')
                 ->call('save', 'testing')
                 ->assertHasNoErrors();
             $this->project->refresh();
@@ -431,10 +538,11 @@ describe('Project Editing', function () {
             expect($this->project->testing->non_functional_testing_title)->toBe('Non-Functional Testing');
             expect($this->project->testing->non_functional_tests)->toBe('Test non-functional tests');
             expect($this->project->testing->test_repository)->toBe('https://github.com/test/tests');
-            expect($this->project->testing->testing_sign_off)->toEqual($this->testAssessor->id);
-            expect($this->project->testing->user_acceptance)->toEqual($this->testLead->id);
-            expect($this->project->testing->testing_lead_sign_off)->toEqual($this->testDesigner->id);
-            expect($this->project->testing->service_delivery_sign_off)->toEqual($this->testDeployer->id);
+            expect($this->project->testing->testing_sign_off)->toBe('approved');
+            expect($this->project->testing->user_acceptance)->toBe('approved');
+            expect($this->project->testing->testing_lead_sign_off)->toBe('pending');
+            expect($this->project->testing->service_delivery_sign_off)->toBe('rejected');
+            expect($this->project->testing->service_resilience_sign_off)->toBe('approved');
         });
 
         it('validates required fields for testing form', function () {
@@ -460,6 +568,13 @@ describe('Project Editing', function () {
                 ->set('testingForm.testRepository', 'not-a-url')
                 ->call('save', 'testing')
                 ->assertHasErrors(['testingForm.testRepository' => 'url']);
+        });
+
+        it('rejects a sign-off value that is not a valid ApprovalStatus', function () {
+            livewire(ProjectEditor::class, ['project' => $this->project])
+                ->set('testingForm.testingSignOff', 'banana')
+                ->call('save', 'testing')
+                ->assertHasErrors(['testingForm.testingSignOff']);
         });
     });
 

@@ -20,9 +20,9 @@
                 wire:model="ideationForm.deadline" />
 
             <flux:select label="Strategic Initiative" wire:model="ideationForm.initiative" placeholder="Please select a Strategic Initiative...">
-                @foreach ($ideationForm->availableStrategicInitiatives as $key => $label)
-                    <flux:select.option value="{{ $key }}">
-                        {{ $key }} - {{ $label }}
+                @foreach (\App\Enums\StrategicInitiative::cases() as $initiative)
+                    <flux:select.option value="{{ $initiative->value }}">
+                        {{ $initiative->label() }} - {{ $initiative->description() }}
                     </flux:select.option>
                 @endforeach
             </flux:select>

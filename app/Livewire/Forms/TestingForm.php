@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\ApprovalStatus;
 use App\Events\ProjectUpdated;
 use App\Events\ServiceAcceptanceRequested;
 use App\Events\UATRequested;
 use App\Models\Project;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -40,19 +42,14 @@ class TestingForm extends Form
     #[Validate('url|max:255')]
     public ?string $testRepository;
 
-    #[Validate('required|string|max:255')]
     public ?string $testingSignOff = '';
 
-    #[Validate('required|string|max:255')]
     public ?string $userAcceptance = '';
 
-    #[Validate('required|string|max:255')]
     public ?string $testingLeadSignOff = '';
 
-    #[Validate('required|string|max:255')]
     public ?string $serviceDeliverySignOff = '';
 
-    #[Validate('required|string|max:255')]
     public ?string $serviceResilienceSignOff = '';
 
     #[Validate('nullable|string|max:5000')]
@@ -70,11 +67,16 @@ class TestingForm extends Form
     #[Validate('nullable|string|max:5000')]
     public ?string $serviceResilienceSignOffNotes = null;
 
-    public $availableApprovalStates = [
-        'pending' => 'Pending',
-        'approved' => 'Approved',
-        'rejected' => 'Rejected',
-    ];
+    public function rules(): array
+    {
+        return [
+            'testingSignOff' => ['required', Rule::enum(ApprovalStatus::class)],
+            'userAcceptance' => ['required', Rule::enum(ApprovalStatus::class)],
+            'testingLeadSignOff' => ['required', Rule::enum(ApprovalStatus::class)],
+            'serviceDeliverySignOff' => ['required', Rule::enum(ApprovalStatus::class)],
+            'serviceResilienceSignOff' => ['required', Rule::enum(ApprovalStatus::class)],
+        ];
+    }
 
     public function setProject(Project $project)
     {

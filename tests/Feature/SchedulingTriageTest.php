@@ -91,6 +91,26 @@ describe('Scheduling Triage Fields', function () {
                 ->toBe(ChangeBoardOutcome::APPROVED);
         });
 
+        it('saves and loads a Not Required change board outcome', function () {
+            // Arrange
+            $user = User::factory()->create(['is_admin' => true]);
+            $assignedUser = User::factory()->create();
+            $project = Project::factory()->create();
+            ($this->setupValidScheduling)($project, $assignedUser);
+            $this->actingAs($user);
+
+            // Act
+            livewire(ProjectEditor::class, ['project' => $project])
+                ->set('schedulingForm.changeBoardOutcome', ChangeBoardOutcome::NOT_REQUIRED)
+                ->call('save', 'scheduling')
+                ->assertHasNoErrors();
+
+            // Assert
+            $project->refresh();
+            expect($project->scheduling->change_board_outcome)
+                ->toBe(ChangeBoardOutcome::NOT_REQUIRED);
+        });
+
         it('saves all three fields together', function () {
             // Arrange
             $user = User::factory()->create(['is_admin' => true]);
@@ -239,18 +259,20 @@ describe('Scheduling Triage Fields', function () {
                 ->assertSeeHtml('Change Board Outcome');
         });
 
-        it('shows all change board outcome options', function () {
+        it('shows every change board outcome option', function () {
             // Arrange
             $user = User::factory()->create(['is_admin' => true]);
             $project = Project::factory()->create();
             $this->actingAs($user);
 
-            // Act & Assert
-            livewire(ProjectEditor::class, ['project' => $project])
-                ->assertSee('Pending')
-                ->assertSee('Approved')
-                ->assertSee('Deferred')
-                ->assertSee('Rejected');
+            // Act
+            $component = livewire(ProjectEditor::class, ['project' => $project]);
+
+            // Assert - every real outcome (including 'Not Required') is offered, driven by
+            // the enum so the test cannot drift out of step with the domain.
+            foreach (ChangeBoardOutcome::cases() as $outcome) {
+                $component->assertSee($outcome->label());
+            }
         });
 
         it('displays selected values correctly', function () {

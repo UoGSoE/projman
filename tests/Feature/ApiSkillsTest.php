@@ -16,7 +16,7 @@ function authHeader(User $user): array
 
 it('lists skills in a paginated response', function () {
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
-    Skill::factory()->create(['name' => 'Python', 'skill_category' => 'Languages']);
+    Skill::factory()->create(['name' => 'Python', 'skill_category' => 'Languages', 'description' => 'A programming language']);
     Skill::factory()->create(['name' => 'Kubernetes', 'skill_category' => 'Ops']);
 
     $response = $this->withHeaders(authHeader($admin))
@@ -29,6 +29,13 @@ it('lists skills in a paginated response', function () {
         'meta',
     ]);
     expect($response->json('data'))->toHaveCount(2);
+
+    $pythonRow = collect($response->json('data'))->firstWhere('name', 'Python');
+    expect($pythonRow['skill_category'])->toBe('Languages');
+    expect($pythonRow['description'])->toBe('A programming language');
+
+    $kubernetesRow = collect($response->json('data'))->firstWhere('name', 'Kubernetes');
+    expect($kubernetesRow['skill_category'])->toBe('Ops');
 });
 
 it('lists users who hold a given skill with their levels', function () {
@@ -47,10 +54,14 @@ it('lists users who hold a given skill with their levels', function () {
     expect($response->json('data'))->toHaveCount(2);
 
     $aliceRow = collect($response->json('data'))->firstWhere('id', $alice->id);
+    expect($aliceRow['skills'][0]['id'])->toBe($skill->id);
+    expect($aliceRow['skills'][0]['name'])->toBe('Python');
     expect($aliceRow['skills'][0]['level'])->toBe('working');
     expect($aliceRow['skills'][0]['level_value'])->toBe(2);
 
     $bobRow = collect($response->json('data'))->firstWhere('id', $bob->id);
+    expect($bobRow['skills'][0]['id'])->toBe($skill->id);
+    expect($bobRow['skills'][0]['name'])->toBe('Python');
     expect($bobRow['skills'][0]['level'])->toBe('expert');
     expect($bobRow['skills'][0]['level_value'])->toBe(4);
 });

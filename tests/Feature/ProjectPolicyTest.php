@@ -186,15 +186,16 @@ describe('ProjectEditor in-method authorisation', function () {
             ->assertForbidden();
     });
 
-    it('forbids a requester from calling governance actions', function (string $method) {
+    it('forbids the owner-requester from calling governance actions even on their own ideation project', function (string $method) {
         $owner = User::factory()->requester()->create();
-        $intruder = User::factory()->requester()->create();
         $project = Project::factory()->create([
             'user_id' => $owner->id,
             'status' => ProjectStatus::IDEATION,
         ]);
 
-        $this->actingAs($intruder);
+        // The owner passes the ownership/update check while in ideation, so this proves
+        // governance actions are gated on something stronger than "can update".
+        $this->actingAs($owner);
 
         livewire(ProjectEditor::class, ['project' => $project])
             ->call($method)

@@ -16,9 +16,12 @@ use App\Livewire\Forms\TestingForm;
 use App\Models\Project;
 use App\Models\Skill;
 use App\Models\User;
+use App\Support\HeatmapCell;
 use App\Traits\HasHeatmapData;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
@@ -139,16 +142,34 @@ class ProjectEditor extends Component
         $this->advanceToNextStage();
     }
 
-    public function approveFeasibility(): void
+    public function returnToPreviousStage(): void
     {
         $this->authorize('update', $this->project);
+
+        if (! $this->project->status->canReturnToPreviousStage()) {
+            Flux::toast('Work package cannot be returned to a previous stage from '.$this->project->status->label().'.', variant: 'warning');
+
+            return;
+        }
+
+        $this->project->returnToPreviousStage();
+        $this->project->addHistory(Auth::user(), 'Returned to '.$this->project->status->value);
+
+        $this->modal('return-to-previous-stage-modal')->close();
+
+        Flux::toast('Work package returned to '.$this->project->status->label(), variant: 'success');
+    }
+
+    public function approveFeasibility(): void
+    {
+        $this->authorize('manageWorkflow', $this->project);
         $this->feasibilityForm->approve();
         Flux::toast('Feasibility approved successfully', variant: 'success');
     }
 
     public function rejectFeasibility(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->feasibilityForm->reject();
         $this->modal('reject-feasibility-modal')->close();
         Flux::toast('Feasibility rejected', variant: 'warning');
@@ -156,42 +177,42 @@ class ProjectEditor extends Component
 
     public function submitScoping(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->scopingForm->submit();
         Flux::toast('Scoping submitted to Work Package Assessors', variant: 'success');
     }
 
     public function submitSchedulingToDCGG(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->schedulingForm->submitToDCGG();
         Flux::toast('Scheduling submitted to Digital Change Governance Group', variant: 'success');
     }
 
     public function scheduleScheduling(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->schedulingForm->schedule();
         Flux::toast('Scheduling approved and scheduled', variant: 'success');
     }
 
     public function requestUAT(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->testingForm->requestUAT();
         Flux::toast('UAT testing requested - UAT Tester has been notified', variant: 'success');
     }
 
     public function requestServiceAcceptance(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->testingForm->requestServiceAcceptance();
         Flux::toast('Service Acceptance requested - Service Leads have been notified', variant: 'success');
     }
 
     public function submitTesting(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->testingForm->submit();
         $this->advanceToNextStage();
         Flux::toast('Testing complete - work package advanced to Deployed stage', variant: 'success');
@@ -199,28 +220,28 @@ class ProjectEditor extends Component
 
     public function acceptDeploymentService(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->deployedForm->acceptService();
         Flux::toast('Service Acceptance submitted - Service Leads have been notified', variant: 'success');
     }
 
     public function approveDeployment(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->deployedForm->approve();
         Flux::toast('Deployment approved - work package status set to Completed', variant: 'success');
     }
 
     public function addDevelopmentNote(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->developmentForm->addNote($this->project->development);
         Flux::modal('add-note-developmentForm')->close();
     }
 
     public function addBuildNote(): void
     {
-        $this->authorize('update', $this->project);
+        $this->authorize('manageWorkflow', $this->project);
         $this->buildForm->addNote($this->project->build);
         Flux::modal('add-note-buildForm')->close();
     }
@@ -234,14 +255,11 @@ class ProjectEditor extends Component
     public function heatmapData(): array
     {
         $buckets = $this->getDateBuckets();
-
-        // Collect assigned user IDs from scheduling form
         $assignedUserIds = $this->getAssignedStaffIds();
 
-        // Calculate busyness adjustments for live preview
-        $adjustments = $this->calculateBusynessAdjustments();
+        $staff = $this->staffWithCellsForBuckets($buckets, $assignedUserIds, $this->project->id);
+        $staff = $this->applyLivePreview($staff, $buckets, $assignedUserIds);
 
-        $staff = $this->staffWithBusynessForBuckets($buckets, $assignedUserIds, $adjustments);
         $projects = $this->activeProjects();
 
         return [
@@ -250,7 +268,81 @@ class ProjectEditor extends Component
             'projects' => $projects,
             'component' => $this,
             'hasAssignedStaff' => ! empty($assignedUserIds),
+            'canModelInEditProject' => $this->previewState() !== null,
         ];
+    }
+
+    /**
+     * Snapshot the in-edit project's state from the live forms (falling back
+     * to the saved record for fields the user hasn't changed). Returns null
+     * when anything required to model the project is missing.
+     *
+     * @return array{effort_days: int, start: Carbon, end: Carbon, user_ids: array<int>, people_count: int}|null
+     */
+    protected function previewState(): ?array
+    {
+        $effort = $this->scopingForm->estimatedEffort ?? $this->project->scoping?->estimated_effort;
+        $start = $this->schedulingForm->estimatedStartDate ?? $this->project->scheduling?->estimated_start_date;
+        $end = $this->schedulingForm->estimatedCompletionDate ?? $this->project->scheduling?->estimated_completion_date;
+        $userIds = $this->getAssignedStaffIds();
+
+        if (! $effort || ! $start || ! $end || empty($userIds)) {
+            return null;
+        }
+
+        $start = $start instanceof Carbon ? $start->copy() : Carbon::parse($start);
+        $end = $end instanceof Carbon ? $end->copy() : Carbon::parse($end);
+
+        return [
+            'effort_days' => $effort->estimatedDays(),
+            'start' => $start,
+            'end' => $end,
+            'user_ids' => $userIds,
+            'people_count' => count($userIds),
+        ];
+    }
+
+    /**
+     * Overlay the in-edit project's projected per-day cost on top of the
+     * base cells for every currently-selected staff member.
+     */
+    protected function applyLivePreview(SupportCollection $staff, array $buckets, array $assignedUserIds): SupportCollection
+    {
+        $preview = $this->previewState();
+
+        if ($preview === null) {
+            return $staff;
+        }
+
+        $duration = (int) $preview['start']->diffInWeekdays($preview['end']) + 1;
+
+        $overlaps = array_map(
+            fn ($bucket) => $preview['start']->lte($bucket['end']) && $preview['end']->gte($bucket['start']),
+            $buckets
+        );
+
+        return $staff->map(function ($entry) use ($preview, $duration, $overlaps, $assignedUserIds) {
+            if (! in_array($entry['user']->id, $assignedUserIds)) {
+                return $entry;
+            }
+
+            $extra = Project::calculatePerDayCost(
+                $entry['user'],
+                $preview['effort_days'],
+                $preview['people_count'],
+                $duration,
+            );
+
+            $entry['cells'] = array_map(
+                fn ($cell, $i) => $overlaps[$i]
+                    ? new HeatmapCell($cell->utilisation + $extra)
+                    : $cell,
+                $entry['cells'],
+                array_keys($entry['cells']),
+            );
+
+            return $entry;
+        });
     }
 
     protected function getAssignedStaffIds(): array

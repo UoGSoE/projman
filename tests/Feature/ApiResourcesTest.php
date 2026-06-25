@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AvailabilityForChange;
 use App\Enums\Busyness;
 use App\Enums\ServiceFunction;
 use App\Enums\SkillLevel;
@@ -89,4 +90,16 @@ it('exposes busyness and service_function on UserResource', function () {
     expect($resource['busyness_week_1_value'])->toBe(60);
     expect($resource['busyness_week_2'])->toBe('high');
     expect($resource['busyness_week_2_value'])->toBe(90);
+});
+
+it('exposes availability_for_change alongside the legacy busyness fields', function () {
+    $user = User::factory()->create([
+        'is_staff' => true,
+        'availability_for_change' => AvailabilityForChange::Good,
+    ]);
+
+    $resource = (new UserResource($user))->resolve();
+
+    expect($resource['availability_for_change'])->toBe('good');
+    expect($resource['availability_for_change_value'])->toBe(80);
 });

@@ -54,7 +54,7 @@ it('displays projects grouped by service function', function () {
         ->assertSee('Research Project');
 });
 
-it('excludes projects without scheduling dates from timeline', function () {
+it('keeps projects without scheduling dates off the timeline and in the unscheduled list', function () {
     $user = User::factory()->create();
     $scheduledProject = $this->createProject(['user_id' => $user->id, 'title' => 'Scheduled Project']);
     $unscheduledProject = $this->createProject(['user_id' => $user->id, 'title' => 'Unscheduled Project']);
@@ -64,9 +64,22 @@ it('excludes projects without scheduling dates from timeline', function () {
         'estimated_completion_date' => now()->addMonths(2),
     ]);
 
-    Livewire::test(RoadmapView::class)
-        ->assertSee('Unscheduled Work Packages')
-        ->assertSee('Unscheduled Project');
+    $component = Livewire::test(RoadmapView::class);
+
+    // The timeline is built only from projects with scheduling dates.
+    $timelineProjectIds = collect($component->viewData('roadmapData'))
+        ->flatMap(fn ($group) => collect($group['lanes'])->flatten(1))
+        ->pluck('project.id')
+        ->all();
+
+    expect($timelineProjectIds)->toContain($scheduledProject->id)
+        ->and($timelineProjectIds)->not->toContain($unscheduledProject->id);
+
+    // The undated project is surfaced separately rather than on the timeline.
+    $unscheduledProjectIds = $component->viewData('unscheduledProjects')->pluck('id')->all();
+
+    expect($unscheduledProjectIds)->toContain($unscheduledProject->id)
+        ->and($unscheduledProjectIds)->not->toContain($scheduledProject->id);
 });
 
 it('calculates BRAG status as black for completed projects', function () {

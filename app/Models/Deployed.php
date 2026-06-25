@@ -3,31 +3,18 @@
 namespace App\Models;
 
 use App\Models\Traits\CanCheckIfEdited;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Touches;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[Fillable('project_id', 'deployment_lead_id', 'service_function', 'functional_tests', 'non_functional_tests', 'bau_operational_wiki', 'service_resilience_approval', 'service_resilience_notes', 'service_operations_approval', 'service_operations_notes', 'service_delivery_approval', 'service_delivery_notes', 'service_accepted_at', 'deployment_approved_at')]
+#[Touches('project')]
 class Deployed extends Model
 {
     use CanCheckIfEdited;
     use HasFactory;
-
-    protected $fillable = [
-        'project_id',
-        'deployment_lead_id',
-        'service_function',
-        'functional_tests',
-        'non_functional_tests',
-        'bau_operational_wiki',
-        'service_resilience_approval',
-        'service_resilience_notes',
-        'service_operations_approval',
-        'service_operations_notes',
-        'service_delivery_approval',
-        'service_delivery_notes',
-        'service_accepted_at',
-        'deployment_approved_at',
-    ];
 
     protected function casts(): array
     {
@@ -36,8 +23,6 @@ class Deployed extends Model
             'deployment_approved_at' => 'datetime',
         ];
     }
-
-    protected $touches = ['project'];
 
     public function project(): BelongsTo
     {

@@ -1,13 +1,9 @@
 <?php
 
 use App\Events\ServiceAcceptanceRequested;
-use App\Events\UATAccepted;
-use App\Events\UATRejected;
 use App\Events\UATRequested;
 use App\Livewire\ProjectEditor;
 use App\Mail\ServiceAcceptanceRequestedMail;
-use App\Mail\UATAcceptedMail;
-use App\Mail\UATRejectedMail;
 use App\Mail\UATRequestedMail;
 use App\Models\Project;
 use App\Models\Role;
@@ -101,11 +97,16 @@ describe('Request UAT Workflow', function () {
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
             ->set('testingForm.uatTesterId', $uatTester->id)
-            ->call('requestUAT');
+            ->call('requestUAT')
+            ->assertHasNoErrors();
 
-        // Assert
-        Mail::assertQueued(UATRequestedMail::class, function ($mail) use ($uatTester) {
-            return $mail->hasTo($uatTester->email);
+        // Assert - one mail, carrying this project, to the assigned UAT Tester only
+        Mail::assertQueued(UATRequestedMail::class, 1);
+        Mail::assertQueued(UATRequestedMail::class, function ($mail) use ($uatTester, $project) {
+            return $mail->hasTo($uatTester->email) && $mail->project->is($project);
+        });
+        Mail::assertNotQueued(UATRequestedMail::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->email);
         });
     });
 
@@ -127,7 +128,8 @@ describe('Request UAT Workflow', function () {
         $project->refresh();
         expect($project->history()->count())->toBe($historyCountBefore + 1);
         $latestHistory = $project->history()->latest()->first();
-        expect(str_contains($latestHistory->description, 'Requested UAT'))->toBeTrue();
+        expect(str_contains($latestHistory->description, 'Requested UAT'))->toBeTrue()
+            ->and($latestHistory->user_id)->toBe($user->id);
     });
 
     it('saves department_office field correctly', function () {
@@ -158,85 +160,6 @@ describe('Request UAT Workflow', function () {
         // Assert - field persists after refresh
         $project = $project->fresh(['testing']);
         expect($project->testing->department_office)->toBe('IT Department');
-    });
-});
-
-describe('UAT Acceptance/Rejection Workflow', function () {
-    beforeEach(function () {
-        $this->setupBaseNotificationRoles();
-    });
-
-    it('dispatches UATAccepted event when User Acceptance set to approved', function () {
-        // Arrange
-        Event::fake([UATAccepted::class]);
-        $user = User::factory()->create(['is_admin' => true]);
-        $project = createTestingProject();
-        $this->actingAs($user);
-
-        // Act
-        livewire(ProjectEditor::class, ['project' => $project])
-            ->set('testingForm.userAcceptance', 'approved')
-            ->call('save', 'testing');
-
-        // Manually fire the event (in reality this would be triggered by Livewire lifecycle)
-        event(new UATAccepted($project));
-
-        // Assert
-        Event::assertDispatched(UATAccepted::class);
-    });
-
-    it('dispatches UATRejected event when User Acceptance set to rejected', function () {
-        // Arrange
-        Event::fake([UATRejected::class]);
-        $user = User::factory()->create(['is_admin' => true]);
-        $project = createTestingProject();
-        $this->actingAs($user);
-
-        // Act
-        livewire(ProjectEditor::class, ['project' => $project])
-            ->set('testingForm.userAcceptance', 'rejected')
-            ->set('testingForm.userAcceptanceNotes', 'Tests failed')
-            ->call('save', 'testing');
-
-        // Manually fire the event
-        event(new UATRejected($project));
-
-        // Assert
-        Event::assertDispatched(UATRejected::class);
-    });
-
-    it('sends email to project owner when UAT accepted', function () {
-        // Arrange
-        Mail::fake();
-        $projectOwner = User::factory()->create();
-        $project = createTestingProject();
-        $project->update(['user_id' => $projectOwner->id]);
-        $this->actingAs($projectOwner);
-
-        // Act - fire the event
-        event(new UATAccepted($project));
-
-        // Assert
-        Mail::assertQueued(UATAcceptedMail::class, function ($mail) use ($projectOwner) {
-            return $mail->hasTo($projectOwner->email);
-        });
-    });
-
-    it('sends email to project owner when UAT rejected', function () {
-        // Arrange
-        Mail::fake();
-        $projectOwner = User::factory()->create();
-        $project = createTestingProject();
-        $project->update(['user_id' => $projectOwner->id]);
-        $this->actingAs($projectOwner);
-
-        // Act - fire the event
-        event(new UATRejected($project));
-
-        // Assert
-        Mail::assertQueued(UATRejectedMail::class, function ($mail) use ($projectOwner) {
-            return $mail->hasTo($projectOwner->email);
-        });
     });
 });
 
@@ -312,17 +235,25 @@ describe('Request Service Acceptance Workflow', function () {
         $serviceLead->roles()->attach($serviceLeadRole);
 
         $user = User::factory()->create(['is_admin' => true]);
-        $project = createTestingProject();
+        $owner = User::factory()->create();
+        $project = createTestingProject(['user_id' => $owner->id]);
         $project->testing->update(['user_acceptance' => 'approved']);
         $this->actingAs($user);
 
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->call('requestServiceAcceptance');
+            ->call('requestServiceAcceptance')
+            ->assertHasNoErrors();
 
-        // Assert
-        Mail::assertQueued(ServiceAcceptanceRequestedMail::class, function ($mail) use ($serviceLead) {
-            return $mail->hasTo($serviceLead->email);
+        // Assert - one mail, carrying this project, to the Service Lead
+        Mail::assertQueued(ServiceAcceptanceRequestedMail::class, 1);
+        Mail::assertQueued(ServiceAcceptanceRequestedMail::class, function ($mail) use ($serviceLead, $project) {
+            return $mail->hasTo($serviceLead->email) && $mail->project->is($project);
+        });
+
+        // Assert - the project owner is not notified (config excludes the owner)
+        Mail::assertNotQueued(ServiceAcceptanceRequestedMail::class, function ($mail) use ($owner) {
+            return $mail->hasTo($owner->email);
         });
     });
 
@@ -347,7 +278,8 @@ describe('Request Service Acceptance Workflow', function () {
         $project->refresh();
         expect($project->history()->count())->toBe($historyCountBefore + 1);
         $latestHistory = $project->history()->latest()->first();
-        expect(str_contains($latestHistory->description, 'Requested Service Acceptance'))->toBeTrue();
+        expect(str_contains($latestHistory->description, 'Requested Service Acceptance'))->toBeTrue()
+            ->and($latestHistory->user_id)->toBe($user->id);
     });
 });
 
@@ -447,7 +379,7 @@ describe('Submit Testing Workflow', function () {
         livewire(ProjectEditor::class, ['project' => $project])
             ->call('submitTesting');
 
-        // Assert - submitTesting creates 2 history entries: "Submitted testing" + "Advanced to deployed" + "Project statys changed to ..."
+        // Assert - submitTesting creates 3 history entries: "Submitted testing" + "Advanced to deployed" + status change
         $project->refresh();
         expect($project->history()->count())->toBe($historyCountBefore + 3);
 
@@ -456,6 +388,10 @@ describe('Submit Testing Workflow', function () {
         $descriptions = $historyEntries->pluck('description')->implode(' ');
         expect($descriptions)->toContain('Advanced to');
         expect($descriptions)->toContain('Submitted testing');
+
+        // The "Submitted testing" entry is attributed to the acting user
+        $submitted = $historyEntries->first(fn ($entry) => str_contains($entry->description, 'Submitted testing'));
+        expect($submitted->user_id)->toBe($user->id);
     });
 });
 

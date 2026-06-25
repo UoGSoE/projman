@@ -31,4 +31,15 @@ enum EffortScale: string
             self::XX_LARGE => '>101',
         };
     }
+
+    public function estimatedDays(): int
+    {
+        return match ($this) {
+            self::SMALL => 5,
+            self::MEDIUM => 10,
+            self::LARGE => 40,
+            self::X_LARGE => 75,
+            self::XX_LARGE => 150,
+        };
+    }
 }

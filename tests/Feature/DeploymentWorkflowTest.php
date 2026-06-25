@@ -127,9 +127,10 @@ describe('Service Acceptance Workflow', function () {
         // Assert - sent exactly once with 3 recipients
         // (2 test Service Leads + 1 default Service Lead created in beforeEach)
         Mail::assertQueued(DeploymentServiceAcceptedMail::class, 1);
-        Mail::assertQueued(DeploymentServiceAcceptedMail::class, function ($mail) use ($serviceLead1, $serviceLead2) {
+        Mail::assertQueued(DeploymentServiceAcceptedMail::class, function ($mail) use ($serviceLead1, $serviceLead2, $project) {
             return $mail->hasTo($serviceLead1->email)
                 && $mail->hasTo($serviceLead2->email)
+                && $mail->project->is($project)
                 && count($mail->to) === 3;
         });
     });
@@ -270,9 +271,10 @@ describe('Deployment Approval Workflow', function () {
         // Assert - sent exactly once with 3 recipients
         // (1 test Service Lead + 1 project owner + 1 default Service Lead created in beforeEach)
         Mail::assertQueued(DeploymentApprovedMail::class, 1);
-        Mail::assertQueued(DeploymentApprovedMail::class, function ($mail) use ($serviceLead, $projectOwner) {
+        Mail::assertQueued(DeploymentApprovedMail::class, function ($mail) use ($serviceLead, $projectOwner, $project) {
             return $mail->hasTo($serviceLead->email)
                 && $mail->hasTo($projectOwner->email)
+                && $mail->project->is($project)
                 && count($mail->to) === 3;
         });
     });

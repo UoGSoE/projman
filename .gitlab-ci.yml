@@ -58,7 +58,6 @@ unit-tests:
   - php artisan config:clear
   - php artisan migrate:fresh
   - cat .env
-  - echo "Add code coverage and upload artifact to gitlab"
   - php ./vendor/bin/pest -c phpunit.gitlab.xml
 
 php-codestyle-check:
@@ -84,7 +83,7 @@ php-security-scan:
   script:
     - cd /var/www/html
     - composer config http-basic.composer.fluxui.dev "${FLUX_USERNAME}" "${FLUX_LICENSE_KEY}"
-    - composer audit --abandoned report
+    - composer audit
 
 dotenv-example-missing-keys-check:
   stage: test
@@ -179,7 +178,8 @@ deploy_to_prod:
     DOTENV: ${PROD_DOTENV}
 
 .build:
-  image: docker:28
+  # docker:28 digest as of 2026-06-11 - review/bump periodically
+  image: docker:28@sha256:2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac
   variables:
     DOCKER_TARGET: ""
     IMAGE_NAME: ""
@@ -190,7 +190,8 @@ deploy_to_prod:
 
 .deployment:
   when: manual
-  image: docker:28
+  # docker:28 digest as of 2026-06-11 - review/bump periodically
+  image: docker:28@sha256:2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac
   variables:
     IMAGE_NAME: ""
     TRAEFIK_BACKEND: ""

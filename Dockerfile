@@ -65,7 +65,8 @@ RUN composer install \
     --prefer-dist
 
 ### Build JS/css assets
-FROM node:22 as frontend
+# node:22 digest as of 2026-06-11 - dependabot raises PRs to bump this
+FROM node:22@sha256:1031993481795705055273f2eef0c24597abdcb277d6e058c82f78cbbdef92a6 as frontend
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ENV http_proxy="http://wwwcache.gla.ac.uk:8080"
@@ -88,7 +89,7 @@ COPY --chown=node:node resources/css* /home/node/resources/css
 COPY --chown=node:node resources/views* /home/node/resources/views
 COPY --chown=node:node --from=qa-composer /var/www/html/vendor /home/node/vendor
 
-RUN npm install && \
+RUN npm ci --ignore-scripts && \
     npm run build && \
     npm cache clean --force
 
@@ -127,9 +128,9 @@ RUN if grep -q horizon composer.json; then php /var/www/html/artisan horizon:pub
 RUN ln -sf /run/secrets/.env /var/www/html/.env
 
 #- Clean up and production-cache our apps settings/views/routing
+#- NB: route:cache happens in app-start, not here - Livewire v4 route hashes need the real APP_KEY
 RUN php /var/www/html/artisan storage:link && \
     php /var/www/html/artisan view:cache && \
-    php /var/www/html/artisan route:cache && \
     chown -R www-data:www-data storage bootstrap/cache
 
 #- Set up the default healthcheck

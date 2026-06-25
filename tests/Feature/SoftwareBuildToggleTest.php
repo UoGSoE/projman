@@ -80,7 +80,7 @@ describe('Software Development vs Build Toggle', function () {
     });
 
     describe('Development Form Conditional Disabling', function () {
-        it('disables development form fieldset when checkbox unchecked', function () {
+        it('shows the "not required" callout in the development form when software dev is off', function () {
             // Arrange
             $project = $this->createProject();
             $project->scoping->update(['requires_software_dev' => false]);
@@ -93,7 +93,7 @@ describe('Software Development vs Build Toggle', function () {
                 ->assertSee('This work package does not require custom software development');
         });
 
-        it('enables development form fieldset when checkbox checked', function () {
+        it('hides the "not required" callout in the development form when software dev is on', function () {
             // Arrange
             $project = $this->createProject();
             $project->scoping->update(['requires_software_dev' => true]);
@@ -121,7 +121,7 @@ describe('Software Development vs Build Toggle', function () {
     });
 
     describe('UI Tab Visibility', function () {
-        it('always shows both development and build tabs', function () {
+        it('shows both Development and Build whether or not software dev is required', function () {
             // Arrange
             $project = $this->createProject();
 
@@ -141,7 +141,7 @@ describe('Software Development vs Build Toggle', function () {
                 ->assertSee('Build');
         });
 
-        it('displays build tab with TBC placeholder', function () {
+        it('shows the Build tab', function () {
             // Arrange
             $project = $this->createProject();
 
@@ -151,8 +151,9 @@ describe('Software Development vs Build Toggle', function () {
             // Assert - Build tab should exist
             $response->assertSee('Build');
 
-            // Note: We can't easily test the panel content without switching tabs,
-            // but the template includes the build-form which has the TBC text
+            // The Build tab's TBC placeholder is only rendered once that tab is active;
+            // asserting the rendered panel content is browser-test territory, so here we
+            // only confirm the tab itself is present.
         });
     });
 

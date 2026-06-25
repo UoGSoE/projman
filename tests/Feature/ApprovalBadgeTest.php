@@ -33,6 +33,13 @@ describe('<x-approval-badge>', function () {
         expect(strtolower($html))->toContain('zinc');
     });
 
+    it('matches the status colour regardless of casing', function () {
+        $html = Blade::render('<x-approval-badge label="Delivery" status="Approved" />');
+
+        expect($html)->toContain('Approved');
+        expect(strtolower($html))->toContain('green');
+    });
+
     it('allows the visible status text to be overridden with a display prop', function () {
         $html = Blade::render('<x-approval-badge label="Deadline Achievable" status="approved" display="Yes" />');
 

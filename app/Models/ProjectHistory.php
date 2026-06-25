@@ -3,20 +3,16 @@
 namespace App\Models;
 
 use Database\Factories\ProjectHistoryFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[Fillable('project_id', 'user_id', 'description')]
 class ProjectHistory extends Model
 {
     /** @use HasFactory<ProjectHistoryFactory> */
     use HasFactory;
-
-    protected $fillable = [
-        'project_id',
-        'user_id',
-        'description',
-    ];
 
     protected function casts(): array
     {

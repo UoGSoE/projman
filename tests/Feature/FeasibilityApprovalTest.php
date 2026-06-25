@@ -16,6 +16,24 @@ use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
+/**
+ * Put a feasibility into the saved, ready-for-approval state the real UI requires
+ * before the approve/reject buttons appear: assessment complete and a solution
+ * assessment recorded. Mirrors the gating tests further down this file.
+ */
+function completeSavedFeasibility(Project $project, User $assessor): void
+{
+    $project->feasibility->update([
+        'assessed_by' => $assessor->id,
+        'date_assessed' => now()->addDay(),
+        'technical_credence' => 'Technically sound',
+        'cost_benefit_case' => 'Good ROI',
+        'dependencies_prerequisites' => 'None',
+        'alternative_proposal' => 'No alternatives',
+        'existing_solution_status' => 'no',
+    ]);
+}
+
 describe('Feasibility Approval Workflow', function () {
     beforeEach(function () {
         // Set up notification roles required for ProjectCreated and Feasibility events
@@ -23,32 +41,34 @@ describe('Feasibility Approval Workflow', function () {
     });
 
     it('approves feasibility when no existing solution exists', function () {
-        // Arrange
+        // Arrange - a saved, ready-for-approval feasibility (as the real UI requires)
         $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
         $project = Project::factory()->create();
+        completeSavedFeasibility($project, $assessor);
         $this->actingAs($user);
 
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('feasibilityForm.existingSolutionStatus', 'no')
-            ->set('feasibilityForm.offTheShelfSolutionStatus', 'no')
             ->call('approveFeasibility')
             ->assertHasNoErrors();
 
-        // Assert
+        // Assert - approval recorded, and the saved solution assessment is left intact
         $project->refresh();
         expect($project->feasibility->approval_status)->toBe('approved')
             ->and($project->feasibility->approved_at)->not->toBeNull()
-            ->and($project->feasibility->actioned_by)->toBe($user->id);
+            ->and($project->feasibility->actioned_by)->toBe($user->id)
+            ->and($project->feasibility->existing_solution_status)->toBe('no');
     });
 
     it('prevents approval when existing UoG solution is identified', function () {
-        // Arrange
+        // Arrange - otherwise ready for approval, so only the 'yes' rule can block
         $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
         $project = Project::factory()->create();
+        completeSavedFeasibility($project, $assessor);
         $this->actingAs($user);
 
-        // Set existing solution to 'yes' (approve button should be disabled)
         $project->feasibility->update([
             'existing_solution_status' => 'yes',
             'existing_solution_notes' => 'We already have System X',
@@ -56,7 +76,8 @@ describe('Feasibility Approval Workflow', function () {
 
         // Act - try to call approve (should not work since button would be disabled in UI)
         livewire(ProjectEditor::class, ['project' => $project])
-            ->call('approveFeasibility');
+            ->call('approveFeasibility')
+            ->assertHasErrors('feasibilityForm.existingSolutionStatus');
 
         // Assert approval did not happen
         $project->refresh();
@@ -65,12 +86,13 @@ describe('Feasibility Approval Workflow', function () {
     });
 
     it('prevents approval when off-the-shelf solution is identified', function () {
-        // Arrange
+        // Arrange - otherwise ready for approval, so only the 'yes' rule can block
         $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
         $project = Project::factory()->create();
+        completeSavedFeasibility($project, $assessor);
         $this->actingAs($user);
 
-        // Set off-the-shelf solution to 'yes' (approve button should be disabled)
         $project->feasibility->update([
             'off_the_shelf_solution_status' => 'yes',
             'off_the_shelf_solution_notes' => 'Product XYZ is available',
@@ -78,7 +100,8 @@ describe('Feasibility Approval Workflow', function () {
 
         // Act - try to call approve (should not work since button would be disabled in UI)
         livewire(ProjectEditor::class, ['project' => $project])
-            ->call('approveFeasibility');
+            ->call('approveFeasibility')
+            ->assertHasErrors('feasibilityForm.offTheShelfSolutionStatus');
 
         // Assert approval did not happen
         $project->refresh();
@@ -124,16 +147,16 @@ describe('Feasibility Approval Workflow', function () {
     });
 
     it('dispatches FeasibilityApproved event on approval', function () {
-        // Arrange
+        // Arrange - a saved, ready-for-approval feasibility (as the real UI requires)
         Event::fake([FeasibilityApproved::class]);
         $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
         $project = Project::factory()->create();
+        completeSavedFeasibility($project, $assessor);
         $this->actingAs($user);
 
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('feasibilityForm.existingSolutionStatus', 'no')
-            ->set('feasibilityForm.offTheShelfSolutionStatus', 'no')
             ->call('approveFeasibility');
 
         // Assert
@@ -168,16 +191,25 @@ describe('Feasibility Approval Workflow', function () {
         $assessor->roles()->attach($role);
 
         $user = User::factory()->create(['is_admin' => true]);
-        $project = Project::factory()->create();
+        $owner = User::factory()->create();
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+        completeSavedFeasibility($project, $assessor);
         $this->actingAs($user);
 
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->call('approveFeasibility');
+            ->call('approveFeasibility')
+            ->assertHasNoErrors();
 
-        // Assert
-        Mail::assertQueued(FeasibilityApprovedMail::class, function ($mail) use ($assessor) {
-            return $mail->hasTo($assessor->email);
+        // Assert - one mail, carrying this project, to the Work Package Assessor
+        Mail::assertQueued(FeasibilityApprovedMail::class, 1);
+        Mail::assertQueued(FeasibilityApprovedMail::class, function ($mail) use ($assessor, $project) {
+            return $mail->hasTo($assessor->email) && $mail->project->is($project);
+        });
+
+        // Assert - the project owner is not notified on approval (config excludes the owner)
+        Mail::assertNotQueued(FeasibilityApprovedMail::class, function ($mail) use ($owner) {
+            return $mail->hasTo($owner->email);
         });
     });
 
@@ -193,18 +225,27 @@ describe('Feasibility Approval Workflow', function () {
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
             ->set('feasibilityForm.rejectReason', 'Not feasible at this time')
-            ->call('rejectFeasibility');
+            ->call('rejectFeasibility')
+            ->assertHasNoErrors();
 
-        // Assert
-        Mail::assertQueued(FeasibilityRejectedMail::class, function ($mail) use ($owner) {
-            return $mail->hasTo($owner->email);
+        // Assert - one mail, carrying this project, to the project owner
+        Mail::assertQueued(FeasibilityRejectedMail::class, 1);
+        Mail::assertQueued(FeasibilityRejectedMail::class, function ($mail) use ($owner, $project) {
+            return $mail->hasTo($owner->email) && $mail->project->is($project);
+        });
+
+        // Assert - the admin who actioned the rejection is not a recipient
+        Mail::assertNotQueued(FeasibilityRejectedMail::class, function ($mail) use ($admin) {
+            return $mail->hasTo($admin->email);
         });
     });
 
     it('records history when feasibility is approved', function () {
-        // Arrange
+        // Arrange - saved, ready-for-approval feasibility
         $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
         $project = Project::factory()->create();
+        completeSavedFeasibility($project, $assessor);
         $historyCountBefore = $project->history()->count();
         $this->actingAs($user);
 
@@ -245,8 +286,10 @@ describe('Feasibility Approval Workflow', function () {
     it('only affects the specific project when approving', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
         $projectToApprove = Project::factory()->create();
         $otherProject = Project::factory()->create();
+        completeSavedFeasibility($projectToApprove, $assessor);
         $this->actingAs($user);
 
         // Act
@@ -455,6 +498,28 @@ describe('Feasibility Approval Workflow', function () {
         $project->refresh();
         expect($project->feasibility->existing_solution_status)->toBe('yes_not_practical')
             ->and($project->feasibility->existing_solution_notes)->toBe('Too expensive for academic budget');
+    });
+
+    it('blocks approval server-side when no solution assessment has been saved', function () {
+        // Arrange - assessment complete but no solution assessment recorded
+        Event::fake([FeasibilityApproved::class]);
+        $user = User::factory()->create(['is_admin' => true]);
+        $assessor = User::factory()->create();
+        $project = Project::factory()->create();
+        completeSavedFeasibility($project, $assessor);
+        $project->feasibility->update(['existing_solution_status' => null]);
+        $this->actingAs($user);
+
+        // Act - call approve directly, as a crafted request would (button is hidden in the UI)
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->call('approveFeasibility')
+            ->assertHasErrors('feasibilityForm.approvalStatus');
+
+        // Assert - approval did not happen and no event was dispatched
+        $project->refresh();
+        expect($project->feasibility->approval_status)->toBe('pending')
+            ->and($project->feasibility->approved_at)->toBeNull();
+        Event::assertNotDispatched(FeasibilityApproved::class);
     });
 
     it('does not show buttons when solution assessment is missing', function () {

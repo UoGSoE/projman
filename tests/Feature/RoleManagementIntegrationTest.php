@@ -76,10 +76,9 @@ describe('Role Management Integration', function () {
             // Check that UserList shows the updated role name
             $userListComponent = livewire(UserList::class);
 
-            // Set the properties manually to avoid view rendering issues
-            $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
-            $userListComponent->availableRoles = Role::active()->get();
+            // Open the role modal the way a user would, so the assertions exercise
+            // openChangeUserRoleModal() rather than manually-assembled state.
+            $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
 
             // Test the component properties directly
             expect($userListComponent->availableRoles->pluck('name')->toArray())->toContain('Updated User Role');
@@ -103,10 +102,9 @@ describe('Role Management Integration', function () {
             // Check that UserList excludes the inactive role from available options
             $userListComponent = livewire(UserList::class);
 
-            // Set the properties manually to avoid view rendering issues
-            $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
-            $userListComponent->availableRoles = Role::active()->get();
+            // Open the role modal the way a user would, so the assertions exercise
+            // openChangeUserRoleModal() rather than manually-assembled state.
+            $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
 
             expect($userListComponent->availableRoles->pluck('name')->toArray())->not->toContain('User');
         });
@@ -132,10 +130,9 @@ describe('Role Management Integration', function () {
             // Check that UserList handles the deleted role gracefully
             $userListComponent = livewire(UserList::class);
 
-            // Set the properties manually to avoid view rendering issues
-            $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
-            $userListComponent->availableRoles = Role::active()->get();
+            // Open the role modal the way a user would, so the assertions exercise
+            // openChangeUserRoleModal() rather than manually-assembled state.
+            $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
 
             // User should now have no roles
             expect($userListComponent->userRoleIds)->toHaveCount(0);
@@ -155,10 +152,9 @@ describe('Role Management Integration', function () {
             // Check that UserList immediately sees the new role
             $userListComponent = livewire(UserList::class);
 
-            // Set the properties manually to avoid view rendering issues
-            $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
-            $userListComponent->availableRoles = Role::active()->get();
+            // Open the role modal the way a user would, so the assertions exercise
+            // openChangeUserRoleModal() rather than manually-assembled state.
+            $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
 
             expect($userListComponent->availableRoles->pluck('name')->toArray())->toContain('New Role');
         });
@@ -306,9 +302,7 @@ describe('Role Management Integration', function () {
             $this->regularUser->refresh();
 
             // Check that UserList shows the updated role name
-            $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
-            $userListComponent->availableRoles = Role::active()->get();
+            $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
             expect($userListComponent->userRoleIds)->toContain($developerRole->id);
         });
 
@@ -329,10 +323,9 @@ describe('Role Management Integration', function () {
             // Check that UserList excludes it from available roles
             $userListComponent = livewire(UserList::class);
 
-            // Set the properties manually to avoid view rendering issues
-            $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
-            $userListComponent->availableRoles = Role::active()->get();
+            // Open the role modal the way a user would, so the assertions exercise
+            // openChangeUserRoleModal() rather than manually-assembled state.
+            $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
             expect($userListComponent->availableRoles->pluck('name')->toArray())->not->toContain('User');
 
             // Reactivate the role
@@ -345,9 +338,7 @@ describe('Role Management Integration', function () {
             expect($this->userRole->is_active)->toBe(true);
 
             // Check that UserList now includes it in available roles
-            $userListComponent->selectedUser = $this->regularUser->fresh(['roles']);
-            $userListComponent->userRoleIds = $userListComponent->selectedUser->roles->pluck('id')->toArray();
-            $userListComponent->availableRoles = Role::active()->get();
+            $userListComponent->call('openChangeUserRoleModal', $this->regularUser);
             expect($userListComponent->availableRoles->pluck('name')->toArray())->toContain('User');
         });
     });

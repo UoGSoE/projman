@@ -1,6 +1,7 @@
 <?php
 
-use App\Enums\Busyness;
+use App\Enums\AvailabilityForChange;
+use App\Enums\EffortScale;
 use App\Livewire\HeatMapViewer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -95,12 +96,11 @@ it('provides 10 buckets in days view by default', function () {
     }
 });
 
-it('includes busyness data for each staff member', function () {
+it('includes a heatmap cell per bucket for each staff member', function () {
     // Arrange
     User::factory()->create([
         'is_staff' => true,
-        'busyness_week_1' => 30, // LOW
-        'busyness_week_2' => 60, // MEDIUM
+        'availability_for_change' => AvailabilityForChange::Moderate,
     ]);
 
     // Act
@@ -108,8 +108,8 @@ it('includes busyness data for each staff member', function () {
 
     // Assert
     $staff = $component->viewData('staff');
-    expect($staff[0])->toHaveKey('busyness');
-    expect($staff[0]['busyness'])->toHaveCount(10);
+    expect($staff[0])->toHaveKey('cells');
+    expect($staff[0]['cells'])->toHaveCount(10);
 });
 
 it('defaults to days view mode', function () {
@@ -154,45 +154,53 @@ it('can switch to months view mode', function () {
     }
 });
 
-it('calculates busyness from project assignments in weeks view', function () {
-    // Arrange
+it('builds a heatmap cell from project assignments in weeks view', function () {
+    // Staff with Moderate (60%) AFC, sole assignee on a Small (5 person-day)
+    // project running one working week (5 weekdays).
+    // Per-day cost = 5 / 1 / 5 / 0.6 = 1.667 → 167% → Black.
     $staff = User::factory()->create([
         'is_staff' => true,
+        'availability_for_change' => AvailabilityForChange::Moderate,
     ]);
 
     $project = $this->createProject([
         'title' => 'Assigned Project',
         'status' => 'scheduling',
     ]);
+    $project->scoping->update(['estimated_effort' => EffortScale::SMALL]);
 
-    // Assign the staff member to the project with dates that overlap the first week
     $project->scheduling->update([
         'assigned_to' => $staff->id,
         'estimated_start_date' => now()->startOfWeek(),
         'estimated_completion_date' => now()->endOfWeek(),
     ]);
 
-    // Act
     $component = Livewire::test(HeatMapViewer::class)
         ->set('viewMode', 'weeks');
 
-    // Assert - staff should have LOW busyness for first week (1 project)
     $staffData = $component->viewData('staff');
     $assignedStaff = $staffData->firstWhere('user.id', $staff->id);
 
-    expect($assignedStaff['busyness'][0])->toBe(Busyness::LOW);
+    expect($assignedStaff['cells'][0]->colour())->toBe('bg-black');
 });
 
-it('persists view mode in URL', function () {
-    // Arrange & Act
-    $this->get(route('project.heatmap', ['viewMode' => 'months']))
-        ->assertOk();
+it('hydrates the view mode from the URL query string', function () {
+    Livewire::withQueryParams(['viewMode' => 'months'])
+        ->test(HeatMapViewer::class)
+        ->assertSet('viewMode', 'months');
+});
 
-    $component = Livewire::test(HeatMapViewer::class)
-        ->set('viewMode', 'months');
+it('hydrates the name filter from the URL query string and applies it', function () {
+    $wanted = User::factory()->create(['is_staff' => true, 'surname' => 'Wanted']);
+    User::factory()->create(['is_staff' => true, 'surname' => 'Ignored']);
 
-    // Assert
-    expect($component->get('viewMode'))->toBe('months');
+    $component = Livewire::withQueryParams(['nameFilter' => [$wanted->id]])
+        ->test(HeatMapViewer::class);
+
+    $component->assertSet('nameFilter', [$wanted->id]);
+
+    $staff = $component->viewData('staff');
+    expect($staff->pluck('user.id')->all())->toBe([$wanted->id]);
 });
 
 it('can filter staff by name using the name filter', function () {
@@ -275,4 +283,17 @@ it('provides all staff for the pillbox options regardless of filter', function (
     // Assert - allStaff should contain all staff (for pillbox options)
     $allStaff = $component->viewData('allStaff');
     expect($allStaff)->toHaveCount(3); // admin + 2 created
+});
+
+it('shows a "how is this calculated?" explainer trigger on the heatmap page', function () {
+    Livewire::test(HeatMapViewer::class)
+        ->assertSee('How is this calculated?');
+});
+
+it('embeds the counted-role labels and enum values in the explainer markup', function () {
+    Livewire::test(HeatMapViewer::class)
+        ->assertSee('Change champion')      // single-person role -> checkbox
+        ->assertSee('CoSE IT staff')        // multi-person role -> number input
+        ->assertSee('Large (30-50 days)')   // EffortScale label, shown as specced
+        ->assertSee('Moderate');            // AvailabilityForChange level
 });

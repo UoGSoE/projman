@@ -2,6 +2,7 @@
     {{-- Designed by / Service Function --}}
     <div class="grid grid-cols-2 gap-4">
         <flux:select label="Designed by" wire:model="detailedDesignForm.designedBy">
+            <flux:select.option value="">– Select –</flux:select.option>
             @foreach ($this->availableUsers as $user)
                 <flux:select.option value="{{ $user->id }}">
                     {{ $user->full_name }}
@@ -27,30 +28,30 @@
     <div class="grid grid-cols-5 gap-4">
         <flux:input label="Approvals" value="Approvals" disabled />
         <flux:select label="Delivery" wire:model="detailedDesignForm.approvalDelivery">
-            @foreach ($detailedDesignForm->availableApprovalStates as $label)
-                <flux:select.option value="{{ $label }}">
-                    {{ $label }}
+            @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                <flux:select.option value="{{ $state->value }}">
+                    {{ $state->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>
         <flux:select label="Operations" wire:model="detailedDesignForm.approvalOperations">
-            @foreach ($detailedDesignForm->availableApprovalStates as $label)
-                <flux:select.option value="{{ $label }}">
-                    {{ $label }}
+            @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                <flux:select.option value="{{ $state->value }}">
+                    {{ $state->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>
         <flux:select label="Resilience" wire:model="detailedDesignForm.approvalResilience">
-            @foreach ($detailedDesignForm->availableApprovalStates as $label)
-                <flux:select.option value="{{ $label }}">
-                    {{ $label }}
+            @foreach (\App\Enums\ApprovalStatus::cases() as $state)
+                <flux:select.option value="{{ $state->value }}">
+                    {{ $state->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>
-        <flux:select label="Change Board" wire:model="detailedDesignForm.approvalChangeBoard">
-            @foreach ($detailedDesignForm->availableApprovalStates as $label)
-                <flux:select.option value="{{ $label }}">
-                    {{ $label }}
+        <flux:select label="Architecture Governance Board" wire:model="detailedDesignForm.approvalAgb">
+            @foreach (\App\Enums\AgbApproval::cases() as $state)
+                <flux:select.option value="{{ $state->value }}">
+                    {{ $state->label() }}
                 </flux:select.option>
             @endforeach
         </flux:select>

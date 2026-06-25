@@ -40,6 +40,24 @@ it('seeds a fixed pool of projects across the pipeline', function () {
 
     expect($count)->toBeGreaterThanOrEqual(50);
     expect($count)->toBeLessThanOrEqual(80);
+
+    // Projects are spread across the whole pipeline, not bunched in one stage.
+    $stages = [
+        ProjectStatus::IDEATION,
+        ProjectStatus::FEASIBILITY,
+        ProjectStatus::SCOPING,
+        ProjectStatus::SCHEDULING,
+        ProjectStatus::DETAILED_DESIGN,
+        ProjectStatus::DEVELOPMENT,
+        ProjectStatus::TESTING,
+        ProjectStatus::DEPLOYED,
+        ProjectStatus::COMPLETED,
+        ProjectStatus::CANCELLED,
+    ];
+
+    foreach ($stages as $stage) {
+        expect(Project::where('status', $stage)->count())->toBeGreaterThan(0);
+    }
 });
 
 it('does not allocate staff to projects that have not reached that stage', function () {
@@ -82,9 +100,27 @@ it('allocates staff to projects from the scheduling stage onwards', function () 
 it('sets staff busyness from assigned workload, not project ownership', function () {
     $this->seed(TestDataSeeder::class);
 
-    $busyStaff = User::itStaff()
-        ->whereNotIn('busyness_week_1', [Busyness::UNKNOWN->value])
-        ->count();
+    $itStaff = User::itStaff()->get();
 
-    expect($busyStaff)->toBeGreaterThan(0);
+    // Each IT staffer's week-1 busyness is derived precisely from their active assignment count.
+    foreach ($itStaff as $member) {
+        $expected = Busyness::fromProjectCount($member->activeAssignedProjectCount());
+        expect($member->busyness_week_1)->toBe($expected);
+    }
+
+    // Sanity: the workload isn't all zero - at least some staff register as busy.
+    expect($itStaff->contains(fn ($m) => $m->busyness_week_1 !== Busyness::UNKNOWN))->toBeTrue();
+
+    // Ownership does not create busyness: requesters own projects but are never assigned,
+    // so their week-1 busyness stays UNKNOWN.
+    $requestersWhoOwnProjects = User::query()
+        ->where('is_itstaff', false)
+        ->where('is_admin', false)
+        ->whereHas('projects')
+        ->get();
+
+    expect($requestersWhoOwnProjects)->not->toBeEmpty();
+    foreach ($requestersWhoOwnProjects as $requester) {
+        expect($requester->busyness_week_1)->toBe(Busyness::UNKNOWN);
+    }
 });

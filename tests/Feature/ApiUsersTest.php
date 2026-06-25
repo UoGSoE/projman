@@ -71,6 +71,10 @@ it('returns a single user\'s skills with levels', function () {
     $pythonRow = collect($response->json('data'))->firstWhere('name', 'Python');
     expect($pythonRow['level'])->toBe('working');
     expect($pythonRow['level_value'])->toBe(2);
+
+    $k8sRow = collect($response->json('data'))->firstWhere('name', 'Kubernetes');
+    expect($k8sRow['level'])->toBe('awareness');
+    expect($k8sRow['level_value'])->toBe(1);
 });
 
 it('returns 404 for a non-existent user id on the skills endpoint', function () {

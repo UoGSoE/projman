@@ -46,17 +46,26 @@ describe('Scheduling DCGG Workflow', function () {
             ->and($project->scheduling->scheduled_at)->toBeNull();
     });
 
-    it('validates required fields before submitting to DCGG', function () {
+    it('blocks submission to DCGG until every required scheduling field is set', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
         $project = Project::factory()->create();
         // Leave scheduling fields empty
         $this->actingAs($user);
 
-        // Act & Assert
+        // Act & Assert - each genuinely required field must report an error.
         livewire(ProjectEditor::class, ['project' => $project])
             ->call('submitSchedulingToDCGG')
-            ->assertHasErrors();
+            ->assertHasErrors([
+                'schedulingForm.priority',
+                'schedulingForm.estimatedStartDate',
+                'schedulingForm.estimatedCompletionDate',
+                'schedulingForm.changeBoardDate',
+                'schedulingForm.assignedTo',
+            ]);
+
+        // Validation failure must not record a DCGG submission.
+        expect($project->fresh()->scheduling->submitted_to_dcgg_at)->toBeNull();
     });
 
     it('dispatches SchedulingSubmittedToDCGG event', function () {

@@ -14,6 +14,8 @@
                         Upcoming ten working days of staff capacity at a glance.
                 @endswitch
             </flux:text>
+
+            <x-heatmap-explainer class="mt-3" />
         </div>
 
         <div class="flex flex-col items-end gap-4">
@@ -23,13 +25,6 @@
                     <flux:radio value="weeks" label="Weeks" />
                     <flux:radio value="months" label="Months" />
                 </flux:radio.group>
-                <flux:text variant="subtle" class="text-xs">
-                    @if ($viewMode === 'days')
-                        Showing manually reported busyness from staff profiles.
-                    @else
-                        Showing busyness calculated from project assignments.
-                    @endif
-                </flux:text>
             </div>
 
             <flux:pillbox wire:model.live="nameFilter" multiple searchable placeholder="Filter by staff..." class="min-w-64">

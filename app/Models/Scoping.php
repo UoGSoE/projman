@@ -4,31 +4,18 @@ namespace App\Models;
 
 use App\Enums\EffortScale;
 use App\Models\Traits\CanCheckIfEdited;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Touches;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[Touches('project')]
+#[Fillable('project_id', 'deliverable_title', 'assessed_by', 'estimated_effort', 'in_scope', 'out_of_scope', 'assumptions', 'skills_required', 'dcgg_status', 'submitted_to_dcgg_at', 'scheduled_at', 'requires_software_dev')]
 class Scoping extends Model
 {
     use CanCheckIfEdited;
     use HasFactory;
-
-    protected $touches = ['project'];
-
-    protected $fillable = [
-        'project_id',
-        'deliverable_title',
-        'assessed_by',
-        'estimated_effort',
-        'in_scope',
-        'out_of_scope',
-        'assumptions',
-        'skills_required',
-        'dcgg_status',
-        'submitted_to_dcgg_at',
-        'scheduled_at',
-        'requires_software_dev',
-    ];
 
     public function project(): BelongsTo
     {

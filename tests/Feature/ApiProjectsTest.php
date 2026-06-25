@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,9 +18,13 @@ function projectBearerFor(User $user): array
     return ['Authorization' => "Bearer {$token}"];
 }
 
-it('lists projects with null assignments when no scheduling stage exists', function () {
+it('returns the full project shape with empty assignments when scheduling is unassigned', function () {
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
-    $project = Project::factory()->create(['title' => 'Lone project']);
+    $project = Project::factory()->create([
+        'title' => 'Lone project',
+        'status' => ProjectStatus::IDEATION,
+        'school_group' => 'School of Computing',
+    ]);
 
     $response = $this->withHeaders(projectBearerFor($admin))
         ->getJson('/api/projects')
@@ -27,7 +32,10 @@ it('lists projects with null assignments when no scheduling stage exists', funct
 
     $row = collect($response->json('data'))->firstWhere('id', $project->id);
 
+    expect($row)->toHaveKeys(['id', 'title', 'status', 'school_group', 'assignments']);
     expect($row['title'])->toBe('Lone project');
+    expect($row['status'])->toBe(ProjectStatus::IDEATION->value);
+    expect($row['school_group'])->toBe('School of Computing');
     expect($row['assignments']['assigned_to'])->toBeNull();
     expect($row['assignments']['technical_lead'])->toBeNull();
     expect($row['assignments']['change_champion'])->toBeNull();
@@ -64,6 +72,24 @@ it('populates assignment fields from the scheduling stage', function () {
         ['id' => $cose1->id, 'name' => 'Alan Turing'],
         ['id' => $cose2->id, 'name' => 'Barbara Liskov'],
     ]);
+});
+
+it('returns paginated projects with pagination metadata', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
+    Project::factory()->count(3)->create();
+
+    $response = $this->withHeaders(projectBearerFor($admin))
+        ->getJson('/api/projects')
+        ->assertOk()
+        ->assertJsonStructure([
+            'data',
+            'links' => ['first', 'last', 'prev', 'next'],
+            'meta' => ['current_page', 'from', 'last_page', 'per_page', 'to', 'total'],
+        ]);
+
+    expect($response->json('meta.total'))->toBe(3);
+    expect($response->json('meta.current_page'))->toBe(1);
+    expect($response->json('data'))->toHaveCount(3);
 });
 
 it('rejects unauthenticated requests to the projects endpoint', function () {

@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\Busyness;
+use App\Enums\AvailabilityForChange;
 use App\Enums\SkillLevel;
 use App\Livewire\Profile;
 use App\Models\Skill;
@@ -70,17 +70,15 @@ describe('Profile Component', function () {
             ->assertSeeText('No skills recorded');
     });
 
-    it('displays busyness controls', function () {
+    it('displays the availability for change control', function () {
         livewire(Profile::class)
-            ->assertSeeText('My Busy-ness');
+            ->assertSeeText('Availability for Change');
     });
 
-    it('persists a busyness selection to the database as the matching enum', function () {
+    it('persists an availability_for_change selection to the database as the matching enum', function () {
         livewire(Profile::class)
-            ->set('busynessWeek1', Busyness::HIGH->value)
-            ->set('busynessWeek2', Busyness::MEDIUM->value);
+            ->set('availabilityForChange', AvailabilityForChange::Good->value);
 
-        expect($this->user->fresh()->busyness_week_1)->toBe(Busyness::HIGH)
-            ->and($this->user->fresh()->busyness_week_2)->toBe(Busyness::MEDIUM);
+        expect($this->user->fresh()->availability_for_change)->toBe(AvailabilityForChange::Good);
     });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,20 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * @extends Model
  */
+#[Fillable('name', 'description', 'is_active')]
 class Role extends Model
 {
     use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'description',
-        'is_active',
-    ];
 
     /**
      * Get the attributes that should be cast.

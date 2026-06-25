@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/sso-auth.php';
 
-Route::group(['middleware' => 'auth'], function () {
+Route::middleware('auth')->group(function () {
     Route::get('/', HomePage::class)->name('home');
     Route::get('/work-package/create', ProjectCreator::class)->middleware('can:create,'.Project::class)->name('project.create');
     Route::get('/work-package/{project}', ProjectViewer::class)->middleware('can:view,project')->name('project.show');

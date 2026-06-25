@@ -2,19 +2,15 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\ApprovalStatus;
 use App\Models\Project;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class DetailedDesignForm extends Form
 {
     public ?Project $project = null;
-
-    public $availableApprovalStates = [
-        'pending' => 'Pending',
-        'approved' => 'Approved',
-        'rejected' => 'Rejected',
-    ];
 
     #[Validate('required|integer|exists:users,id')]
     public ?int $designedBy = null;
@@ -31,17 +27,23 @@ class DetailedDesignForm extends Form
     #[Validate('url|max:255')]
     public ?string $hldDesignLink;
 
-    #[Validate('required|string|max:255')]
-    public ?string $approvalDelivery = '';
+    public ?string $approvalDelivery = 'pending';
+
+    public ?string $approvalOperations = 'pending';
+
+    public ?string $approvalResilience = 'pending';
 
     #[Validate('required|string|max:255')]
-    public ?string $approvalOperations = '';
+    public ?string $approvalAgb = 'pending';
 
-    #[Validate('required|string|max:255')]
-    public ?string $approvalResilience = '';
-
-    #[Validate('required|string|max:255')]
-    public ?string $approvalChangeBoard = '';
+    public function rules(): array
+    {
+        return [
+            'approvalDelivery' => ['required', Rule::enum(ApprovalStatus::class)],
+            'approvalOperations' => ['required', Rule::enum(ApprovalStatus::class)],
+            'approvalResilience' => ['required', Rule::enum(ApprovalStatus::class)],
+        ];
+    }
 
     public function setProject(Project $project)
     {
@@ -51,10 +53,10 @@ class DetailedDesignForm extends Form
         $this->functionalRequirements = $project->detailedDesign->functional_requirements;
         $this->nonFunctionalRequirements = $project->detailedDesign->non_functional_requirements;
         $this->hldDesignLink = $project->detailedDesign->hld_design_link;
-        $this->approvalDelivery = $project->detailedDesign->approval_delivery;
-        $this->approvalOperations = $project->detailedDesign->approval_operations;
-        $this->approvalResilience = $project->detailedDesign->approval_resilience;
-        $this->approvalChangeBoard = $project->detailedDesign->approval_change_board;
+        $this->approvalDelivery = $project->detailedDesign->approval_delivery ?? 'pending';
+        $this->approvalOperations = $project->detailedDesign->approval_operations ?? 'pending';
+        $this->approvalResilience = $project->detailedDesign->approval_resilience ?? 'pending';
+        $this->approvalAgb = $project->detailedDesign->approval_agb ?? 'pending';
     }
 
     public function save()
@@ -68,7 +70,8 @@ class DetailedDesignForm extends Form
             'approval_delivery' => $this->approvalDelivery,
             'approval_operations' => $this->approvalOperations,
             'approval_resilience' => $this->approvalResilience,
-            'approval_change_board' => $this->approvalChangeBoard,
+            'approval_agb' => $this->approvalAgb,
+            'approval_change_board' => $this->approvalAgb,
         ]);
     }
 }

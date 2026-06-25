@@ -246,13 +246,20 @@ describe('UserList Component', function () {
                 ->assertDontSeeText('Doe');
         });
 
-        it('maintains sort when searching', function () {
+        it('maintains the sort order while a search filter is applied', function () {
+            // Two users sharing a surname the search can match, plus the baseline
+            // John Smith / Jane Doe / Admin User who should be filtered out.
+            User::factory()->create(['forenames' => 'Zoe', 'surname' => 'Filterton']);
+            User::factory()->create(['forenames' => 'Amy', 'surname' => 'Filterton']);
+
             livewire(UserList::class)
                 ->call('sort', 'forenames')
-                ->set('search', 'o') // Should match John and Doe
+                ->set('search', 'Filterton')
                 ->assertSet('sortOn', 'forenames')
                 ->assertSet('sortDirection', 'asc')
-                ->assertSeeInOrder(['Jane', 'John']); // Jane comes before John alphabetically
+                ->assertSeeInOrder(['Amy', 'Zoe']) // sorted by forenames within the filtered set
+                ->assertDontSeeText('John') // non-matching users are excluded by the search
+                ->assertDontSeeText('Jane');
         });
 
         it('can search and sort together', function () {
@@ -284,26 +291,22 @@ describe('UserList Component', function () {
                 ->assertStatus(200);
         });
 
-        it('handles special characters in search', function () {
-            // Create a user with special characters in their name
+        it('returns the matching user when the search contains special characters', function () {
             $userWithSpecialChars = User::factory()->create([
                 'surname' => "Test's",
                 'forenames' => 'User & Co.',
             ]);
 
-            $component = livewire(UserList::class);
+            // Asserting against the component's data sidesteps HTML-escaping of the
+            // apostrophe/ampersand, and proves the search actually returns the user.
+            $results = livewire(UserList::class)
+                ->set('search', "Test's")
+                ->assertOk()
+                ->viewData('users');
 
-            // Search for the user - our sanitization should handle special characters
-            $component->set('search', "Test's");
-
-            // The search should work and not cause errors
-            $component->call('getUsers');
-
-            // Verify the component renders without errors
-            $component->assertOk();
-
-            // Verify the user exists in the database
-            expect(User::where('surname', "Test's")->exists())->toBe(true);
+            expect($results->getCollection()->pluck('id'))
+                ->toContain($userWithSpecialChars->id)
+                ->not->toContain($this->regularUser->id);
         });
     });
 });
@@ -415,11 +418,15 @@ describe('User Role Management', function () {
             ->assertSet('userRoleIds', []);
     });
 
-    it('updates selected roles using checklist cards', function () {
+    it('preloads the users existing roles when opening the role modal', function () {
+        $this->regularUser->roles()->sync([$this->adminRole->id, $this->managerRole->id]);
+
         livewire(UserList::class)
             ->call('openChangeUserRoleModal', $this->regularUser)
-            ->set('userRoleIds', [$this->adminRole->id, $this->managerRole->id])
-            ->assertSet('userRoleIds', [$this->adminRole->id, $this->managerRole->id]);
+            ->assertSet('selectedUser.id', $this->regularUser->id)
+            ->assertSet('userRoleIds', fn ($ids) => count($ids) === 2
+                && in_array($this->adminRole->id, $ids)
+                && in_array($this->managerRole->id, $ids));
     });
 
     it('saves selected roles to user', function () {
@@ -459,6 +466,19 @@ describe('IT Staff Toggling', function () {
 
         livewire(UserList::class)
             ->call('toggleItStaff', $target->fresh());
+        expect($target->fresh()->is_itstaff)->toBeFalse();
+    });
+
+    it('forbids a non-admin from toggling IT staff status and leaves it unchanged', function () {
+        $nonAdmin = User::factory()->staff()->create();
+        $target = User::factory()->requester()->create();
+
+        $this->actingAs($nonAdmin);
+
+        livewire(UserList::class)
+            ->call('toggleItStaff', $target)
+            ->assertForbidden();
+
         expect($target->fresh()->is_itstaff)->toBeFalse();
     });
 

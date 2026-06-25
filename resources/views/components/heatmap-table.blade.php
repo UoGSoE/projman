@@ -22,11 +22,11 @@
                     </flux:link>
                 </div>
 
-                @foreach ($entry['busyness'] as $index => $busyness)
+                @foreach ($entry['cells'] as $index => $cell)
                     <div
-                        class="h-10 rounded-md border border-white/10 shadow-sm transition-colors {{ $busyness->colour() }}"
-                        title="{{ $entry['user']->forenames }} {{ $entry['user']->surname }} — {{ $buckets[$index]['label'] }} {{ $buckets[$index]['sublabel'] }} ({{ $busyness->label() }})"
-                        aria-label="{{ $entry['user']->forenames }} {{ $entry['user']->surname }}: {{ $buckets[$index]['label'] }} {{ $buckets[$index]['sublabel'] }} {{ $busyness->label() }}"
+                        class="h-10 rounded-md border border-white/10 shadow-sm transition-colors {{ $cell->colour() }}"
+                        title="{{ $entry['user']->forenames }} {{ $entry['user']->surname }} — {{ $buckets[$index]['label'] }} {{ $buckets[$index]['sublabel'] }} ({{ $cell->label() }})"
+                        aria-label="{{ $entry['user']->forenames }} {{ $entry['user']->surname }}: {{ $buckets[$index]['label'] }} {{ $buckets[$index]['sublabel'] }} {{ $cell->label() }}"
                     ></div>
                 @endforeach
             @endforeach

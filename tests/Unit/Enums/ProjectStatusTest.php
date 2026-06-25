@@ -16,8 +16,16 @@ it('provides a human-readable label for every case', function () {
         ->and(ProjectStatus::CANCELLED->label())->toBe('Cancelled');
 });
 
-it('returns a Flux colour name for every case', function (ProjectStatus $status) {
-    $fluxColours = ['zinc', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'];
-
-    expect($status->colour())->toBeIn($fluxColours);
-})->with(ProjectStatus::cases());
+it('maps each case to its intended Flux colour', function () {
+    expect(ProjectStatus::IDEATION->colour())->toBe('lime')
+        ->and(ProjectStatus::FEASIBILITY->colour())->toBe('green')
+        ->and(ProjectStatus::SCOPING->colour())->toBe('amber')
+        ->and(ProjectStatus::SCHEDULING->colour())->toBe('amber')
+        ->and(ProjectStatus::DETAILED_DESIGN->colour())->toBe('amber')
+        ->and(ProjectStatus::DEVELOPMENT->colour())->toBe('amber')
+        ->and(ProjectStatus::BUILD->colour())->toBe('amber')
+        ->and(ProjectStatus::TESTING->colour())->toBe('amber')
+        ->and(ProjectStatus::DEPLOYED->colour())->toBe('green')
+        ->and(ProjectStatus::COMPLETED->colour())->toBe('zinc')
+        ->and(ProjectStatus::CANCELLED->colour())->toBe('red');
+});

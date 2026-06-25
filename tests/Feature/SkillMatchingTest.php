@@ -2,7 +2,6 @@
 
 use App\Enums\SkillLevel;
 use App\Livewire\ProjectEditor;
-use App\Models\Project;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,54 +14,28 @@ describe('Skill Matching', function () {
         $this->fakeNotifications();
     });
 
-    it('can sort a list of people with most applicable skill level for a given competency', function () {
-        $skill1 = Skill::factory()->create(['name' => 'Laravel', 'skill_category' => 'Programming Languages', 'description' => 'PHP framework for web development']);
-        $skill2 = Skill::factory()->create(['name' => 'React', 'skill_category' => 'Programming Languages', 'description' => 'JavaScript library for building user interfaces']);
-        $skill3 = Skill::factory()->create(['name' => 'Project Management', 'skill_category' => 'Management', 'description' => 'Managing projects and teams']);
-        $user1 = User::factory()->create();
-        $user2 = User::factory()->create();
-        $user3 = User::factory()->create();
-        $user4 = User::factory()->create();
-        $user5 = User::factory()->create();
-        $user1->skills()->attach($skill1->id, ['skill_level' => SkillLevel::AWARENESS->value]);
-        $user2->skills()->attach($skill2->id, ['skill_level' => SkillLevel::WORKING->value]);
-        $user3->skills()->attach($skill1->id, ['skill_level' => SkillLevel::EXPERT->value]);
-        $user5->skills()->attach($skill3->id, ['skill_level' => SkillLevel::WORKING->value]);
-        $user5->skills()->attach($skill2->id, ['skill_level' => SkillLevel::WORKING->value]);
-        // dd($user5->hasSkill($skill3->id));
+    it('sorts matched staff by total skill score across the required competencies', function () {
+        $laravel = Skill::factory()->create(['name' => 'Laravel']);
+        $react = Skill::factory()->create(['name' => 'React']);
+        $projectManagement = Skill::factory()->create(['name' => 'Project Management']);
 
-        $project = Project::factory()->create();
-        $project->scoping->skills_required = [$skill1->id, $skill3->id];
+        $multiMatch = User::factory()->create(['surname' => 'MultiMatch']);   // matches both required skills
+        $singleMatch = User::factory()->create(['surname' => 'SingleMatch']); // matches one required skill
+        $offTopic = User::factory()->create(['surname' => 'OffTopic']);       // only a non-required skill
 
-        $requiredSkillIds = [3, 2];
+        $multiMatch->skills()->attach($projectManagement->id, ['skill_level' => SkillLevel::WORKING->value]); // 2
+        $multiMatch->skills()->attach($react->id, ['skill_level' => SkillLevel::WORKING->value]); // 2 -> total 4
+        $singleMatch->skills()->attach($react->id, ['skill_level' => SkillLevel::WORKING->value]); // 2
+        $offTopic->skills()->attach($laravel->id, ['skill_level' => SkillLevel::EXPERT->value]); // not required -> 0
 
-        $users = User::with(['skills' => function ($query) use ($requiredSkillIds) {
-            // eager load only skills with ids in the array requiredSkillIds for each user
-            // this helps to not include skills we dont need to match
-            $query->whereIn('skill_id', $requiredSkillIds);
-        }])
-            ->whereHas('skills', function ($query) use ($requiredSkillIds) {
-                // whereHas filters the users to only include those with skills with ids in the array requiredSkillIds
-                $query->whereIn('skill_id', $requiredSkillIds);
-            })
-            ->get()
-            ->map(function ($user) {
-                $totalScore = $user->skills->sum(function ($skill) use ($user) {
-                    $level = SkillLevel::from($user->getSkillLevel($skill));
+        $matched = (new ProjectEditor)->getUsersMatchedBySkills([$projectManagement->id, $react->id]);
 
-                    return $level->getNumericValue();
-                });
-                $user->total_skill_score = $totalScore;
-
-                return $user;
-            })
-            ->sortByDesc('total_skill_score')
-            ->values();
-
-        // dd($users);
-        expect($users)->toHaveCount(2);
-        expect($users->pluck('id')->toArray())->toBe([$user5->id, $user2->id]);
-        expect($users->pluck('total_skill_score')->toArray())->toBe([4, 2]);
+        // Highest combined score first, then the single match, then everyone else on 0.
+        expect($matched->first()->id)->toBe($multiMatch->id)
+            ->and($matched->first()->total_skill_score)->toBe(4)
+            ->and($matched[1]->id)->toBe($singleMatch->id)
+            ->and($matched[1]->total_skill_score)->toBe(2)
+            ->and($matched->firstWhere('id', $offTopic->id)->total_skill_score)->toBe(0);
     });
 
     it('can get users matched by skills and sorted by score', function () {
@@ -100,12 +73,21 @@ describe('Skill Matching', function () {
         expect($matchedUsers->last()->total_skill_score)->toBe(0);
     });
 
-    it('returns all staff sorted alphabetically when no required skills provided', function () {
+    it('returns all staff sorted alphabetically by surname when no required skills are provided', function () {
+        User::factory()->create(['forenames' => 'Test', 'surname' => 'Zulu']);
+        User::factory()->create(['forenames' => 'Test', 'surname' => 'Alpha']);
+        User::factory()->create(['forenames' => 'Test', 'surname' => 'Mike']);
+
         $matchedUsers = (new ProjectEditor)->getUsersMatchedBySkills([]);
 
-        // Should return all staff users sorted by surname (1 from fakeNotifications)
-        expect($matchedUsers)->toHaveCount(1);
-        expect($matchedUsers->first()->total_skill_score)->toBe(0);
+        // The known staff come back in ascending surname order (robust to the fakeNotifications user).
+        $knownSurnames = array_values(array_intersect(
+            $matchedUsers->pluck('surname')->all(),
+            ['Alpha', 'Mike', 'Zulu']
+        ));
+
+        expect($knownSurnames)->toBe(['Alpha', 'Mike', 'Zulu'])
+            ->and($matchedUsers->firstWhere('surname', 'Alpha')->total_skill_score)->toBe(0);
     });
 
     it('returns all staff with score 0 when no users have required skills', function () {

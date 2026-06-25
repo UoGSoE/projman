@@ -1,11 +1,14 @@
 <?php
 
+use App\Enums\AvailabilityForChange;
 use App\Enums\Busyness;
+use App\Enums\EffortScale;
 use App\Enums\ProjectStatus;
 use App\Livewire\ProjectEditor;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -158,7 +161,15 @@ describe('User::activeAssignedProjectCount()', function () {
     });
 });
 
-describe('ProjectEditor busyness adjustments', function () {
+describe('ProjectEditor live preview (NEW model — TODO)', function () {
+    // The previous tests asserted busyness ±1 adjustments on the old enum model.
+    // The new model needs different live-preview behaviour: when the user
+    // toggles staff in the scheduling form, the heatmap cells for those users
+    // should add/remove the in-edit project's per-day cost. To implement that,
+    // ProjectEditor needs to pass the form's current effort/dates/staff into
+    // the cell calculation as a "preview override" (since they aren't saved
+    // yet). Tests will be reinstated once that path is built.
+
     it('stores original assigned staff IDs on mount', function () {
         $staffMember = User::factory()->create(['is_staff' => true]);
 
@@ -178,69 +189,103 @@ describe('ProjectEditor busyness adjustments', function () {
         expect($component->get('originalAssignedStaffIds'))->toBe([]);
     });
 
-    it('calculates +1 adjustment for newly selected staff', function () {
-        $staffMember = User::factory()->create(['is_staff' => true]);
+    it('reflects newly selected staff in the heatmap (live preview)', function () {
+        // A staff member with Moderate (60%) AFC and no committed projects.
+        $alice = User::factory()->create([
+            'is_staff' => true,
+            'availability_for_change' => AvailabilityForChange::Moderate,
+        ]);
+
+        // A scheduling-stage project, scoped Small (5 person-days), 5-weekday duration.
+        // If Alice is allocated solo: 5 / 1 / 5 / 0.6 = 1.667 → 167% → Black.
         $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
+        $project->scoping->update(['estimated_effort' => EffortScale::SMALL]);
+
+        $start = Carbon::today()->isWeekend()
+            ? Carbon::today()->next(Carbon::MONDAY)
+            : Carbon::today();
 
         $component = Livewire::test(ProjectEditor::class, ['project' => $project])
-            ->set('schedulingForm.assignedTo', $staffMember->id);
+            ->set('scopingForm.estimatedEffort', EffortScale::SMALL)
+            ->set('schedulingForm.estimatedStartDate', $start->format('Y-m-d'))
+            ->set('schedulingForm.estimatedCompletionDate', $start->copy()->addWeekdays(4)->format('Y-m-d'))
+            ->set('schedulingForm.assignedTo', $alice->id);
 
-        // Get the heatmap data which uses adjustments
         $heatmapData = $component->get('heatmapData');
+        $aliceEntry = collect($heatmapData['staff'])->firstWhere('user.id', $alice->id);
 
-        // The staff member should have busyness calculated with +1 adjustment
-        // Since they have 0 projects + 1 = 1 project, should be LOW
-        $staffEntry = collect($heatmapData['staff'])->firstWhere('user.id', $staffMember->id);
-
-        expect($staffEntry)->not->toBeNull();
-        expect($staffEntry['busyness'][0])->toBe(Busyness::LOW);
+        // The first cell should reflect the in-edit project's projected impact.
+        expect($aliceEntry['cells'][0]->colour())->toBe('bg-black');
     });
 
-    it('calculates -1 adjustment for deselected staff', function () {
-        $staffMember = User::factory()->create([
+    it('removes deselected staff contribution from the heatmap (live preview)', function () {
+        // Alice is saved as the assignee on a Small/5-weekday project — her saved
+        // cell would be Black (1.667 utilisation). When the editor deselects her,
+        // her cell should fall back to Green (no projects).
+        $alice = User::factory()->create([
             'is_staff' => true,
-            'busyness_week_1' => Busyness::HIGH,
-            'busyness_week_2' => Busyness::HIGH,
+            'availability_for_change' => AvailabilityForChange::Moderate,
         ]);
 
-        // Create project with this staff member assigned
+        $start = Carbon::today()->isWeekend()
+            ? Carbon::today()->next(Carbon::MONDAY)
+            : Carbon::today();
+
         $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
-        $project->scheduling->update(['assigned_to' => $staffMember->id]);
+        $project->scoping->update(['estimated_effort' => EffortScale::SMALL]);
+        $project->scheduling->update([
+            'assigned_to' => $alice->id,
+            'estimated_start_date' => $start,
+            'estimated_completion_date' => $start->copy()->addWeekdays(4),
+        ]);
 
-        // Mount the component (staff is in original)
-        $component = Livewire::test(ProjectEditor::class, ['project' => $project]);
+        $component = Livewire::test(ProjectEditor::class, ['project' => $project])
+            ->set('schedulingForm.assignedTo', null);
 
-        // Verify original IDs include the staff member
-        expect($component->get('originalAssignedStaffIds'))->toContain($staffMember->id);
-
-        // Now deselect the staff member
-        $component->set('schedulingForm.assignedTo', null);
-
-        // Get heatmap data - staff should show reduced busyness
         $heatmapData = $component->get('heatmapData');
-        $staffEntry = collect($heatmapData['staff'])->firstWhere('user.id', $staffMember->id);
+        $aliceEntry = collect($heatmapData['staff'])->firstWhere('user.id', $alice->id);
 
-        // HIGH - 1 adjustment = MEDIUM
-        expect($staffEntry['busyness'][0])->toBe(Busyness::MEDIUM);
+        expect($aliceEntry['cells'][0]->colour())->toBe('bg-green-500');
+    });
+    it('surfaces a notice in the heatmap when the in-edit project lacks the data needed to model it', function () {
+        // Project without scoping effort or scheduling dates filled in.
+        $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
+
+        Livewire::test(ProjectEditor::class, ['project' => $project])
+            ->set('showHeatmap', true)
+            ->assertSee('Set the start and completion dates');
     });
 
-    it('shows stored busyness for unchanged staff', function () {
-        $staffMember = User::factory()->create([
+    it('shows saved cost for staff whose selection has not changed (live preview)', function () {
+        // Mount the editor with no form changes. The base cells exclude the
+        // in-edit project; the live preview re-adds its cost based on the form's
+        // current state. With no changes, that state matches the saved state,
+        // so the cell should look the same as it would if the editor never
+        // touched it.
+        $alice = User::factory()->create([
             'is_staff' => true,
-            'busyness_week_1' => Busyness::HIGH,
-            'busyness_week_2' => Busyness::HIGH,
+            'availability_for_change' => AvailabilityForChange::Moderate,
         ]);
 
+        $start = Carbon::today()->isWeekend()
+            ? Carbon::today()->next(Carbon::MONDAY)
+            : Carbon::today();
+
         $project = Project::factory()->create(['status' => ProjectStatus::SCHEDULING]);
-        $project->scheduling->update(['assigned_to' => $staffMember->id]);
+        $project->scoping->update(['estimated_effort' => EffortScale::SMALL]);
+        $project->scheduling->update([
+            'assigned_to' => $alice->id,
+            'estimated_start_date' => $start,
+            'estimated_completion_date' => $start->copy()->addWeekdays(4),
+        ]);
 
         $component = Livewire::test(ProjectEditor::class, ['project' => $project]);
 
         $heatmapData = $component->get('heatmapData');
-        $staffEntry = collect($heatmapData['staff'])->firstWhere('user.id', $staffMember->id);
+        $aliceEntry = collect($heatmapData['staff'])->firstWhere('user.id', $alice->id);
 
-        // No adjustment, should use stored busyness value
-        expect($staffEntry['busyness'][0])->toBe(Busyness::HIGH);
+        // 5 / 1 / 5 / 0.6 = 1.667 → Black, same as if the editor weren't involved.
+        expect($aliceEntry['cells'][0]->colour())->toBe('bg-black');
     });
 });
 

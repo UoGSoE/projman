@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\AvailabilityForChange;
 use App\Enums\ProjectStatus;
 use App\Events\ProjectCreated;
 use App\Events\ProjectStageChange;
 use App\Models\Traits\CanCheckIfEdited;
 use Database\Factories\ProjectFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,8 +16,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
+#[Fillable('user_id', 'school_group', 'title', 'deadline', 'status')]
 class Project extends Model
 {
     use CanCheckIfEdited;
@@ -27,18 +31,13 @@ class Project extends Model
         'created' => ProjectCreated::class,
     ];
 
-    protected $fillable = [
-        'user_id',
-        'school_group',
-        'title',
-        'deadline',
-        'status',
-    ];
-
-    protected $casts = [
-        'status' => ProjectStatus::class,
-        'deadline' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'status' => ProjectStatus::class,
+            'deadline' => 'date',
+        ];
+    }
 
     /**
      * Get the validation rules that apply to the model.
@@ -178,5 +177,78 @@ class Project extends Model
         ProjectStageChange::dispatch($this, auth()->user());
 
         return $this->status;
+    }
+
+    public function returnToPreviousStage(): ProjectStatus
+    {
+        $previous = $this->status->getPreviousStatus();
+
+        abort_if($previous === null, 422, 'Cannot return to a previous stage from '.$this->status->label().'.');
+
+        $this->update(['status' => $previous]);
+
+        return $this->status;
+    }
+
+    /**
+     * IDs of every user allocated to this project across all stage forms.
+     */
+    public function teamMemberIds(): Collection
+    {
+        return collect([
+            $this->scheduling?->assigned_to,
+            $this->scheduling?->technical_lead_id,
+            $this->scheduling?->change_champion_id,
+            $this->detailedDesign?->designed_by,
+            $this->development?->lead_developer,
+            $this->testing?->test_lead,
+            $this->feasibility?->assessed_by,
+            $this->scoping?->assessed_by,
+        ])
+            ->filter()
+            ->merge(collect($this->scheduling?->cose_it_staff ?? []))
+            ->merge(collect($this->development?->development_team ?? []))
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Per-day cost (as a fraction of full-time) this project imposes on the
+     * given user, distributed equally across allocated people and spread
+     * uniformly across the project's working-day duration, normalised against
+     * the user's Availability for Change.
+     */
+    public function perDayCostForUser(User $user): float
+    {
+        $effortDays = $this->scoping?->estimated_effort?->estimatedDays();
+        $start = $this->scheduling?->estimated_start_date;
+        $end = $this->scheduling?->estimated_completion_date;
+
+        if (! $effortDays || ! $start || ! $end) {
+            return 0.0;
+        }
+
+        return self::calculatePerDayCost(
+            $user,
+            $effortDays,
+            $this->teamMemberIds()->count(),
+            (int) $start->diffInWeekdays($end) + 1,
+        );
+    }
+
+    /**
+     * Pure formula behind perDayCostForUser. Exposed so the heatmap's live
+     * preview can compute the cost of an in-edit project using form values
+     * that aren't saved to the database yet.
+     */
+    public static function calculatePerDayCost(User $user, int $effortDays, int $peopleCount, int $duration): float
+    {
+        $afc = ($user->availability_for_change ?? AvailabilityForChange::Moderate)->value / 100;
+
+        if ($afc <= 0) {
+            return PHP_FLOAT_MAX;
+        }
+
+        return $effortDays / max(1, $peopleCount) / max(1, $duration) / $afc;
     }
 }

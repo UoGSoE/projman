@@ -70,13 +70,22 @@ it('tracks skipped staff with all-99 assessments', function () {
     expect($result['skippedStaff'])->toHaveCount(9);
 });
 
-it('maps actual values to correct skill level strings', function () {
+it('maps actual values to the correct skill level strings', function () {
     $parser = new SkillsSpreadsheetParser;
     $result = $parser->parse(__DIR__.'/../fixtures/it_training_modeller.xlsx');
 
+    $staffSkills = $result['staffSkills'];
+
+    // Exact numeric-to-level mappings (1 -> awareness, 2 -> working, 3 -> practitioner, 4 -> expert).
+    expect($staffSkills['John Watson']['Service acceptance'])->toBe('awareness')
+        ->and($staffSkills['John Watson']['Information security'])->toBe('working')
+        ->and($staffSkills['John Watson']['Asset Management'])->toBe('practitioner')
+        ->and($staffSkills['Jane Marple']['Application support'])->toBe('expert');
+
+    // Backstop: no value ever leaks through outside the known set.
     $validLevels = ['awareness', 'working', 'practitioner', 'expert'];
-    foreach ($result['staffSkills'] as $staffName => $skills) {
-        foreach ($skills as $skillName => $level) {
+    foreach ($staffSkills as $skills) {
+        foreach ($skills as $level) {
             expect($validLevels)->toContain($level);
         }
     }

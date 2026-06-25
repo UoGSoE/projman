@@ -96,6 +96,21 @@ enum ProjectStatus: string
         };
     }
 
+    public function getPreviousStatus(): ?self
+    {
+        return match ($this) {
+            self::SCOPING => self::FEASIBILITY,
+            self::SCHEDULING => self::SCOPING,
+            self::DETAILED_DESIGN => self::SCHEDULING,
+            default => null,
+        };
+    }
+
+    public function canReturnToPreviousStage(): bool
+    {
+        return $this->getPreviousStatus() !== null;
+    }
+
     public static function getAll(): array
     {
         return array_column(self::cases(), 'value');

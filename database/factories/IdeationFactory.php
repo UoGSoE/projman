@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\StrategicInitiative;
 use App\Models\Ideation;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -25,7 +26,7 @@ class IdeationFactory extends Factory
             'business_case' => fake()->sentence(),
             'benefits' => fake()->paragraph(),
             'deadline' => fake()->dateTimeBetween('now', '+1 year'),
-            'strategic_initiative' => fake()->sentence(),
+            'strategic_initiative' => fake()->randomElement(StrategicInitiative::cases())->value,
         ];
     }
 }

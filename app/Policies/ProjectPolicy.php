@@ -30,6 +30,11 @@ class ProjectPolicy
             && $project->status === ProjectStatus::IDEATION;
     }
 
+    public function manageWorkflow(User $user, Project $project): bool
+    {
+        return $user->isAdmin() || $user->isItStaff();
+    }
+
     public function cancel(User $user, Project $project): bool
     {
         return $user->id === $project->user_id || $user->isAdmin();

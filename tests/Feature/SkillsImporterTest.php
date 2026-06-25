@@ -80,24 +80,25 @@ it('imports skills and syncs user skill levels on confirm', function () {
     expect(Skill::where('name', 'Asset Management')->exists())->toBeTrue();
     expect(Skill::where('name', 'Asset Management')->first()->skill_category)->toBe('Core');
 
-    // Watson should have skills assigned
+    // Watson's levels reflect the spreadsheet's numeric values mapped to SkillLevel
+    // (Asset Management = 3 -> practitioner, Information security = 2 -> working).
     $watson->refresh();
     expect($watson->skills)->not->toBeEmpty();
-
-    // Verify a specific skill level
-    $assetMgmt = Skill::where('name', 'Asset Management')->first();
-    $watsonSkillLevel = $watson->getSkillLevel($assetMgmt);
-    expect($watsonSkillLevel)->not->toBe('none');
+    expect($watson->getSkillLevel(Skill::where('name', 'Asset Management')->first()))->toBe('practitioner');
+    expect($watson->getSkillLevel(Skill::where('name', 'Information security')->first()))->toBe('working');
 });
 
-it('overwrites existing skill levels on re-import', function () {
+it('overwrites existing skill levels and removes stale skills on re-import', function () {
     $admin = User::factory()->create(['is_admin' => true, 'is_staff' => true]);
     $watson = User::factory()->create(['is_staff' => true, 'surname' => 'Watson', 'forenames' => 'John']);
     $this->actingAs($admin);
 
-    // Pre-populate with old data
-    $oldSkill = Skill::factory()->create(['name' => 'Asset Management']);
-    $watson->skills()->attach($oldSkill->id, ['skill_level' => 'awareness']);
+    // Pre-existing data: Asset Management at the wrong level, plus a skill that is NOT
+    // in the spreadsheet and should be dropped by the sync.
+    $assetMgmt = Skill::factory()->create(['name' => 'Asset Management']);
+    $staleSkill = Skill::factory()->create(['name' => 'Obsolete Skill']);
+    $watson->skills()->attach($assetMgmt->id, ['skill_level' => 'awareness']);
+    $watson->skills()->attach($staleSkill->id, ['skill_level' => 'expert']);
 
     $file = UploadedFile::fake()->createWithContent(
         'it_training_modeller.xlsx',
@@ -110,11 +111,13 @@ it('overwrites existing skill levels on re-import', function () {
         ->call('confirmImport')
         ->assertSet('step', 'complete');
 
-    // Watson's skills should be replaced (sync), not just appended
     $watson->refresh();
-    $assetMgmt = Skill::where('name', 'Asset Management')->first();
-    $watsonLevel = $watson->getSkillLevel($assetMgmt);
-    expect($watsonLevel)->not->toBe('awareness'); // Should be updated from the spreadsheet
+
+    // The matching skill is overwritten to the spreadsheet's level (awareness -> practitioner)...
+    expect($watson->getSkillLevel($assetMgmt))->toBe('practitioner');
+    // ...and the skill absent from the spreadsheet is removed by the sync, not left behind.
+    expect($watson->skills->pluck('name'))->not->toContain('Obsolete Skill');
+    expect($watson->getSkillLevel($staleSkill))->toBe('none');
 });
 
 it('falls back to forename and surname when a surname has duplicates', function () {

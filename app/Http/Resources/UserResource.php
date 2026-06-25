@@ -26,6 +26,8 @@ class UserResource extends JsonResource
             'busyness_week_1_value' => $this->busyness_week_1?->value,
             'busyness_week_2' => $this->busyness_week_2 ? strtolower($this->busyness_week_2->name) : null,
             'busyness_week_2_value' => $this->busyness_week_2?->value,
+            'availability_for_change' => $this->availability_for_change ? strtolower($this->availability_for_change->name) : null,
+            'availability_for_change_value' => $this->availability_for_change?->value,
             'skills' => SkillWithLevelResource::collection($this->whenLoaded('skills')),
         ];
     }

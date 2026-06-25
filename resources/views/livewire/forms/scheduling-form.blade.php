@@ -95,15 +95,6 @@
             @endif
         </flux:select>
 
-        {{-- <flux:select label="Team Assignment" wire:model="schedulingForm.teamAssignment">
-            <flux:select.option value="">– Select –</flux:select.option>
-            @foreach ($schedulingForm->availableTeams as $id => $name)
-                <flux:select.option value="{{ $id }}">
-                    {{ $name }}
-                </flux:select.option>
-            @endforeach
-        </flux:select> --}}
-
         <flux:pillbox multiple placeholder="Pick staff..." label="CoSE IT staff (Skill Score)"
             wire:model.live="schedulingForm.coseItStaff">
             @foreach ($this->skillMatchedUsers as $user)
@@ -164,6 +155,8 @@
                         All staff members are shown alphabetically.
                     @endif
                 </flux:text>
+
+                <x-heatmap-explainer class="mt-3" />
             </div>
 
             <div class="flex flex-col items-end gap-2">
@@ -172,15 +165,17 @@
                     <flux:radio value="weeks" label="Weeks" />
                     <flux:radio value="months" label="Months" />
                 </flux:radio.group>
-                <flux:text variant="subtle" class="text-xs">
-                    @if ($viewMode === 'days')
-                        Showing manually reported busyness.
-                    @else
-                        Showing busyness from project assignments.
-                    @endif
-                </flux:text>
             </div>
         </div>
+
+        @if (! $this->heatmapData['canModelInEditProject'])
+            <flux:callout icon="information-circle" variant="secondary" class="mt-4">
+                <flux:callout.heading>A bit more information needed to project this work package</flux:callout.heading>
+                <flux:callout.text>
+                    Set the start and completion dates, choose an effort scale on the Scoping stage, and assign at least one staff member to see how this work package would shift the heatmap.
+                </flux:callout.text>
+            </flux:callout>
+        @endif
 
         <div class="mt-4">
             @include('components.heatmap-table', $this->heatmapData)

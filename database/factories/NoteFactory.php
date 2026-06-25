@@ -24,7 +24,7 @@ class NoteFactory extends Factory
             'noteable_type' => Development::class,
             'noteable_id' => Development::factory(),
             'user_id' => User::factory(),
-            'body' => $this->faker->paragraph,
+            'body' => $this->faker->paragraph(),
         ];
     }
 
