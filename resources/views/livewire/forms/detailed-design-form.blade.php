@@ -60,6 +60,9 @@
     <flux:separator />
 
     <div class="flex items-center gap-2">
+        @can('changeStage', $project)
+            @include('livewire.forms.partials.save-stage-buttons', ['stage' => \App\Enums\ProjectStatus::DETAILED_DESIGN])
+        @endcan
         <flux:button wire:click="saveAndAdvance('detailed-design')" variant="primary" icon:trailing="arrow-right">
             Advance to Next Stage
         </flux:button>

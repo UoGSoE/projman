@@ -67,3 +67,4 @@ NOTES_*
 it_training_modeller.xlsx
 
 .ant/
+.playwright-cli

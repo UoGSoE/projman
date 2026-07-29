@@ -154,6 +154,29 @@ describe('ProjectPolicy cancel ability', function () {
     });
 });
 
+describe('ProjectPolicy changeStage ability', function () {
+    it('allows an admin to change the stage of a project', function () {
+        $admin = User::factory()->admin()->create();
+        $project = Project::factory()->create();
+
+        expect($admin->can('changeStage', $project))->toBeTrue();
+    });
+
+    it('forbids IT staff from changing the stage of a project', function () {
+        $itStaff = User::factory()->staff()->create();
+        $project = Project::factory()->create();
+
+        expect($itStaff->can('changeStage', $project))->toBeFalse();
+    });
+
+    it('forbids the owner from changing the stage of their own project', function () {
+        $owner = User::factory()->requester()->create();
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+
+        expect($owner->can('changeStage', $project))->toBeFalse();
+    });
+});
+
 describe('ProjectEditor in-method authorisation', function () {
     it('forbids a requester from calling advanceToNextStage via Livewire', function () {
         $owner = User::factory()->requester()->create();

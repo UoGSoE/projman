@@ -184,9 +184,10 @@ describe('Project Editing', function () {
                 ->assertDontSee('Advance to Next Stage');
         });
 
-        it('keeps the "Advance to Next Stage" wording for admin users', function () {
+        it('shows the save dropdown alongside the advance button for admin users', function () {
             // beforeEach already actingAs an admin user
             livewire(ProjectEditor::class, ['project' => $this->project])
+                ->assertSee('Save and make this stage current')
                 ->assertSee('Advance to Next Stage')
                 ->assertDontSee('Submit Work Package');
         });

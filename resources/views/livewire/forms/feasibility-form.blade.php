@@ -82,6 +82,9 @@
             </flux:modal.trigger>
         @endif
 
+        @can('changeStage', $project)
+            @include('livewire.forms.partials.save-stage-buttons', ['stage' => \App\Enums\ProjectStatus::FEASIBILITY])
+        @endcan
         <flux:button wire:click="saveAndAdvance('feasibility')" variant="primary" icon:trailing="arrow-right">
             Advance to Next Stage
         </flux:button>

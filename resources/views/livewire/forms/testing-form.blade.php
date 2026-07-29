@@ -108,7 +108,11 @@
 
     {{-- Action Buttons --}}
     <div class="flex flex-wrap gap-3 items-center">
-        <flux:button type="submit" variant="primary">Update</flux:button>
+        @can('changeStage', $project)
+            @include('livewire.forms.partials.save-stage-buttons', ['stage' => \App\Enums\ProjectStatus::TESTING])
+        @else
+            <flux:button type="submit" variant="primary">Update</flux:button>
+        @endcan
 
         @if (!empty($testingForm->uatTesterId) && empty($project->testing->uat_requested_at))
             <flux:button wire:click="requestUAT">Request UAT</flux:button>

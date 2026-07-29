@@ -142,6 +142,42 @@ class ProjectEditor extends Component
         $this->advanceToNextStage();
     }
 
+    public function saveAndMakeStageCurrent(string $formType): void
+    {
+        $this->authorize('changeStage', $this->project);
+
+        $this->save($formType);
+
+        $this->makeStageCurrent(ProjectStatus::from($formType));
+    }
+
+    public function saveAndMakeNextStageCurrent(string $formType): void
+    {
+        $this->authorize('changeStage', $this->project);
+
+        $this->save($formType);
+
+        $this->makeStageCurrent(ProjectStatus::from($formType)->getNextStatus($this->project));
+    }
+
+    protected function makeStageCurrent(ProjectStatus $stage): void
+    {
+        if ($this->project->status === ProjectStatus::CANCELLED || $this->project->status === ProjectStatus::COMPLETED) {
+            Flux::toast('Work package is '.ucfirst($this->project->status->value).', cannot change its stage', variant: 'warning');
+
+            return;
+        }
+
+        if ($this->project->status === $stage) {
+            return;
+        }
+
+        $this->project->changeStageTo($stage);
+        $this->project->addHistory(Auth::user(), 'Stage set to '.$stage->value);
+
+        Flux::toast('Work package stage set to '.$stage->label(), variant: 'success');
+    }
+
     public function returnToPreviousStage(): void
     {
         $this->authorize('update', $this->project);

@@ -128,6 +128,9 @@
                 </flux:button>
             @endif
 
+            @can('changeStage', $project)
+                @include('livewire.forms.partials.save-stage-buttons', ['stage' => \App\Enums\ProjectStatus::SCHEDULING])
+            @endcan
             <flux:button wire:click="saveAndAdvance('scheduling')" variant="primary" icon:trailing="arrow-right">
                 Advance to Next Stage
             </flux:button>

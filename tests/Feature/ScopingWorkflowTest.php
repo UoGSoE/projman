@@ -192,7 +192,7 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
             ->assertSeeInOrder(array_map(fn ($scale) => $scale->label(), EffortScale::cases()));
     });
 
-    it('shows Update button in Scoping tab', function () {
+    it('shows the Save button in the Scoping tab', function () {
         // Arrange
         $user = User::factory()->create(['is_admin' => true]);
         $project = Project::factory()->create();
@@ -200,6 +200,6 @@ describe('Scoping Effort Scale & Simplified Workflow', function () {
 
         // Act & Assert
         livewire(ProjectEditor::class, ['project' => $project])
-            ->assertSee('Update');
+            ->assertSeeHtml('data-test="save-scoping-button"');
     });
 });

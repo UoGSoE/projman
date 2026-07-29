@@ -47,6 +47,9 @@
             Submit
         </flux:button>
 
+        @can('changeStage', $project)
+            @include('livewire.forms.partials.save-stage-buttons', ['stage' => \App\Enums\ProjectStatus::SCOPING])
+        @endcan
         <flux:button wire:click="saveAndAdvance('scoping')" variant="primary" icon:trailing="arrow-right">
             Advance to Next Stage
         </flux:button>

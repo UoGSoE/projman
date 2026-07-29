@@ -173,7 +173,12 @@ class Project extends Model
 
     public function advanceToNextStage(): ProjectStatus
     {
-        $this->update(['status' => $this->status->getNextStatus($this)]);
+        return $this->changeStageTo($this->status->getNextStatus($this));
+    }
+
+    public function changeStageTo(ProjectStatus $stage): ProjectStatus
+    {
+        $this->update(['status' => $stage]);
         ProjectStageChange::dispatch($this, auth()->user());
 
         return $this->status;

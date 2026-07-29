@@ -40,6 +40,11 @@ class ProjectPolicy
         return $user->id === $project->user_id || $user->isAdmin();
     }
 
+    public function changeStage(User $user, Project $project): bool
+    {
+        return $user->isAdmin();
+    }
+
     public function saveForm(User $user, Project $project, string $formType): bool
     {
         if ($user->isAdmin() || $user->isItStaff()) {

@@ -77,7 +77,11 @@
 
     {{-- Action Buttons --}}
     <div class="flex flex-wrap gap-3 items-center">
-        <flux:button type="submit" variant="primary">Update</flux:button>
+        @can('changeStage', $project)
+            @include('livewire.forms.partials.save-stage-buttons', ['stage' => \App\Enums\ProjectStatus::DEPLOYED])
+        @else
+            <flux:button type="submit" variant="primary">Update</flux:button>
+        @endcan
 
         @if($project->deployed->isReadyForServiceAcceptance() && $project->deployed->needsServiceAcceptance())
             <flux:button wire:click="acceptDeploymentService" data-test="service-acceptance-button">
