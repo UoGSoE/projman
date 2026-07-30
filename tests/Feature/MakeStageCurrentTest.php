@@ -1,19 +1,20 @@
 <?php
 
 use App\Enums\ProjectStatus;
-use App\Events\ProjectStageChange;
 use App\Livewire\ProjectEditor;
+use App\Mail\ProjectStageChangeMail;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 
 use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->fakeNotifications();
+    Mail::fake();
+    $this->ensureProjectCreatedRoles();
 });
 
 function fillIdeationForm($component)
@@ -39,9 +40,10 @@ it('lets an admin save an earlier form and make that stage current', function ()
 
     expect($project->fresh()->status)->toBe(ProjectStatus::IDEATION);
     expect($project->fresh()->ideation->objective)->toBe('Updated Objective');
-    expect($project->history()->pluck('description'))->toContain('Stage set to ideation');
+    expect($project->history()->pluck('description'))->toContain("Stage changed to ideation by {$admin->full_name}");
+    expect($project->history()->pluck('description'))->not->toContain('Stage set to ideation');
     expect($project->history()->latest('id')->first()->user_id)->toBe($admin->id);
-    Event::assertDispatchedTimes(ProjectStageChange::class, 1);
+    Mail::assertQueued(ProjectStageChangeMail::class, 1);
 });
 
 it('forbids IT staff from calling $action', function (string $action) {
@@ -56,7 +58,7 @@ it('forbids IT staff from calling $action', function (string $action) {
 
     expect($project->fresh()->status)->toBe(ProjectStatus::TESTING);
     expect($project->history()->count())->toBe(0);
-    Event::assertNotDispatched(ProjectStageChange::class);
+    Mail::assertNotQueued(ProjectStageChangeMail::class);
 })->with([
     'saveAndMakeStageCurrent',
     'saveAndMakeNextStageCurrent',
@@ -74,8 +76,8 @@ it('just saves when the chosen stage is already current', function () {
 
     expect($project->fresh()->status)->toBe(ProjectStatus::IDEATION);
     expect($project->fresh()->ideation->objective)->toBe('Updated Objective');
-    expect($project->history()->pluck('description'))->not->toContain('Stage set to ideation');
-    Event::assertNotDispatched(ProjectStageChange::class);
+    expect($project->history()->pluck('description'))->not->toContain("Stage changed to ideation by {$admin->full_name}");
+    Mail::assertNotQueued(ProjectStageChangeMail::class);
 });
 
 it('does not change the stage when the form fails validation', function () {
@@ -91,7 +93,7 @@ it('does not change the stage when the form fails validation', function () {
 
     expect($project->fresh()->status)->toBe(ProjectStatus::TESTING);
     expect($project->history()->count())->toBe(0);
-    Event::assertNotDispatched(ProjectStageChange::class);
+    Mail::assertNotQueued(ProjectStageChangeMail::class);
 });
 
 it('saves the form but refuses to change the stage of a $status project', function (ProjectStatus $status) {
@@ -106,8 +108,8 @@ it('saves the form but refuses to change the stage of a $status project', functi
 
     expect($project->fresh()->status)->toBe($status);
     expect($project->fresh()->ideation->objective)->toBe('Updated Objective');
-    expect($project->history()->pluck('description'))->not->toContain('Stage set to ideation');
-    Event::assertNotDispatched(ProjectStageChange::class);
+    expect($project->history()->pluck('description'))->not->toContain("Stage changed to ideation by {$admin->full_name}");
+    Mail::assertNotQueued(ProjectStageChangeMail::class);
 })->with([
     'Cancelled' => [ProjectStatus::CANCELLED],
 ]);
@@ -124,8 +126,9 @@ it('lets an admin move a completed project back to an earlier stage', function (
 
     expect($project->fresh()->status)->toBe(ProjectStatus::IDEATION);
     expect($project->fresh()->ideation->objective)->toBe('Updated Objective');
-    expect($project->history()->pluck('description'))->toContain('Stage set to ideation');
-    Event::assertDispatchedTimes(ProjectStageChange::class, 1);
+    expect($project->history()->pluck('description'))->toContain("Stage changed to ideation by {$admin->full_name}");
+    expect($project->history()->pluck('description'))->not->toContain('Stage set to ideation');
+    Mail::assertQueued(ProjectStageChangeMail::class, 1);
 });
 
 it('lets an admin save an earlier form and make the stage after it current', function () {
@@ -140,8 +143,8 @@ it('lets an admin save an earlier form and make the stage after it current', fun
 
     expect($project->fresh()->status)->toBe(ProjectStatus::FEASIBILITY);
     expect($project->fresh()->ideation->objective)->toBe('Updated Objective');
-    expect($project->history()->pluck('description'))->toContain('Stage set to feasibility');
-    Event::assertDispatchedTimes(ProjectStageChange::class, 1);
+    expect($project->history()->pluck('description'))->toContain("Stage changed to feasibility by {$admin->full_name}");
+    Mail::assertQueued(ProjectStageChangeMail::class, 1);
 });
 
 it('skips Development when making the stage after Detailed Design current on a non-software project', function () {
@@ -177,8 +180,8 @@ it('only changes the stage once when the action is double-clicked', function () 
         ->assertHasNoErrors();
 
     expect($project->fresh()->status)->toBe(ProjectStatus::IDEATION);
-    expect($project->history()->pluck('description')->filter(fn ($entry) => $entry === 'Stage set to ideation'))->toHaveCount(1);
-    Event::assertDispatchedTimes(ProjectStageChange::class, 1);
+    expect($project->history()->pluck('description')->filter(fn ($entry) => $entry === "Stage changed to ideation by {$admin->full_name}"))->toHaveCount(1);
+    Mail::assertQueued(ProjectStageChangeMail::class, 1);
 });
 
 it('shows the save dropdown options to an admin', function () {

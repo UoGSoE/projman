@@ -131,8 +131,6 @@ class ProjectEditor extends Component
 
         $this->project->advanceToNextStage();
 
-        $this->project->addHistory(Auth::user(), 'Advanced to '.$this->project->status->value);
-
         Flux::toast('Work package advanced to '.ucfirst($this->project->status->value), variant: 'success');
     }
 
@@ -173,7 +171,6 @@ class ProjectEditor extends Component
         }
 
         $this->project->changeStageTo($stage);
-        $this->project->addHistory(Auth::user(), 'Stage set to '.$stage->value);
 
         Flux::toast('Work package stage set to '.$stage->label(), variant: 'success');
     }
