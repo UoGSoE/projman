@@ -162,8 +162,8 @@ class ProjectEditor extends Component
 
     protected function makeStageCurrent(ProjectStatus $stage): void
     {
-        if ($this->project->status === ProjectStatus::CANCELLED || $this->project->status === ProjectStatus::COMPLETED) {
-            Flux::toast('Work package is '.ucfirst($this->project->status->value).', cannot change its stage', variant: 'warning');
+        if ($this->project->status === ProjectStatus::CANCELLED) {
+            Flux::toast('Work package is Cancelled, cannot change its stage', variant: 'warning');
 
             return;
         }

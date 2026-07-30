@@ -109,9 +109,24 @@ it('saves the form but refuses to change the stage of a $status project', functi
     expect($project->history()->pluck('description'))->not->toContain('Stage set to ideation');
     Event::assertNotDispatched(ProjectStageChange::class);
 })->with([
-    'Completed' => [ProjectStatus::COMPLETED],
     'Cancelled' => [ProjectStatus::CANCELLED],
 ]);
+
+it('lets an admin move a completed project back to an earlier stage', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
+    $project = Project::factory()->create(['status' => ProjectStatus::COMPLETED]);
+
+    fillIdeationForm(livewire(ProjectEditor::class, ['project' => $project]))
+        ->call('saveAndMakeStageCurrent', 'ideation')
+        ->assertHasNoErrors();
+
+    expect($project->fresh()->status)->toBe(ProjectStatus::IDEATION);
+    expect($project->fresh()->ideation->objective)->toBe('Updated Objective');
+    expect($project->history()->pluck('description'))->toContain('Stage set to ideation');
+    Event::assertDispatchedTimes(ProjectStageChange::class, 1);
+});
 
 it('lets an admin save an earlier form and make the stage after it current', function () {
     $admin = User::factory()->admin()->create();
