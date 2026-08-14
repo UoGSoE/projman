@@ -177,9 +177,9 @@ For AI agents, each failing test constrains the solution space.  You can't over-
 
 We like feature tests and rarely write unit tests.  When we do, it's for pure logic that doesn't need the framework - MAC address normalisation, enum behaviour, string formatting, that sort of thing.
 
-We always test the full side-effects and both happy and unhappy paths.  Say a method creates a record and sends an email when validation passes.  We also test that invalid data does *not* create the record *or* send the email.  Not just that we got a validation error.
+We always test the full side-effects and both happy and unhappy paths.  Say a method creates a record and sends an email when validation passes.  We also test that invalid data does *not* create the record *or* send the email.  Not just that we got a validation error.  We also make sure that the email goes to the right person and doesn't email anyone else.
 
-We also check code doesn't do things we didn't expect.  If we're testing a delete, we make sure just that one record was deleted, not the whole collection.
+We also check code doesn't do things we didn't expect.  If we're testing a delete, we make sure just that one record was deleted, not the whole collection - which a naive test like `$this->assertModelMissing($user)` would pass.
 
 Always verify records using the related Eloquent model, not raw database assertions.  This catches cases where a relationship is doing extra work or should have triggered a side-effect.
 
@@ -213,7 +213,7 @@ You may also have the `test-debug` agent available.  Use it if you're stuck, but
 
 ### Running tests
 
-`php artisan test --compact` for the full suite.  Shows full output for failures but keeps passing tests quiet, which saves context window space.
+`php artisan test --parallel --tia` for the full suite.  Shows full output for failures but keeps passing tests quiet, which saves context window space.  `tia` is a new feature of pest v5 "Test Impact Analysis" - it builds a map of tests and code so it will only run tests which are affected by recent code changes.  It uses `pcov` under the hood.  Note that it is 'smart' enough to know that adding a comment to a code file doesn't need the test to run.
 
 `--filter=TestName` when you're working on a specific test file.
 
@@ -251,25 +251,11 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 ## Foundational Context
 
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+This application is a Laravel application running on PHP 8.4. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
-- php - 8.4
-- laravel/framework (LARAVEL) - v13
-- laravel/horizon (HORIZON) - v5
-- laravel/prompts (PROMPTS) - v0
-- laravel/sanctum (SANCTUM) - v4
-- laravel/socialite (SOCIALITE) - v5
-- livewire/flux (FLUXUI_FREE) - v2
-- livewire/flux-pro (FLUXUI_PRO) - v2
-- livewire/livewire (LIVEWIRE) - v4
-- laravel/boost (BOOST) - v2
-- laravel/mcp (MCP) - v0
-- laravel/pail (PAIL) - v1
-- laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
-- tailwindcss (TAILWINDCSS) - v4
+Before relying on a package's API, confirm its installed version:
+- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
+- JS packages: check `package.json` for the installed versions.
 
 ## Skills Activation
 
@@ -327,6 +313,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
 3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
 4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
+
+## Project Rules
+
+- This project contains committed, area-grouped rules in `.ai/rules` when that directory exists (settled decisions, non-obvious traps, standing constraints). Framework and package guidelines that only apply to specific paths (testing, frontend, components) also live there, under `.ai/rules/boost` — this is not just recorded decisions, it is load-bearing guidance you have not seen inline. Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule. If `.ai/rules` does not exist, continue without it.
+- Record durable rules with `record-rule` so the next agent or teammate inherits them instead of working them out again. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Always use `record-rule`, never your native memory or notes tool — native memory is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
 
 ## Artisan
 

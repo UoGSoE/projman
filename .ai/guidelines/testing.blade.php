@@ -24,9 +24,9 @@ For AI agents, each failing test constrains the solution space.  You can't over-
 
 We like feature tests and rarely write unit tests.  When we do, it's for pure logic that doesn't need the framework - MAC address normalisation, enum behaviour, string formatting, that sort of thing.
 
-We always test the full side-effects and both happy and unhappy paths.  Say a method creates a record and sends an email when validation passes.  We also test that invalid data does *not* create the record *or* send the email.  Not just that we got a validation error.
+We always test the full side-effects and both happy and unhappy paths.  Say a method creates a record and sends an email when validation passes.  We also test that invalid data does *not* create the record *or* send the email.  Not just that we got a validation error.  We also make sure that the email goes to the right person and doesn't email anyone else.
 
-We also check code doesn't do things we didn't expect.  If we're testing a delete, we make sure just that one record was deleted, not the whole collection.
+We also check code doesn't do things we didn't expect.  If we're testing a delete, we make sure just that one record was deleted, not the whole collection - which a naive test like `$this->assertModelMissing($user)` would pass.
 
 Always verify records using the related Eloquent model, not raw database assertions.  This catches cases where a relationship is doing extra work or should have triggered a side-effect.
 
@@ -62,7 +62,7 @@ You may also have the `test-debug` agent available.  Use it if you're stuck, but
 
 ### Running tests
 
-`php artisan test --compact` for the full suite.  Shows full output for failures but keeps passing tests quiet, which saves context window space.
+`php artisan test --parallel --tia` for the full suite.  Shows full output for failures but keeps passing tests quiet, which saves context window space.  `tia` is a new feature of pest v5 "Test Impact Analysis" - it builds a map of tests and code so it will only run tests which are affected by recent code changes.  It uses `pcov` under the hood.  Note that it is 'smart' enough to know that adding a comment to a code file doesn't need the test to run.
 
 `--filter=TestName` when you're working on a specific test file.
 
