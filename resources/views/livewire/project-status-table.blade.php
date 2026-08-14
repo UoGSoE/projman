@@ -1,28 +1,34 @@
 <div>
-    @if ($projects->isEmpty())
+    @if ($projects->isEmpty() && ! $this->isFiltered())
         <div class="flex flex-col h-full mt-6 space-y-6">
             <flux:text>You don't have any work packages yet. Start a new work package to get underway.</flux:text>
         </div>
     @else
         @if (!$userId)
             <div class="flex flex-col md:flex-row gap-6 h-full mt-6">
-                <flux:input type="text" wire:model="search" placeholder="Search..." />
-                <flux:select variant="combobox" wire:model="schoolGroup" placeholder="School/group...">
-                    <flux:select.option>All</flux:select.option>
-                    <flux:select.option>Engineering</flux:select.option>
-                    <flux:select.option>Chemistry</flux:select.option>
-                    <flux:select.option>Another</flux:select.option>
-                    <flux:select.option>Something</flux:select.option>
-                </flux:select>
-                <flux:select variant="combobox" wire:model="status" placeholder="Status...">
-                    @foreach ($projectStatuses as $status)
-                        <flux:select.option>{{ $status }}</flux:select.option>
+                <flux:input type="text" wire:model.live.debounce.300ms="search" placeholder="Search..." />
+                <flux:select variant="combobox" wire:model.live="schoolGroup" placeholder="School/group...">
+                    <flux:select.option value="">All</flux:select.option>
+                    @foreach ($schoolGroups as $group)
+                        <flux:select.option value="{{ $group }}">{{ $group }}</flux:select.option>
                     @endforeach
                 </flux:select>
+                <flux:select variant="combobox" wire:model.live="status" placeholder="Status...">
+                    <flux:select.option value="">All</flux:select.option>
+                    @foreach ($projectStatuses as $status)
+                        <flux:select.option value="{{ $status->value }}">{{ $status->label() }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:button icon="arrow-down-tray" wire:click="export" data-test="export-work-packages-button">
+                    Export
+                </flux:button>
             </div>
 
             <flux:separator variant="subtle" class="mt-6" />
         @endif
+        @if ($projects->isEmpty())
+            <flux:text class="mt-6">No matching work packages found.</flux:text>
+        @else
         <flux:table :paginate="$projects">
             <flux:table.columns>
                 <flux:table.column>Work Package</flux:table.column>
@@ -106,5 +112,6 @@
                 @endforeach
             </flux:table.rows>
         </flux:table>
-    @endempty
+        @endif
+    @endif
 </div>
