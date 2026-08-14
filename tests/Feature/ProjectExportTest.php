@@ -10,7 +10,9 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->fakeAllProjectEvents();
-    $this->admin = User::factory()->create(['is_admin' => true]);
+    // is_itstaff is explicitly false so this fixture proves the isAdmin() branch
+    // of the export policy (the factory default would make every admin IT staff too)
+    $this->admin = User::factory()->create(['is_admin' => true, 'is_itstaff' => false]);
     $this->requester = User::factory()->requester()->create();
 });
 
@@ -270,5 +272,6 @@ test('export button only visible to admins and IT staff on project viewer', func
 
     $this->actingAs($this->requester)
         ->get(route('project.show', $project))
+        ->assertOk()
         ->assertDontSee('Export');
 });

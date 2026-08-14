@@ -7,6 +7,7 @@ use App\Mail\ServiceAcceptanceRequestedMail;
 use App\Mail\UATRequestedMail;
 use App\Models\Project;
 use App\Models\Role;
+use App\Models\Testing;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -16,12 +17,23 @@ use function Pest\Livewire\livewire;
 
 uses(RefreshDatabase::class);
 
-// Helper to create project in Testing stage with testing record
-function createTestingProject(array $projectAttributes = [], array $testingAttributes = []): Project
+// Helper to create a project in the Testing stage whose testing record is fully
+// filled in (valid form data, all sign-offs pending).
+//
+// When events are live, the ProjectCreated listener has already created the real
+// testing record, so we fill that one - hasTesting() would add an orphaned second
+// row that $project->testing never returns. When events are faked the listener
+// never ran, so updateOrCreate creates the record instead.
+function createTestingProject(array $projectAttributes = []): Project
 {
-    return Project::factory()
-        ->hasTesting($testingAttributes)
-        ->create(array_merge(['status' => 'testing'], $projectAttributes));
+    $project = Project::factory()->create(array_merge(['status' => 'testing'], $projectAttributes));
+
+    $project->testing()->updateOrCreate(
+        ['project_id' => $project->id],
+        Testing::factory()->complete()->raw(['project_id' => $project->id])
+    );
+
+    return $project->fresh();
 }
 
 describe('Request UAT Workflow', function () {
@@ -133,26 +145,16 @@ describe('Request UAT Workflow', function () {
     });
 
     it('saves department_office field correctly', function () {
-        // Arrange
+        // Arrange - createTestingProject seeds a fully valid form, so only the
+        // field under test needs setting
         $user = User::factory()->create(['is_admin' => true]);
-        $testLead = User::factory()->create();
         $project = createTestingProject();
         $this->actingAs($user);
 
-        // Act - save with department_office value and all required fields
+        expect($project->testing->department_office)->toBeNull();
+
+        // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('testingForm.testLead', $testLead->id)
-            ->set('testingForm.serviceFunction', 'Test Service')
-            ->set('testingForm.functionalTestingTitle', 'Functional Tests')
-            ->set('testingForm.functionalTests', 'FR1: Test case 1')
-            ->set('testingForm.nonFunctionalTestingTitle', 'Non-Functional Tests')
-            ->set('testingForm.nonFunctionalTests', 'NFR1: Test case 1')
-            ->set('testingForm.testRepository', 'https://example.com/tests')
-            ->set('testingForm.testingSignOff', 'pending')
-            ->set('testingForm.userAcceptance', 'pending')
-            ->set('testingForm.testingLeadSignOff', 'pending')
-            ->set('testingForm.serviceDeliverySignOff', 'pending')
-            ->set('testingForm.serviceResilienceSignOff', 'pending')
             ->set('testingForm.departmentOffice', 'IT Department')
             ->call('save', 'testing')
             ->assertHasNoErrors();
@@ -456,9 +458,9 @@ describe('Integration Tests', function () {
     });
 
     it('completes full testing workflow from request to submit', function () {
-        // Arrange
+        // Arrange - the UAT tester must be IT staff to pass the saveForm policy
         $user = User::factory()->create(['is_admin' => true]);
-        $uatTester = User::factory()->create();
+        $uatTester = User::factory()->staff()->create();
         $serviceLead = User::factory()->create();
         $serviceLeadRole = Role::firstOrCreate(['name' => 'Service Lead']);
         $serviceLead->roles()->attach($serviceLeadRole);
@@ -475,21 +477,10 @@ describe('Integration Tests', function () {
         $project = $project->fresh(['testing']);
         expect($project->testing->uat_requested_at)->not->toBeNull();
 
-        // Step 2: UAT Tester approves
+        // Step 2: UAT Tester approves (the form is already valid from the fixture,
+        // so only the approval fields change)
         $this->actingAs($uatTester);
-        $testLead = User::factory()->create();
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('testingForm.testLead', $testLead->id)
-            ->set('testingForm.serviceFunction', 'Test Service')
-            ->set('testingForm.functionalTestingTitle', 'Functional Tests')
-            ->set('testingForm.functionalTests', 'FR1: Test case 1')
-            ->set('testingForm.nonFunctionalTestingTitle', 'Non-Functional Tests')
-            ->set('testingForm.nonFunctionalTests', 'NFR1: Test case 1')
-            ->set('testingForm.testRepository', 'https://example.com/tests')
-            ->set('testingForm.testingSignOff', 'pending')
-            ->set('testingForm.testingLeadSignOff', 'pending')
-            ->set('testingForm.serviceDeliverySignOff', 'pending')
-            ->set('testingForm.serviceResilienceSignOff', 'pending')
             ->set('testingForm.userAcceptance', 'approved')
             ->set('testingForm.userAcceptanceNotes', 'All tests passed')
             ->call('save', 'testing')
@@ -527,9 +518,9 @@ describe('Integration Tests', function () {
     });
 
     it('handles rejection workflow correctly', function () {
-        // Arrange
+        // Arrange - the UAT tester must be IT staff to pass the saveForm policy
         $user = User::factory()->create(['is_admin' => true]);
-        $uatTester = User::factory()->create();
+        $uatTester = User::factory()->staff()->create();
         $project = createTestingProject();
         $this->actingAs($user);
 
@@ -539,21 +530,10 @@ describe('Integration Tests', function () {
             ->call('requestUAT')
             ->assertHasNoErrors();
 
-        // Step 2: UAT Tester rejects
+        // Step 2: UAT Tester rejects (the form is already valid from the fixture,
+        // so only the rejection fields change)
         $this->actingAs($uatTester);
-        $testLead = User::factory()->create();
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('testingForm.testLead', $testLead->id)
-            ->set('testingForm.serviceFunction', 'Test Service')
-            ->set('testingForm.functionalTestingTitle', 'Functional Tests')
-            ->set('testingForm.functionalTests', 'FR1: Test case 1')
-            ->set('testingForm.nonFunctionalTestingTitle', 'Non-Functional Tests')
-            ->set('testingForm.nonFunctionalTests', 'NFR1: Test case 1')
-            ->set('testingForm.testRepository', 'https://example.com/tests')
-            ->set('testingForm.testingSignOff', 'pending')
-            ->set('testingForm.testingLeadSignOff', 'pending')
-            ->set('testingForm.serviceDeliverySignOff', 'pending')
-            ->set('testingForm.serviceResilienceSignOff', 'pending')
             ->set('testingForm.userAcceptance', 'rejected')
             ->set('testingForm.userAcceptanceNotes', 'Critical bugs found')
             ->call('save', 'testing')
@@ -568,8 +548,9 @@ describe('Integration Tests', function () {
             ->call('requestServiceAcceptance')
             ->assertHasErrors('testingForm.userAcceptance');
 
-        // Assert: project still in Testing stage
+        // Assert: the request was refused and the project stays in Testing
         $project->refresh();
+        expect($project->testing->service_acceptance_requested_at)->toBeNull();
         expect($project->status->value)->toBe('testing');
     });
 });

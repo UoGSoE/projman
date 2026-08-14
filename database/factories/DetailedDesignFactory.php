@@ -35,4 +35,19 @@ class DetailedDesignFactory extends Factory
             'approval_agb' => $changeBoardApproval,
         ];
     }
+
+    /**
+     * Pins every approval to a deterministic 'pending'; the valid form data
+     * itself comes from definition().
+     */
+    public function complete(): static
+    {
+        return $this->state(fn () => [
+            'approval_delivery' => 'pending',
+            'approval_operations' => 'pending',
+            'approval_resilience' => 'pending',
+            'approval_change_board' => 'pending',
+            'approval_agb' => 'pending',
+        ]);
+    }
 }

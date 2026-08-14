@@ -3,6 +3,7 @@
 use App\Enums\ProjectStatus;
 use App\Livewire\ProjectEditor;
 use App\Mail\ProjectStageChangeMail;
+use App\Models\Ideation;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -86,10 +87,26 @@ it('does not change the stage when the form fails validation', function () {
 
     $project = Project::factory()->create(['status' => ProjectStatus::TESTING]);
 
-    fillIdeationForm(livewire(ProjectEditor::class, ['project' => $project]))
+    // Seed an otherwise-valid ideation record so blanking the objective is the
+    // only thing failing validation (deadline pinned to satisfy after:today)
+    $project->ideation->update(Ideation::factory()->raw([
+        'project_id' => $project->id,
+        'deadline' => now()->addMonth(),
+    ]));
+
+    livewire(ProjectEditor::class, ['project' => $project])
         ->set('ideationForm.objective', '')
         ->call('saveAndMakeStageCurrent', 'ideation')
-        ->assertHasErrors(['ideationForm.objective']);
+        ->assertHasErrors(['ideationForm.objective'])
+        // proves the blanked objective was the only invalid field, i.e. the
+        // seeded record really was otherwise valid
+        ->assertHasNoErrors([
+            'ideationForm.schoolGroup',
+            'ideationForm.businessCase',
+            'ideationForm.benefits',
+            'ideationForm.deadline',
+            'ideationForm.initiative',
+        ]);
 
     expect($project->fresh()->status)->toBe(ProjectStatus::TESTING);
     expect($project->history()->count())->toBe(0);

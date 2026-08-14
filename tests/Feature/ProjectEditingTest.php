@@ -51,6 +51,7 @@ describe('Project Editing', function () {
         $project = Project::factory()->create(['status' => ProjectStatus::IDEATION]);
 
         livewire(ProjectEditor::class, ['project' => $project])
+            ->assertSee('Ideation')
             ->assertSee('Feasibility')
             ->assertSee('Scoping')
             ->assertSee('Scheduling')
@@ -75,7 +76,12 @@ describe('Project Editing', function () {
             ->assertDontSee('Feasibility')
             ->assertDontSee('Scoping')
             ->assertDontSee('Scheduling')
-            ->assertDontSee('Detailed Design');
+            ->assertDontSee('Detailed Design')
+            ->assertDontSee('Development')
+            // no assertDontSee('Build'): the ideation form's strategic initiative
+            // dropdown legitimately contains "Venture Builder"
+            ->assertDontSee('Testing')
+            ->assertDontSee('Deployed');
     });
 
     it('livewire can advance the project to next stage', function () {

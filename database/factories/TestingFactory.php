@@ -35,4 +35,19 @@ class TestingFactory extends Factory
             'service_resilience_sign_off' => fake()->randomElement(['pending', 'approved', 'rejected']),
         ];
     }
+
+    /**
+     * Pins every sign-off to a deterministic 'pending'; the valid form data
+     * itself comes from definition().
+     */
+    public function complete(): static
+    {
+        return $this->state(fn () => [
+            'testing_sign_off' => 'pending',
+            'user_acceptance' => 'pending',
+            'testing_lead_sign_off' => 'pending',
+            'service_delivery_sign_off' => 'pending',
+            'service_resilience_sign_off' => 'pending',
+        ]);
+    }
 }

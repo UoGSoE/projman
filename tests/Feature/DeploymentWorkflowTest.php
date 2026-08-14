@@ -24,13 +24,15 @@ beforeEach(function () {
     $this->setupBaseNotificationRoles();
 });
 
-// Helper to create project in Deployed stage with basic deployed record
-// For tests needing specific states, use: Project::factory()->has(Deployed::factory()->state())->create()
+// Helper to create project in Deployed stage. The ProjectCreated listener creates
+// the deployed record (hasDeployed() would only add an orphaned duplicate row).
+// For tests needing specific states, update that record from a factory state, e.g.
+// $project->deployed->update(Arr::except(Deployed::factory()->readyForServiceAcceptance()->make()->toArray(), 'project_id'))
+// - the Arr::except matters: the factory's project_id is a fresh Project, and
+// without it the update would repoint the deployed row at that stray project.
 function createDeployedProject(array $projectAttributes = []): Project
 {
-    return Project::factory()
-        ->hasDeployed()
-        ->create(array_merge(['status' => 'deployed'], $projectAttributes));
+    return Project::factory()->create(array_merge(['status' => 'deployed'], $projectAttributes));
 }
 
 describe('Service Acceptance Workflow', function () {

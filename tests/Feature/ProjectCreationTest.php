@@ -6,6 +6,7 @@ use App\Enums\ProjectStatus;
 use App\Livewire\ProjectCreator;
 use App\Livewire\ProjectEditor;
 use App\Models\Deployed;
+use App\Models\DetailedDesign;
 use App\Models\Development;
 use App\Models\Feasibility;
 use App\Models\Ideation;
@@ -420,19 +421,17 @@ describe('Project Editing', function () {
         });
 
         it('allows Not Required as an Architecture Governance Board approval value', function () {
+            // Seed a fully valid detailed design so only the field under test changes
+            $this->project->detailedDesign->update(
+                DetailedDesign::factory()->complete()->raw(['project_id' => $this->project->id])
+            );
+            expect($this->project->detailedDesign->approval_agb)->toBe('pending');
+
             livewire(ProjectEditor::class, ['project' => $this->project])
-                ->set('detailedDesignForm.designedBy', $this->testDesigner->id)
-                ->set('detailedDesignForm.serviceFunction', 'Test Service')
-                ->set('detailedDesignForm.functionalRequirements', 'Test Functional Requirements')
-                ->set('detailedDesignForm.nonFunctionalRequirements', 'Test Non-Functional Requirements')
-                ->set('detailedDesignForm.hldDesignLink', 'https://example.com/design')
-                ->set('detailedDesignForm.approvalDelivery', 'approved')
-                ->set('detailedDesignForm.approvalOperations', 'approved')
-                ->set('detailedDesignForm.approvalResilience', 'approved')
                 ->set('detailedDesignForm.approvalAgb', 'not_required')
                 ->call('save', 'detailed-design')
                 ->assertHasNoErrors()
-                ->assertSee('Not Required');
+                ->assertSet('detailedDesignForm.approvalAgb', 'not_required');
 
             // Dual-write during the expand-then-contract transition: the new
             // approval_agb column and the legacy approval_change_board column

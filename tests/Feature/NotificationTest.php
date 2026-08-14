@@ -61,7 +61,7 @@ describe('Config-based notifications', function () {
         $rendered = (new ProjectCreatedMail($project))->render();
 
         expect($rendered)->toContain('A very specific project title');
-        expect($rendered)->toContain($this->projectOwner->name);
+        expect($rendered)->toContain($this->projectOwner->full_name);
     });
 
     it('sends ProjectCreated notification to configured roles', function () {

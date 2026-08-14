@@ -1,7 +1,7 @@
 <x-mail::message>
 # New Work Package
 
-{{ $project->title }} has been requested by {{ $project->user->name }}.
+{{ $project->title }} has been requested by {{ $project->user->full_name }}.
 
 <x-mail::button :url="route('project.show', $project->id)">
     Click here to view the work package

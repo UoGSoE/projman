@@ -5,6 +5,7 @@ use App\Events\FeasibilityRejected;
 use App\Livewire\ProjectEditor;
 use App\Mail\FeasibilityApprovedMail;
 use App\Mail\FeasibilityRejectedMail;
+use App\Models\Feasibility;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
@@ -329,20 +330,20 @@ describe('Feasibility Approval Workflow', function () {
     });
 
     it('persists new feasibility fields when saving', function () {
-        // Arrange
+        // Arrange - seed a valid feasibility record so only the four fields
+        // under test go through the wire (off-the-shelf notes get content so the
+        // save proves it can clear a previously-saved value)
         $user = User::factory()->create(['is_admin' => true]);
-        $assessor = User::factory()->create();
         $project = Project::factory()->create();
+        $seeded = Feasibility::factory()->raw([
+            'project_id' => $project->id,
+            'off_the_shelf_solution_notes' => 'Old notes to be cleared',
+        ]);
+        $project->feasibility->update($seeded);
         $this->actingAs($user);
 
         // Act
         livewire(ProjectEditor::class, ['project' => $project])
-            ->set('feasibilityForm.technicalCredence', 'Technically feasible')
-            ->set('feasibilityForm.costBenefitCase', 'Cost effective solution')
-            ->set('feasibilityForm.dependenciesPrerequisites', 'None')
-            ->set('feasibilityForm.alternativeProposal', 'No alternatives')
-            ->set('feasibilityForm.assessedBy', $assessor->id)
-            ->set('feasibilityForm.dateAssessed', now()->addDay()->format('Y-m-d'))
             ->set('feasibilityForm.existingSolutionStatus', 'yes')
             ->set('feasibilityForm.existingSolutionNotes', 'Legacy System ABC exists')
             ->set('feasibilityForm.offTheShelfSolutionStatus', 'no')
@@ -350,12 +351,14 @@ describe('Feasibility Approval Workflow', function () {
             ->call('save', 'feasibility')
             ->assertHasNoErrors();
 
-        // Assert
+        // Assert - the four wire-set fields persisted, and an untouched seeded
+        // field survived the whole-form save
         $project->refresh();
         expect($project->feasibility->existing_solution_status)->toBe('yes')
             ->and($project->feasibility->existing_solution_notes)->toBe('Legacy System ABC exists')
             ->and($project->feasibility->off_the_shelf_solution_status)->toBe('no')
-            ->and($project->feasibility->off_the_shelf_solution_notes)->toBeNull();
+            ->and($project->feasibility->off_the_shelf_solution_notes)->toBeNull()
+            ->and($project->feasibility->technical_credence)->toBe($seeded['technical_credence']);
     });
 
     it('does not show approve/reject buttons when form is incomplete', function () {

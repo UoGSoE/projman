@@ -18,13 +18,27 @@ use App\Events\UATRejected;
 use App\Events\UATRequested;
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Tests\Traits\CreatesProjects;
 
 abstract class TestCase extends BaseTestCase
 {
     use CreatesProjects;
+
+    /**
+     * Mail is faked globally: with a sync queue, "queued" mail is otherwise
+     * rendered for real (markdown + CSS inlining), which is slow. Tests that
+     * need to prove a mailable renders should construct it and call render().
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Mail::fake();
+    }
 
     /**
      * Set up the base notification roles required for project lifecycle events.
@@ -35,45 +49,18 @@ abstract class TestCase extends BaseTestCase
      */
     protected function setupBaseNotificationRoles(): void
     {
-        // Required for ProjectCreated notifications
-        $adminRole = Role::factory()->create(['name' => 'Admin']);
-        $pmRole = Role::factory()->create(['name' => 'Project Manager']);
-
-        // Required for Feasibility, Scoping, Scheduling notifications
-        $assessorRole = Role::factory()->create(['name' => 'Work Package Assessor']);
-
-        // Required for ProjectStageChange notifications
-        Role::factory()->create(['name' => 'Ideation Manager']);
-        Role::factory()->create(['name' => 'Feasibility Manager']);
-        Role::factory()->create(['name' => 'Scoping Manager']);
-        Role::factory()->create(['name' => 'Scheduling Manager']);
-        Role::factory()->create(['name' => 'Detailed Design Manager']);
-        Role::factory()->create(['name' => 'Development Manager']);
-        $testingManagerRole = Role::factory()->create(['name' => 'Testing Manager']);
-        $serviceLeadRole = Role::factory()->create(['name' => 'Service Lead']);
-        Role::factory()->create(['name' => 'Deployment Manager']);
-        Role::factory()->create(['name' => 'Completed Manager']);
-        Role::factory()->create(['name' => 'Cancelled Manager']);
+        // Use the real seeder so test roles can't drift from production roles
+        $this->seed(RoleSeeder::class);
 
         // Create dummy users and assign to key roles
         // (prevents "No recipients found" exceptions)
-        $adminUser = User::factory()->create([
-            'forenames' => 'Test',
-            'surname' => 'FakeNotificationsUser',
-        ]);
-        $adminUser->roles()->attach($adminRole);
-
-        $assessorUser = User::factory()->create([
-            'forenames' => 'Test',
-            'surname' => 'FakeNotificationsUser',
-        ]);
-        $assessorUser->roles()->attach($assessorRole);
-
-        $serviceLeadUser = User::factory()->create([
-            'forenames' => 'Test',
-            'surname' => 'FakeNotificationsUser',
-        ]);
-        $serviceLeadUser->roles()->attach($serviceLeadRole);
+        foreach (['Admin', 'Work Package Assessor', 'Service Lead'] as $roleName) {
+            $user = User::factory()->create([
+                'forenames' => 'Test',
+                'surname' => 'FakeNotificationsUser',
+            ]);
+            $user->roles()->attach(Role::where('name', $roleName)->firstOrFail());
+        }
     }
 
     /**
