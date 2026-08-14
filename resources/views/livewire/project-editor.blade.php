@@ -37,7 +37,7 @@
     <flux:tab.group class="mt-6">
         <flux:tabs variant="segmented" wire:model="tab">
             <flux:tab name="ideation">Ideation</flux:tab>
-            @admin
+            @can('manageWorkflow', $project)
                 <flux:tab name="feasibility">Feasibility</flux:tab>
                 <flux:tab name="scoping">Scoping</flux:tab>
                 <flux:tab name="scheduling">Scheduling</flux:tab>
@@ -46,14 +46,14 @@
                 <flux:tab name="build">Build</flux:tab>
                 <flux:tab name="testing">Testing</flux:tab>
                 <flux:tab name="deployed">Deployed</flux:tab>
-            @endadmin
+            @endcan
         </flux:tabs>
 
         {{-- Ideation panel --}}
         <flux:tab.panel name="ideation" class="mt-6 space-y-6">
             @include('livewire.forms.ideation-form')
         </flux:tab.panel>
-        @admin
+        @can('manageWorkflow', $project)
         {{-- Feasibility panel --}}
         <flux:tab.panel name="feasibility" class="mt-6 space-y-6">
             @include('livewire.forms.feasibility-form')
@@ -87,7 +87,7 @@
         <flux:tab.panel name="deployed" class="mt-6 space-y-6">
             @include('livewire.forms.deployed-form')
         </flux:tab.panel>
-        @endadmin
+        @endcan
     </flux:tab.group>
 
     @if($project->status->canReturnToPreviousStage())

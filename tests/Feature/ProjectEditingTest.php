@@ -44,6 +44,40 @@ describe('Project Editing', function () {
 
     });
 
+    it('shows all stage tabs to IT staff', function () {
+        $itStaff = User::factory()->staff()->create();
+        $this->actingAs($itStaff);
+
+        $project = Project::factory()->create(['status' => ProjectStatus::IDEATION]);
+
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->assertSee('Feasibility')
+            ->assertSee('Scoping')
+            ->assertSee('Scheduling')
+            ->assertSee('Detailed Design')
+            ->assertSee('Development')
+            ->assertSee('Build')
+            ->assertSee('Testing')
+            ->assertSee('Deployed');
+    });
+
+    it('hides the other stage tabs from the requester who owns the project', function () {
+        $requester = User::factory()->requester()->create();
+        $this->actingAs($requester);
+
+        $project = Project::factory()->create([
+            'status' => ProjectStatus::IDEATION,
+            'user_id' => $requester->id,
+        ]);
+
+        livewire(ProjectEditor::class, ['project' => $project])
+            ->assertSee('Ideation')
+            ->assertDontSee('Feasibility')
+            ->assertDontSee('Scoping')
+            ->assertDontSee('Scheduling')
+            ->assertDontSee('Detailed Design');
+    });
+
     it('livewire can advance the project to next stage', function () {
         $user = User::factory()->create();
         $this->actingAs($user);

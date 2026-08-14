@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/work-package/create', ProjectCreator::class)->middleware('can:create,'.Project::class)->name('project.create');
     Route::get('/work-package/{project}', ProjectViewer::class)->middleware('can:view,project')->name('project.show');
     Route::get('/work-package/{project}/edit', ProjectEditor::class)->middleware('can:update,project')->name('project.edit');
+    Route::get('/work-package/{project}/export', ProjectExportController::class)->middleware('can:export,project')->name('project.export');
 
     Route::get('/profile', Profile::class)->name('profile');
 
@@ -41,7 +42,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/portfolio/backlog', BacklogList::class)->name('portfolio.backlog');
         Route::get('/portfolio/change-on-a-page/{project}', ChangeOnAPage::class)->name('portfolio.change-on-a-page');
         Route::get('/portfolio/roadmap', RoadmapView::class)->name('portfolio.roadmap');
-        Route::get('/work-package/{project}/export', ProjectExportController::class)->name('project.export');
         Route::get('/settings', Settings::class)->name('settings');
     });
 });

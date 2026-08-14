@@ -7,9 +7,9 @@
             <flux:heading size="xl" level="1">{{ $project->title }}</flux:heading>
         </div>
         <div class="flex gap-2">
-            @admin
+            @can('export', $project)
             <flux:button icon="arrow-down-tray" href="{{ route('project.export', $project) }}" target="_blank">Export</flux:button>
-            @endadmin
+            @endcan
             @can('update', $project)
                 <flux:button icon="pencil" variant="primary" href="{{ route('project.edit', $project) }}">Edit</flux:button>
             @endcan

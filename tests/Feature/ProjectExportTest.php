@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->fakeAllProjectEvents();
     $this->admin = User::factory()->create(['is_admin' => true]);
-    $this->staffUser = User::factory()->create(['is_admin' => false, 'is_staff' => true]);
+    $this->requester = User::factory()->requester()->create();
 });
 
 test('admin can access project export', function () {
@@ -23,10 +23,20 @@ test('admin can access project export', function () {
         ->assertSee($project->title);
 });
 
-test('non-admin cannot access project export', function () {
+test('IT staff can access project export', function () {
+    $itStaff = User::factory()->staff()->create();
     $project = $this->createProject();
 
-    $this->actingAs($this->staffUser)
+    $this->actingAs($itStaff)
+        ->get(route('project.export', $project))
+        ->assertOk()
+        ->assertSee($project->title);
+});
+
+test('requester cannot access project export', function () {
+    $project = $this->createProject();
+
+    $this->actingAs($this->requester)
         ->get(route('project.export', $project))
         ->assertForbidden();
 });
@@ -246,14 +256,19 @@ test('export displays footer with export date and app name', function () {
         ->assertSeeInOrder(['Exported on', config('app.name')]);
 });
 
-test('export button only visible to admins on project viewer', function () {
-    $project = $this->createProject();
+test('export button only visible to admins and IT staff on project viewer', function () {
+    $itStaff = User::factory()->staff()->create();
+    $project = $this->createProject(['user_id' => $this->requester->id]);
 
     $this->actingAs($this->admin)
         ->get(route('project.show', $project))
         ->assertSee('Export');
 
-    $this->actingAs($this->staffUser)
+    $this->actingAs($itStaff)
+        ->get(route('project.show', $project))
+        ->assertSee('Export');
+
+    $this->actingAs($this->requester)
         ->get(route('project.show', $project))
         ->assertDontSee('Export');
 });

@@ -35,6 +35,11 @@ class ProjectPolicy
         return $user->isAdmin() || $user->isItStaff();
     }
 
+    public function export(User $user, Project $project): bool
+    {
+        return $user->isAdmin() || $user->isItStaff();
+    }
+
     public function cancel(User $user, Project $project): bool
     {
         return $user->id === $project->user_id || $user->isAdmin();
